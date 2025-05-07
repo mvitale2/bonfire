@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "supabase": "^2.22.12"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^2.0.0",
