@@ -1,0 +1,63 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Ubuntu";
+}
+
+:root {
+  --background-color-1: #333333;
+  --background-color-2: #706c61;
+  --background-color-3: #4a4a4a;
+  --background-color-4: #5c5346;
+  --background-color-5: #2b2b2b;
+
+  --font-color-1: #ffffff;
+  --font-color-2: #e1f4f3;
+  --font-color-3: #cfcfcf;
+  --font-color-4: #b5c7c6;
+  --font-color-5: #f5e6cc;
+
+  --accent-color-1: #ff6f61;
+  --accent-color-2: #ffd700;
+  --accent-color-3: #a3d9a5;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  color: var(--font-color-1);
+  background-color: var(--background-color-1);
+}
+
+button {
+  border: none;
+  background-color: var(--accent-color-3);
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  transition: all ease 0.3s;
+}
+
+button:hover {
+  cursor: pointer;
+  background-color: var(--font-color-4);
+}
+
+input:focus {
+  outline: none;
+}
+
+a {
+  text-decoration: none;
+  color: var(--accent-color-3);
+}
+
+a:hover {
+  text-decoration: underline;
+}

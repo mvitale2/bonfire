@@ -1,0 +1,23 @@
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* width: 50%; */
+  height: 100vh;
+  gap: 1em;
+}
+
+form input {
+  background-color: var(--background-color-3);
+  border: none;
+  border-radius: 5px;
+  height: 50px;
+  color: var(--background-color-5);
+  padding: 5px;
+  font-size: 24px;
+}
+
+form .submit-btn {
+  font-size: 24px;
+}
