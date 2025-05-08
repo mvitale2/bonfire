@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import supabase from "../../../Supabase.jsx";
-import UserInfo from "../../UserInfo/UserInfo.jsx";
+import UserInfo from "../UserInfo/UserInfo.jsx";
 import "./CreateAccount.css";
 
 function CreateAccount() {
