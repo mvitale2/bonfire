@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import supabase from "../../../Supabase";
+import { Link, useNavigate } from "react-router-dom";
+import supabase from "../../../../Supabase"
 import bcrypt from "bcryptjs";
 import "./Login.css";
 
 function Login() {
   const [secretKey, setSecretKey] = useState("");
   const [message, setMessage] = useState(null);
+  const navigate = useNavigate();
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -36,6 +37,9 @@ function Login() {
       // if a match is found, give them access to the account
       if (authenticatedUser) {
         setMessage(`Welcome back, ${authenticatedUser.nickname}`)
+        setTimeout(() => {
+          navigate("/user-settings")
+        }, 2000)
       } else {
         setMessage("Invalid key.")
       }

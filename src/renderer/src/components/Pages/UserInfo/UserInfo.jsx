@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./UserInfo.css";
 
 function UserInfo({ secretKey, nickname, id, publicId }) {
@@ -25,6 +26,9 @@ function UserInfo({ secretKey, nickname, id, publicId }) {
         <section className="id">
           <span className="label">User ID: </span>
           <span>{publicId}</span>
+        </section>
+        <section className="link">
+          <Link to="/">Back to Login</Link>
         </section>
       </div>
     </>
