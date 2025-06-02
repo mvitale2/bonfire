@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase"
 import bcrypt from "bcryptjs";
@@ -8,6 +9,8 @@ function Login() {
   const [secretKey, setSecretKey] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
+  const { setNickname } = useContext(UserContext);
+  const { setId } = useContext(UserContext)
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -36,6 +39,8 @@ function Login() {
 
       // if a match is found, give them access to the account
       if (authenticatedUser) {
+        setNickname(authenticatedUser.nickname)
+        setId(authenticatedUser.public_id)
         setMessage(`Welcome back, ${authenticatedUser.nickname}`)
         setTimeout(() => {
           navigate("/user-settings")
@@ -56,7 +61,7 @@ function Login() {
 
   return (
     <>
-      <form>
+      <form className="login-form">
         <label htmlFor="secret-key" className="key-label">
           <h1>Enter your secret key:</h1>
         </label>

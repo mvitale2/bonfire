@@ -60,7 +60,7 @@ function CreateAccount() {
   return (
     <>
       {secretKey === "" ? (
-        <form>
+        <form className="create-form">
           <label htmlFor="nickname" className="nick-label">
             <h1>Enter a nickname:</h1>
           </label>
