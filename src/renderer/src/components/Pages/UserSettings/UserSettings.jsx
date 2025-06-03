@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import MessagePage from "../Message/message.jsx"; 
 import "./UserSettings.css";
 
 function UserSettings() {
-  const [selectedSection, setSelectedSection] = useState("profile"); // Default section
+  const [selectedSection, setSelectedSection] = useState("profile");
 
   const renderContent = () => {
     switch (selectedSection) {
@@ -14,6 +15,8 @@ function UserSettings() {
         return <div>Your Notification Settings</div>;
       case "privacy":
         return <div>Your Privacy Settings</div>;
+      case "messages":
+        return <MessagePage />; 
       default:
         return <div>Select a section to view settings</div>;
     }
@@ -46,6 +49,12 @@ function UserSettings() {
             onClick={() => setSelectedSection("privacy")}
           >
             Privacy
+          </li>
+          <li
+            className={selectedSection === "messages" ? "active" : ""}
+            onClick={() => setSelectedSection("messages")}
+          >
+            Messages
           </li>
         </ul>
       </div>

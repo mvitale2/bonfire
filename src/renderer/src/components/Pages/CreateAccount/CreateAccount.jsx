@@ -48,6 +48,8 @@ function CreateAccount() {
 
     setSecretKey(rawSecretKey);
     setPublicId(newPublicId);
+    localStorage.setItem("user_id", newPublicId); //  UUID
+
     const newId = newPublicId.slice(0, 6);
     setId(newId);
   };
