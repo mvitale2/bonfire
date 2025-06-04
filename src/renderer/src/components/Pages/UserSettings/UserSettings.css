@@ -1,0 +1,73 @@
+.user-settings-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  width: 100%;
+  height: 100vh;
+  margin: 1em;
+}
+
+.user-settings-wrapper .left {
+  width: 25%;
+  background-color: var(--background-color-5);
+  border-radius: 10px;
+}
+
+.user-settings-wrapper .right {
+  width: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-settings-wrapper .right .setting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: var(--background-color-5);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.user-settings-wrapper .right .nickname .nick-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 1em;
+}
+
+.user-settings-wrapper .right .nickname .nick-form button {
+  width: auto;
+  align-self: center;
+  min-width: 100px;
+}
+
+.user-settings-wrapper .left ul {
+  list-style: none;
+  width: 100%;
+  text-align: center;
+}
+
+.user-settings-wrapper .left ul li {
+  cursor: pointer;
+  transition: all ease 0.1s;
+  padding: 5px;
+  border-radius: 5px;
+  width: 100%;
+}
+
+.user-settings-wrapper .left ul li:hover {
+  background-color: var(--background-color-3);
+}
+
+.active {
+  background-color: var(--background-color-2);
+}
+
+/* so that the bg color doesn't change on hover for active selection */
+.active:hover {
+  background-color: var(--background-color-2) !important;
+}

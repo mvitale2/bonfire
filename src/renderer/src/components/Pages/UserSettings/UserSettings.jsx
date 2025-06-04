@@ -1,14 +1,69 @@
-import React, { useState } from "react";
 import MessagePage from "../Message/message.jsx"; 
+import { useState, useContext } from "react";
 import "./UserSettings.css";
+import { UserContext } from "../../../UserContext.jsx";
+import supabase from "../../../../Supabase.jsx";
+// import Tray from "../../UI Components/Tray/Tray";
 
 function UserSettings() {
-  const [selectedSection, setSelectedSection] = useState("profile");
+  const [selectedSection, setSelectedSection] = useState("profile"); // Default section
+  const { nickname } = useContext(UserContext);
+  const { setNickname } = useContext(UserContext);
+  const { id } = useContext(UserContext);
+  // console.log(nickname);
 
+  // profile settings
+  const Profile = () => {
+    const [newNick, setNewNick] = useState("");
+    const [nickMessage, setNickMessage] = useState(null);
+
+    const handleChange = (e) => {
+      const newText = e.target.value;
+      setNewNick(newText);
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      const { error } = await supabase
+        .from("users")
+        .update({ nickname: newNick })
+        .eq("public_id", id);
+
+      if (error) {
+        console.log("Error updating nickname: ", error.message);
+        setNickMessage("An unexpected error occured. Please try again.");
+        setTimeout(() => setNickMessage(null), 5000);
+      } else {
+        setNickname(newNick);
+        setNickMessage("Success!");
+        setTimeout(() => setNickMessage(null), 5000);
+        setNewNick("");
+      }
+    };
+
+    return (
+      <>
+        <section className="nickname setting">
+          <form className="nick-form" onSubmit={handleSubmit}>
+            <h3>Change Your Nickname</h3>
+            <span>Current Nickname: {`${nickname}#${id.slice(0, 6)}`}</span>
+            <input onChange={handleChange} value={newNick} maxLength={8}></input>
+            <button className="nick-submit-btn" type="submit">
+              Submit
+            </button>
+            <span className="nick-message">{nickMessage}</span>
+          </form>
+        </section>
+      </>
+    );
+  };
+
+  // where each individual setting page is rendered
   const renderContent = () => {
     switch (selectedSection) {
       case "profile":
-        return <div>Your Profile Settings</div>;
+        return <Profile />;
       case "account":
         return <div>Your Account Settings</div>;
       case "notifications":
@@ -22,8 +77,10 @@ function UserSettings() {
     }
   };
 
+  // main user settings page structure
   return (
     <div className="user-settings-wrapper">
+      {/* <Tray nickname={nickname}/> */}
       <div className="left">
         <ul>
           <li
