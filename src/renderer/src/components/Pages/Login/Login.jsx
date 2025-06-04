@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
-import supabase from "../../../../Supabase"
+import supabase from "../../../../Supabase";
 import bcrypt from "bcryptjs";
 import "./Login.css";
 
@@ -19,7 +19,7 @@ function Login() {
       // get all users
       const { data: users, error } = await supabase
         .from("users")
-        .select("nickname, key, public_id");
+        .select("id, nickname, key, public_id");
 
       if (error) {
         console.log("Error fetching users:", error.message);
@@ -43,10 +43,10 @@ function Login() {
         setId(authenticatedUser.public_id)
         setMessage(`Welcome back, ${authenticatedUser.nickname}`)
         setTimeout(() => {
-          navigate("/user-settings")
-        }, 2000)
+          navigate("/user-settings");
+        }, 2000);
       } else {
-        setMessage("Invalid key.")
+        setMessage("Invalid key.");
       }
     } catch (err) {
       console.log("Error during login:", err.message);

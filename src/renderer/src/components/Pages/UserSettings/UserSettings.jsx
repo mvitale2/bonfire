@@ -1,3 +1,4 @@
+import MessagePage from "../Message/message.jsx"; 
 import { useState, useContext } from "react";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -69,6 +70,8 @@ function UserSettings() {
         return <div>Your Notification Settings</div>;
       case "privacy":
         return <div>Your Privacy Settings</div>;
+      case "messages":
+        return <MessagePage />; 
       default:
         return <div>Select a section to view settings</div>;
     }
@@ -103,6 +106,12 @@ function UserSettings() {
             onClick={() => setSelectedSection("privacy")}
           >
             Privacy
+          </li>
+          <li
+            className={selectedSection === "messages" ? "active" : ""}
+            onClick={() => setSelectedSection("messages")}
+          >
+            Messages
           </li>
         </ul>
       </div>
