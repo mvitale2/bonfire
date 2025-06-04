@@ -1,4 +1,4 @@
-form {
+.create-form {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -8,20 +8,10 @@ form {
   gap: 1em;
 }
 
-form input {
-  background-color: var(--background-color-3);
-  border: none;
-  border-radius: 5px;
-  height: 50px;
-  color: var(--font-color-1);
-  padding: 5px;
-  font-size: 24px;
+.create-form span {
+  color: var(--font-color-4);
 }
 
-form span {
-    color: var(--font-color-4);
-}
-
-form .submit-btn {
+.create-form .submit-btn {
   font-size: 24px;
 }

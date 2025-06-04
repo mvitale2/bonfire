@@ -48,6 +48,8 @@ function CreateAccount() {
 
     setSecretKey(rawSecretKey);
     setPublicId(newPublicId);
+    localStorage.setItem("user_id", newPublicId); //  UUID
+
     const newId = newPublicId.slice(0, 6);
     setId(newId);
   };
@@ -60,7 +62,7 @@ function CreateAccount() {
   return (
     <>
       {secretKey === "" ? (
-        <form>
+        <form className="create-form">
           <label htmlFor="nickname" className="nick-label">
             <h1>Enter a nickname:</h1>
           </label>

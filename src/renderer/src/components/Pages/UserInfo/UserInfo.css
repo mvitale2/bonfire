@@ -8,10 +8,16 @@
     height: 100vh;
 }
 
-.info-wrapper
-
 .info-wrapper section .label {
     font-weight: bold;
+}
+
+.info-wrapper .warning {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .info-wrapper section .important {

@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import "./UserInfo.css";
 
@@ -12,7 +11,10 @@ function UserInfo({ secretKey, nickname, id, publicId }) {
         <h1>{user}</h1>
         <section className="warning">
           <span className="important">
-            If you forget this key, you will lose access to your account. Copy it now so that you can log in.
+            If you forget this key, you will lose access to your account.
+          </span>
+          <span className="important">
+            Save it somewhere safe now so that you can log in.
           </span>
         </section>
         <section className="secret-key">

@@ -1,0 +1,35 @@
+.tray-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  background-color: var(--background-color-3);
+  border-radius: 10px;
+  width: 30vw;
+  min-width: 200px;
+}
+
+.tray-wrapper .profile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.tray-wrapper .profile .pfp {
+  font-size: 48px;
+}
+
+.tray-wrapper .profile .nickname {
+  font-size: 26px;
+}
+
+.tray-wrapper .actions .settings {
+    font-size: 38px;
+}
