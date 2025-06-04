@@ -8,16 +8,6 @@
   gap: 1em;
 }
 
-.login-form input {
-  background-color: var(--background-color-3);
-  border: none;
-  border-radius: 5px;
-  height: 50px;
-  color: var(--background-color-5);
-  padding: 5px;
-  font-size: 24px;
-}
-
 .login-form .submit-btn {
   font-size: 24px;
 }

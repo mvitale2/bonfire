@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase";

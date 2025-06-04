@@ -27,6 +27,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  gap: 1em;
   background-color: var(--background-color-5);
   padding: 10px;
   border-radius: 10px;
@@ -70,4 +71,19 @@
 /* so that the bg color doesn't change on hover for active selection */
 .active:hover {
   background-color: var(--background-color-2) !important;
+}
+
+.back:hover {
+  background-color: var(--accent-color-1) !important;
+}
+
+/* account */
+.delete-acct-btn {
+  background-color: var(--background-color-4);
+  color: var(--accent-color-1)
+}
+
+.delete-acct-btn:hover {
+  background-color: var(--accent-color-1);
+  color: var(--background-color-4)
 }

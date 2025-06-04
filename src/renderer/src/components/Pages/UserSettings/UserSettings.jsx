@@ -1,4 +1,4 @@
-import MessagePage from "../Message/message.jsx"; 
+import MessagePage from "../Message/Message.jsx";
 import { useState, useContext } from "react";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -48,12 +48,29 @@ function UserSettings() {
           <form className="nick-form" onSubmit={handleSubmit}>
             <h3>Change Your Nickname</h3>
             <span>Current Nickname: {`${nickname}#${id.slice(0, 6)}`}</span>
-            <input onChange={handleChange} value={newNick} maxLength={8}></input>
+            <input
+              onChange={handleChange}
+              value={newNick}
+              maxLength={8}
+            ></input>
             <button className="nick-submit-btn" type="submit">
               Submit
             </button>
             <span className="nick-message">{nickMessage}</span>
           </form>
+        </section>
+      </>
+    );
+  };
+
+  // Account settings
+  const Account = () => {
+    return (
+      <>
+        <section className="delete-acct setting">
+          <button className="delete-acct-btn">
+            <h3>Delete Your Account</h3>
+          </button>
         </section>
       </>
     );
@@ -65,13 +82,11 @@ function UserSettings() {
       case "profile":
         return <Profile />;
       case "account":
-        return <div>Your Account Settings</div>;
+        return <Account />;
       case "notifications":
         return <div>Your Notification Settings</div>;
       case "privacy":
         return <div>Your Privacy Settings</div>;
-      case "messages":
-        return <MessagePage />; 
       default:
         return <div>Select a section to view settings</div>;
     }
@@ -107,11 +122,8 @@ function UserSettings() {
           >
             Privacy
           </li>
-          <li
-            className={selectedSection === "messages" ? "active" : ""}
-            onClick={() => setSelectedSection("messages")}
-          >
-            Messages
+          <li className="back" onClick={() => console.log("back")}>
+            Back
           </li>
         </ul>
       </div>
