@@ -1,4 +1,5 @@
 import MessagePage from "../Message/Message.jsx";
+import { useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -10,6 +11,7 @@ function UserSettings() {
   const { nickname } = useContext(UserContext);
   const { setNickname } = useContext(UserContext);
   const { id } = useContext(UserContext);
+  const navigate = useNavigate();
   // console.log(nickname);
 
   // profile settings
@@ -47,7 +49,7 @@ function UserSettings() {
         <section className="nickname setting">
           <form className="nick-form" onSubmit={handleSubmit}>
             <h3>Change Your Nickname</h3>
-            <span>Current Nickname: {`${nickname}#${id.slice(0, 6)}`}</span>
+            <span>Current Username: {`${nickname}#${id.slice(0, 6)}`}</span>
             <input
               onChange={handleChange}
               value={newNick}
@@ -122,7 +124,7 @@ function UserSettings() {
           >
             Privacy
           </li>
-          <li className="back" onClick={() => console.log("back")}>
+          <li className="back" onClick={() => navigate("/messages")}>
             Back
           </li>
         </ul>

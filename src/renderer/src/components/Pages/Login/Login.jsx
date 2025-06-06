@@ -43,7 +43,7 @@ function Login() {
         setId(authenticatedUser.public_id)
         setMessage(`Welcome back, ${authenticatedUser.nickname}`)
         setTimeout(() => {
-          navigate("/user-settings");
+          navigate("/messages");
         }, 2000);
       } else {
         setMessage("Invalid key.");

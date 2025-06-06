@@ -13,6 +13,8 @@
   border-radius: 10px;
   width: 30vw;
   min-width: 200px;
+  max-width: 400px;
+  border: 1px solid var(--background-color-2);
 }
 
 .tray-wrapper .profile {
@@ -24,12 +26,28 @@
 
 .tray-wrapper .profile .pfp {
   font-size: 48px;
+  display: flex;
+  align-items: center;
 }
 
 .tray-wrapper .profile .nickname {
   font-size: 26px;
+  display: flex;
+  align-items: center;
 }
 
 .tray-wrapper .actions .settings {
-    font-size: 38px;
+  font-size: 38px;
+  border-radius: 10px;
+  transition: all ease 0.1s;
+  padding: 3px;
+}
+
+.tray-wrapper .actions .settings:hover {
+  background-color: var(--background-color-5);
+}
+
+.tray-wrapper .actions .settings a {
+  display: flex;
+  align-items: center;
 }

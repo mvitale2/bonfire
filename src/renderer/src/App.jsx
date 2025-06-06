@@ -5,6 +5,7 @@ import UserInfo from "./components/Pages/UserInfo/UserInfo.jsx";
 import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
 import { Route, Routes } from "react-router-dom";
 import { UserContext } from "./UserContext.jsx";
+import MessagePage from './components/Pages/Message/Message.jsx';
 
 function App() {
   const [nickname, setNickname] = useState("");
@@ -16,6 +17,7 @@ function App() {
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/user-info" element={<UserInfo />} />
         <Route path="/user-settings" element={<UserSettings />} />
+        <Route path="/messages" element={<MessagePage />} />
       </Routes>
     </UserContext.Provider>
   );

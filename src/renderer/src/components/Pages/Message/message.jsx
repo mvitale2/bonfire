@@ -1,22 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
+import { UserContext } from "../../../UserContext.jsx";
 import supabase from "../../../../Supabase";
 import "./message.css";
+import Tray from "../../UI Components/Tray/Tray.jsx";
+import { IoSend } from "react-icons/io5";
 
 const MessagePage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [userId, setUserId] = useState(null);
+  const { id } = useContext(UserContext);
+  const { nickname } = useContext(UserContext);
   const messagesEndRef = useRef(null);
-
-  // Load user ID from localStorage
-  useEffect(() => {
-    const cachedUserId = localStorage.getItem("user_id");
-    if (cachedUserId) {
-      setUserId(cachedUserId); // This is the public_id (uuid)
-    } else {
-      console.error("User not logged in: No cached user ID found.");
-    }
-  }, []);
 
   // Fetch messages from message_view (includes nickname)
   useEffect(() => {
@@ -61,54 +55,64 @@ const MessagePage = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !userId) {
-      console.error("Missing message content or user ID");
-      return;
-    }
+    if (!newMessage.trim() || !id) return;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("messages")
-      .insert([{ content: newMessage, user_id: userId }])
-      .select(); // important: ensures data is returned
-
-    console.log("Message insert result:", { data, error });
+      .insert([{ content: newMessage, user_id: id }]);
 
     if (error) {
       console.error("Error sending message:", error.message);
-    } else if (!error) {
-        setNewMessage(""); 
-      }
-    else {
-      console.warn("Unexpected insert result:", data);
+    } else {
+      setNewMessage("");
+      // Refetch messages so nicknames are included
+      const { data, error: fetchError } = await supabase
+        .from("message_view")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (!fetchError) setMessages(data);
     }
   };
-  
-  return (
-    <div className="messages-page">
-      <div className="messages-list">
-        {messages.map((msg) => (
-          <div key={msg.id} className="message">
-            <div className="message-content">{msg.content}</div>
-            <div className="message-time">
-              <strong>{msg.nickname}</strong> –{" "}
-              {new Date(msg.created_at).toLocaleString()}
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
 
-      <div className="message-input-container">
-        <input
-          type="text"
-          placeholder="Type your message..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          className="message-input"
-        />
-        <button onClick={handleSendMessage}>Send</button>
+  return (
+    <>
+      <Tray nickname={nickname} />
+      <div className="messages-page">
+        <div className="messages-list">
+          {messages.map((msg) => (
+            <div key={msg.id} className="message">
+              <div className="message-time">
+                <strong>{msg.nickname}</strong> –{" "}
+                {new Date(msg.created_at).toLocaleString()}
+              </div>
+              <div className="message-content">{msg.content}</div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="message-input-container">
+          <div className="input-with-button">
+            <input
+              type="text"
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="message-input"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <button onClick={handleSendMessage}>
+              <IoSend />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

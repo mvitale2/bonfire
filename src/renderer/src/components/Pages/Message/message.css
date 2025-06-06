@@ -1,16 +1,74 @@
-.message-input-container {
-    display: flex;
-    padding: 12px;
-    background: #fff;
-    border-top: 1px solid #ccc;
-  }
-  
-  .message-input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-    margin-right: 8px;
-  }
-  
+.messages-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.messages-page .messages-list {
+  width: 50%;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.8em;
+  overflow-y: scroll;
+  background-color: var(--background-color-5);
+  padding: 10px;
+}
+
+.messages-page .messages-list .message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.messages-page .messages-list .message .message-content {
+  border-top: var(--background-color-2) 1px solid;
+  padding-top: 5px;
+}
+
+.messages-page .message-input-container {
+  display: flex;
+  justify-content: center;
+  width: 50%;
+  padding: 12px;
+}
+
+.messages-page .message-input-container .input-with-button {
+  position: relative;
+  width: 100%;
+}
+
+.messages-page .message-input-container .input-with-button .message-input {
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px;
+  border-radius: 5px;
+  border: 1px solid var(--background-color-2);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.messages-page .message-input-container .input-with-button button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--font-color-2);
+  font-size: 1.3rem;
+  transition: 0.1s all ease;
+}
+
+.messages-page .message-input-container .input-with-button button:hover {
+  color: var(--font-color-4)
+}

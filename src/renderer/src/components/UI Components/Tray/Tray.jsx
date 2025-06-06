@@ -4,7 +4,6 @@ import { CgProfile } from "react-icons/cg";
 import "./Tray.css";
 
 function Tray({ nickname, pfp }) {
-  console.log(pfp)
   return (
     <div className="tray-wrapper">
       <div className="profile">
