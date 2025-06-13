@@ -4,6 +4,7 @@ import supabase from "../../../../Supabase";
 import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
 
 const MessagePage = () => {
   const [messages, setMessages] = useState([]);
@@ -85,7 +86,9 @@ const MessagePage = () => {
                 <strong>{msg.nickname}</strong> –{" "}
                 {new Date(msg.created_at).toLocaleString()}
               </div>
-              <div className="message-content">{msg.content}</div>
+              <div className="message-content">
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
             </div>
           ))}
           <div ref={messagesEndRef} />

@@ -10,7 +10,8 @@ function Login() {
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
   const { setNickname } = useContext(UserContext);
-  const { setId } = useContext(UserContext)
+  const { setId } = useContext(UserContext);
+  const now = new Date().toISOString();
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -39,12 +40,19 @@ function Login() {
 
       // if a match is found, give them access to the account
       if (authenticatedUser) {
-        setNickname(authenticatedUser.nickname)
-        setId(authenticatedUser.public_id)
-        setMessage(`Welcome back, ${authenticatedUser.nickname}`)
+        setNickname(authenticatedUser.nickname);
+        setId(authenticatedUser.public_id);
+        setMessage(`Welcome back, ${authenticatedUser.nickname}`);
         setTimeout(() => {
           navigate("/messages");
         }, 2000);
+        const { error } = await supabase
+          .from("users")
+          .update({ last_logon: now })
+          .eq("public_id", authenticatedUser.public_id);
+        if (error) {
+          console.log("Error uploading login to supabase: ", error.message);
+        }
       } else {
         setMessage("Invalid key.");
       }
