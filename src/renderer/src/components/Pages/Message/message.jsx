@@ -6,19 +6,27 @@ const MessagePage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState(null);
+  const [nickname, setNickname] = useState("");
   const messagesEndRef = useRef(null);
 
-  // Load user ID from localStorage
+  // Load user ID and nickname from localStorage
   useEffect(() => {
-    const cachedUserId = localStorage.getItem("user_id");
+    const cachedUserId = localStorage.getItem("user_id"); // Should store UUID
+    const cachedNickname = localStorage.getItem("nickname");
+
     if (cachedUserId) {
-      setUserId(cachedUserId); // This is the public_id (uuid)
+      setUserId(cachedUserId);
     } else {
       console.error("User not logged in: No cached user ID found.");
     }
+
+    if (cachedNickname) {
+      setNickname(cachedNickname);
+    } else {
+      console.error("No cached nickname found.");
+    }
   }, []);
 
-  // Fetch messages from message_view (includes nickname)
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -35,17 +43,28 @@ const MessagePage = () => {
 
     fetchMessages();
   }, []);
-
-  // Real-time listener
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
-          const newMsg = payload.new;
-          setMessages((prev) => [...prev, newMsg]);
+        async (payload) => {
+          const { data, error } = await supabase
+            .from("message_view")
+            .select("*")
+            .eq("message_id", payload.new.id)
+            .single();
+
+          if (error) {
+            console.error(
+              "Error fetching new message from view:",
+              error.message
+            );
+          } else {
+            console.log("New message from view:", data);
+            setMessages((prev) => [...prev, data]);
+          }
         }
       )
       .subscribe();
@@ -54,35 +73,40 @@ const MessagePage = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  // Scroll to bottom on new messages
+  
+  
+  
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Send message
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !userId) {
-      console.error("Missing message content or user ID");
+    if (!newMessage.trim()) return;
+
+    if (!userId) {
+      alert("User ID missing.");
       return;
     }
 
     const { data, error } = await supabase
       .from("messages")
-      .insert([{ content: newMessage, user_id: userId }])
-      .select(); // important: ensures data is returned
-
-    console.log("Message insert result:", { data, error });
+      .insert([
+        {
+          content: newMessage,
+          user_id: userId, // This is the UUID or public_id
+        },
+      ])
+      .select();
 
     if (error) {
       console.error("Error sending message:", error.message);
-    } else if (!error) {
-        setNewMessage(""); 
-      }
-    else {
-      console.warn("Unexpected insert result:", data);
+    } else {
+      setNewMessage("");
     }
   };
-  
+
   return (
     <div className="messages-page">
       <div className="messages-list">
