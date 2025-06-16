@@ -11,7 +11,7 @@ function Friends() {
     switch (selectedSection) {
       case "friends":
         return <div>Friends list</div>;
-      case "add friends":
+      case "add":
         return <div>Add friends</div>;
       default:
         return <div>Select a section to view settings</div>;
@@ -32,7 +32,7 @@ function Friends() {
             </li>
             <li
               className={selectedSection === "add friends" ? "active" : ""}
-              onClick={() => setSelectedSection("add friends")}
+              onClick={() => setSelectedSection("add")}
             >
               Add Friends
             </li>
