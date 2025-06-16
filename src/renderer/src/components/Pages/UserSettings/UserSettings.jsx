@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
 import supabase from "../../../../Supabase.jsx";
-// import Tray from "../../UI Components/Tray/Tray";
+import Tray from "../../UI Components/Tray/Tray";
 
 function UserSettings() {
   const [selectedSection, setSelectedSection] = useState("profile"); // Default section
@@ -46,6 +46,7 @@ function UserSettings() {
 
     return (
       <>
+        <Tray nickname={nickname} />
         <section className="nickname setting">
           <form className="nick-form" onSubmit={handleSubmit}>
             <h3>Change Your Nickname</h3>
@@ -97,7 +98,6 @@ function UserSettings() {
   // main user settings page structure
   return (
     <div className="user-settings-wrapper">
-      {/* <Tray nickname={nickname}/> */}
       <div className="left">
         <ul>
           <li
@@ -124,9 +124,9 @@ function UserSettings() {
           >
             Privacy
           </li>
-          <li className="back" onClick={() => navigate("/messages")}>
+          {/* <li className="back" onClick={() => navigate("/messages")}>
             Back
-          </li>
+          </li> */}
         </ul>
       </div>
       <div className="right">{renderContent()}</div>

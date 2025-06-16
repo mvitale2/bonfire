@@ -10,8 +10,14 @@
 
 .user-settings-wrapper .left {
   width: 25%;
+  height: 100%;
+  margin-left: 10px;
   background-color: var(--background-color-5);
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .user-settings-wrapper .right {

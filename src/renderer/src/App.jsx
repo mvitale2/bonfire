@@ -6,6 +6,7 @@ import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
 import { Route, Routes } from "react-router-dom";
 import { UserContext } from "./UserContext.jsx";
 import MessagePage from './components/Pages/Message/Message.jsx';
+import Friends from './components/Pages/Friends/Friends.jsx';
 
 function App() {
   const [nickname, setNickname] = useState("");
@@ -18,6 +19,7 @@ function App() {
         <Route path="/user-info" element={<UserInfo />} />
         <Route path="/user-settings" element={<UserSettings />} />
         <Route path="/messages" element={<MessagePage />} />
+        <Route path="/friends" element={<Friends />} />
       </Routes>
     </UserContext.Provider>
   );
