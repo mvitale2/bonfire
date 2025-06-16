@@ -71,3 +71,17 @@
 .active:hover {
   background-color: var(--background-color-2) !important;
 }
+
+.logout-btn {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5em 1em;
+  margin-top: 1em;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #c0392b;
+}

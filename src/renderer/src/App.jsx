@@ -16,6 +16,7 @@ function App() {
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/user-info" element={<UserInfo />} />
         <Route path="/user-settings" element={<UserSettings />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </UserContext.Provider>
   );
