@@ -20,6 +20,7 @@ function App() {
         <Route path="/user-settings" element={<UserSettings />} />
         <Route path="/messages" element={<MessagePage />} />
         <Route path="/friends" element={<Friends />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </UserContext.Provider>
   );

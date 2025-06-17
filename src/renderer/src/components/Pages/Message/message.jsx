@@ -13,7 +13,6 @@ const MessagePage = () => {
   const { nickname } = useContext(UserContext);
   const messagesEndRef = useRef(null);
 
-  // Fetch messages from message_view (includes nickname)
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -30,17 +29,28 @@ const MessagePage = () => {
 
     fetchMessages();
   }, []);
-
-  // Real-time listener
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
-          const newMsg = payload.new;
-          setMessages((prev) => [...prev, newMsg]);
+        async (payload) => {
+          const { data, error } = await supabase
+            .from("message_view")
+            .select("*")
+            .eq("message_id", payload.new.id)
+            .single();
+
+          if (error) {
+            console.error(
+              "Error fetching new message from view:",
+              error.message
+            );
+          } else {
+            console.log("New message from view:", data);
+            setMessages((prev) => [...prev, data]);
+          }
         }
       )
       .subscribe();
@@ -49,29 +59,37 @@ const MessagePage = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  // Scroll to bottom on new messages
+  
+  
+  
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Send message
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !id) return;
+    if (!newMessage.trim()) return;
+
+    if (!userId) {
+      alert("User ID missing.");
+      return;
+    }
 
     const { error } = await supabase
       .from("messages")
-      .insert([{ content: newMessage, user_id: id }]);
+      .insert([
+        {
+          content: newMessage,
+          user_id: userId, // This is the UUID or public_id
+        },
+      ])
+      .select();
 
     if (error) {
       console.error("Error sending message:", error.message);
     } else {
       setNewMessage("");
-      // Refetch messages so nicknames are included
-      const { data, error: fetchError } = await supabase
-        .from("message_view")
-        .select("*")
-        .order("created_at", { ascending: true });
-      if (!fetchError) setMessages(data);
     }
   };
 
