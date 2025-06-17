@@ -1,18 +1,21 @@
-import { useState } from 'react'
+import { useState } from "react";
 import Login from "./components/Pages/Login/Login.jsx";
 import CreateAccount from "./components/Pages/CreateAccount/CreateAccount.jsx";
 import UserInfo from "./components/Pages/UserInfo/UserInfo.jsx";
 import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
 import { Route, Routes } from "react-router-dom";
 import { UserContext } from "./UserContext.jsx";
-import MessagePage from './components/Pages/Message/Message.jsx';
-import Friends from './components/Pages/Friends/Friends.jsx';
+import MessagePage from "./components/Pages/Message/Message.jsx";
+import Friends from "./components/Pages/Friends/Friends.jsx";
+import defaultAvatar from "./assets/default_avatar.png";
 
 function App() {
   const [nickname, setNickname] = useState("");
-  const [id, setId] = useState("")
+  const [id, setId] = useState("");
+  const [avatar, setAvatar] = useState(defaultAvatar);
+
   return (
-    <UserContext.Provider value={{ nickname, setNickname, id, setId }}>
+    <UserContext.Provider value={{ nickname, setNickname, id, setId, avatar, setAvatar }}>
       <Routes>
         <Route index element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />

@@ -23,6 +23,8 @@
 .user-settings-wrapper .right {
   width: 75%;
   display: flex;
+  flex-direction: column;
+  gap: 2em;
   align-items: center;
   justify-content: center;
 }

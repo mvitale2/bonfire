@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { UserContext } from "../../../UserContext.jsx";
-import supabase from "../../../../Supabase";
+import supabase from "../../../../Supabase.jsx";
 import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
@@ -9,8 +9,7 @@ import ReactMarkdown from "react-markdown";
 const MessagePage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const { id } = useContext(UserContext);
-  const { nickname } = useContext(UserContext);
+  const { nickname, id } = useContext(UserContext);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +28,7 @@ const MessagePage = () => {
 
     fetchMessages();
   }, []);
+
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
@@ -48,7 +48,7 @@ const MessagePage = () => {
               error.message
             );
           } else {
-            console.log("New message from view:", data);
+            // console.log("New message from view:", data);
             setMessages((prev) => [...prev, data]);
           }
         }
@@ -59,9 +59,7 @@ const MessagePage = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-  
-  
-  
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,7 +69,7 @@ const MessagePage = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    if (!userId) {
+    if (!id) {
       alert("User ID missing.");
       return;
     }
@@ -81,7 +79,7 @@ const MessagePage = () => {
       .insert([
         {
           content: newMessage,
-          user_id: userId, // This is the UUID or public_id
+          user_id: id,
         },
       ])
       .select();
