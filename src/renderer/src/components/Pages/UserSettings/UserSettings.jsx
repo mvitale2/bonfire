@@ -8,8 +8,7 @@ import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 
 function UserSettings() {
   const [selectedSection, setSelectedSection] = useState("profile"); // Default section
-  const { nickname, setNickname, id, avatar, setAvatar } =
-    useContext(UserContext);
+  const { nickname, setNickname, id, setAvatar } = useContext(UserContext);
   const navigate = useNavigate();
   // console.log(nickname);
 
@@ -34,6 +33,45 @@ function UserSettings() {
       return Math.floor(10000 + Math.random() * 90000);
     }
 
+    const handleDeleteAvatars = async () => {
+      // only retrieves 100 files.
+      // in the future, for scalability, we will need to implement pagination to get more than 100.
+      const { data, error } = await supabase.storage
+        .from("profile-pics")
+        .list("avatars", { limit: 100 });
+
+      if (error) {
+        console.log(`Error listing files: ${error}`);
+        return;
+      }
+
+      const regex = new RegExp(id);
+
+      const filesToDelete = data
+        .filter((file) => regex.test(file.name))
+        .map((file) => `avatars/${file.name}`);
+
+      console.log(filesToDelete);
+
+      // it's also possible to instead check if the user has the default profile picture,
+      // but might as well do this to be sure
+      if (filesToDelete.length === 0) {
+        console.log("User has not set a profile picture.");
+        return;
+      }
+
+      const { error: deleteError } = await supabase.storage
+        .from("profile-pics")
+        .remove(filesToDelete);
+
+      if (deleteError) {
+        console.log(`Error deleting files: ${deleteError}`);
+        return;
+      } else {
+        console.log("Files deleted?");
+      }
+    };
+
     const handleUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -44,18 +82,10 @@ function UserSettings() {
       const randomNumber = generateFiveDigitNumber();
 
       const fileExt = file.name.split(".").pop();
-      const fileName = `${id}${randomNumber}.${fileExt}`;
+      const fileName = `${id} ${randomNumber}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      const { data, error } = await supabase.storage
-        .from("profile-pics")
-        .remove(`avatars/${fileName}`);
-
-      if (error) {
-        console.error("Error deleting file:", error);
-      } else {
-        console.log("File deleted successfully");
-      }
+      handleDeleteAvatars();
 
       const { error: uploadError } = await supabase.storage
         .from("profile-pics")
@@ -154,7 +184,10 @@ function UserSettings() {
         <section className="setting">
           <h3>Profile Picture</h3>
           <Avatar />
-          <input type="file" accept="image/*" onChange={handleUpload} />
+          <label className="avatar-file-upload" htmlFor="avatar-input">
+            Choose an image...
+            <input id="avatar-input" type="file" accept="image/*" onChange={handleUpload} />
+          </label>
           {uploading && <span>Uploading...</span>}
         </section>
       </>

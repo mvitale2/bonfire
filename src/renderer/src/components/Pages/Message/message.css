@@ -26,6 +26,13 @@
   gap: 0.3em;
 }
 
+.messages-page .messages-list .message .message-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5em;
+}
+
 .messages-page .messages-list .message .message-content {
   border-top: var(--background-color-2) 1px solid;
   padding-top: 5px;

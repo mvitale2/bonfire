@@ -5,6 +5,8 @@ import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
+import rehypeExternalLinks from "rehype-external-links";
+import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 
 const MessagePage = () => {
   const [messages, setMessages] = useState([]);
@@ -99,11 +101,23 @@ const MessagePage = () => {
           {messages.map((msg) => (
             <div key={msg.id} className="message">
               <div className="message-time">
-                <strong>{msg.nickname}</strong> –{" "}
-                {new Date(msg.created_at).toLocaleString()}
+                <Avatar otherUserId={msg.user_id} />
+                <span>{`${msg.nickname} - ${new Date(msg.created_at).toLocaleString()}`}</span>
               </div>
               <div className="message-content">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                <ReactMarkdown
+                  rehypePlugins={[
+                    [
+                      rehypeExternalLinks,
+                      {
+                        rel: ["noopener noreferrer nofollow"],
+                        target: ["_blank"],
+                      },
+                    ],
+                  ]}
+                >
+                  {msg.content}
+                </ReactMarkdown>
               </div>
             </div>
           ))}

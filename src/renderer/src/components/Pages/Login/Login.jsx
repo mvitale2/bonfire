@@ -9,8 +9,7 @@ function Login() {
   const [secretKey, setSecretKey] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
-  const { setNickname } = useContext(UserContext);
-  const { setId } = useContext(UserContext);
+  const { setNickname, setId, setAvatar } = useContext(UserContext);
   const now = new Date().toISOString();
 
   const handleClick = async (e) => {
@@ -20,7 +19,7 @@ function Login() {
       // get all users
       const { data: users, error } = await supabase
         .from("users")
-        .select("id, nickname, key, public_id");
+        .select("id, nickname, key, public_id, profile_pic_url");
 
       if (error) {
         console.log("Error fetching users:", error.message);
@@ -42,6 +41,7 @@ function Login() {
       if (authenticatedUser) {
         setNickname(authenticatedUser.nickname);
         setId(authenticatedUser.public_id);
+        setAvatar(authenticatedUser.profile_pic_url);
         setMessage(`Welcome back, ${authenticatedUser.nickname}`);
         setTimeout(() => {
           navigate("/messages");

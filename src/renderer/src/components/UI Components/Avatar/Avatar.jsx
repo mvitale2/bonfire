@@ -1,35 +1,35 @@
-import supabase from "../../../../Supabase.jsx";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../UserContext.jsx";
-import "./Avatar.css"
+import defaultAvatar from "../../../assets/default_avatar.png";
+import fetchProfilePicture from "../../../fetchProfilePicture.jsx";
+import "./Avatar.css";
 
-function Avatar() {
-  const { avatar, setAvatar, id } = useContext(UserContext);
+function Avatar({ otherUserId = null }) {
+  const { avatar, id } = useContext(UserContext);
+  const idToUse = otherUserId != null ? otherUserId : id;
+  const [otherAvatar, setOtherAvatar] = useState(defaultAvatar);
 
   useEffect(() => {
-    const fetchProfilePicture = async () => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("profile_pic_url")
-        .eq("public_id", id)
-        .single();
-
-      console.log("Fetching profile for public_id:", id);
-      console.log("Response:", data, "Error:", error);
-
-      if (!error && data?.profile_pic_url) {
-        setAvatar(data.profile_pic_url);
-      } else {
-        console.error("Failed to fetch profile picture:", error);
-      }
+    let isMounted = true;
+    if (otherUserId) {
+      fetchProfilePicture(idToUse).then((url) => {
+        if (isMounted) setOtherAvatar(url);
+      });
+    }
+    return () => {
+      isMounted = false;
     };
-
-    fetchProfilePicture();
-  }, [avatar]);
+  }, [otherUserId, idToUse]);
 
   return (
     <div className="avatar-div">
-      {avatar && <img className="avatar" src={avatar} alt="avatar"></img>}
+      {avatar && (
+        <img
+          className="avatar"
+          src={otherUserId ? otherAvatar : avatar || defaultAvatar}
+          alt="avatar"
+        ></img>
+      )}
     </div>
   );
 }

@@ -109,3 +109,21 @@
   background-color: var(--accent-color-1);
   color: var(--background-color-4)
 }
+
+.avatar-file-upload input {
+  display: none;
+}
+
+.avatar-file-upload {
+  display: inline-block;
+  padding: 0.5em 1em;
+  background-color: var(--accent-color-3);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  color: var(--background-color-5)
+}
+
+.avatar-file-upload:hover {
+  background-color: var(--font-color-4);
+}
