@@ -72,15 +72,6 @@
   background-color: var(--background-color-3);
 }
 
-.active {
-  background-color: var(--background-color-2);
-}
-
-/* so that the bg color doesn't change on hover for active selection */
-.active:hover {
-  background-color: var(--background-color-2) !important;
-}
-
 .logout-btn {
   background-color: #e74c3c;
   color: white;

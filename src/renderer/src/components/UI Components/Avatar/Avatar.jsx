@@ -23,13 +23,11 @@ function Avatar({ otherUserId = null }) {
 
   return (
     <div className="avatar-div">
-      {avatar && (
-        <img
-          className="avatar"
-          src={otherUserId ? otherAvatar : avatar || defaultAvatar}
-          alt="avatar"
-        ></img>
-      )}
+      <img
+        className="avatar"
+        src={otherUserId ? otherAvatar : avatar || defaultAvatar}
+        alt="avatar"
+      />
     </div>
   );
 }
