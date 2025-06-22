@@ -62,3 +62,26 @@
   padding: 10px;
   border-radius: 10px;
 }
+
+.friends-wrapper .right .friend-requests-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friend-requests-wrapper .friend-request {
+  background-color: var(--background-color-5);
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friend-requests-wrapper .friend-request .buttons {
+  display: flex;
+  gap: 0.5em;
+}

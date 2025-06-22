@@ -51,6 +51,11 @@ button {
   transition: all ease 0.3s;
 }
 
+button:disabled {
+  cursor: not-allowed !important;
+  background-color: var(--accent-color-3) !important;
+}
+
 button:hover {
   cursor: pointer;
   background-color: var(--font-color-4);
