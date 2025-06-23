@@ -10,6 +10,49 @@ function Friends() {
   const { nickname, id } = useContext(UserContext);
   const [selectedSection, setSelectedSection] = useState("friends");
 
+  const checkForRequest = async (otherId) => {
+    const { data: sentRequests, error: sentError } = await supabase
+      .from("friend_requests")
+      .select("requesting_user_id, target_user_id")
+      .eq("requesting_user_id", id);
+
+    if (sentError) {
+      console.log(`Error checking requests: ${error}`);
+    }
+
+    const { data: receivedRequests, error: receivedError } = await supabase
+      .from("friend_requests")
+      .select("requesting_user_id, target_user_id")
+      .eq("target_user_id", id);
+
+    if (receivedError) {
+      console.log(`Error checking requests: ${error}`);
+    }
+
+    const found =
+      (sentRequests &&
+        sentRequests.some((req) => req.target_user_id === otherId)) ||
+      (receivedRequests &&
+        receivedRequests.some((req) => req.requesting_user_id === otherId));
+
+    return !!found;
+  };
+
+  const checkIfFriend = async (targetId) => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("friends, public_id")
+      .eq("public_id", id)
+      .single();
+
+    if (error) {
+      console.log(`Error fetching friends: ${error.message}`);
+      return false;
+    }
+
+    return data.friends.some((friend) => friend.public_id === targetId);
+  };
+
   function AddFriends() {
     const [input, setInput] = useState("");
     const [users, setUsers] = useState([]);
@@ -27,20 +70,6 @@ function Friends() {
       if (error) {
         console.log(`Error sending friend request: ${error}`);
       }
-    };
-
-    const checkForRequest = async (otherId) => {
-      const { data, error } = await supabase
-        .from("friend_requests")
-        .select("requesting_user_id, target_user_id")
-        .eq("requesting_user_id", id);
-
-      if (error) {
-        console.log(`Error checking requests: ${error}`);
-      }
-
-      const found = data && data.some((req) => req.target_user_id === otherId);
-      return found;
     };
 
     useEffect(() => {
@@ -77,7 +106,7 @@ function Friends() {
                 : user || ""
             }
             onChange={(value) => setInput(value)}
-            onSelect={(user) => {
+            onSelect={async (user) => {
               setSelectedUser(user);
               if (user.public_id === id) {
                 setDisableRequest(true);
@@ -86,7 +115,8 @@ function Friends() {
                   const alreadyRequested = await checkForRequest(
                     user.public_id
                   );
-                  setDisableRequest(alreadyRequested);
+                  const alreadyFriend = await checkIfFriend(user.public_id);
+                  setDisableRequest(alreadyRequested || alreadyFriend);
                 })();
               }
             }}
@@ -103,7 +133,6 @@ function Friends() {
             <div>
               {`${selectedUser.nickname}#${selectedUser.public_id.slice(0, 6)}`}
             </div>
-            {/* disabled ternary operator in order to disallow sending friend requests to oneself */}
             <button
               className="request-btn"
               disabled={disableRequest}
@@ -121,17 +150,71 @@ function Friends() {
     const [friendRequests, setFriendRequests] = useState([]);
     const [nicknames, setNicknames] = useState({});
 
-    const fetchNickname = async (public_id) => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("public_id, nickname")
-        .eq("public_id", public_id);
+    const deleteRequest = async (targetId) => {
+      const { delError } = await supabase
+        .from("friend_requests")
+        .delete()
+        .eq("requesting_user_id", targetId)
+        .eq("target_user_id", id);
 
-      if (error) {
-        console.log(`Error occurred while fetching nickname: ${error.message}`);
-      } else {
-        return data;
+      if (delError) {
+        console.log(`Error deleting request: ${delError.message}`);
       }
+    };
+
+    const handleAccept = async (targetId) => {
+      const newFriend = {
+        public_id: targetId,
+        since: new Date().toISOString(),
+      };
+
+      const currentUser = {
+        public_id: id,
+        since: new Date().toISOString(),
+      };
+
+      // Fetch the current friends array first
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("friends")
+        .eq("public_id", id)
+        .single();
+
+      if (!error && user) {
+        const updatedFriends = Array.isArray(user.friends)
+          ? [...user.friends, currentUser]
+          : [newFriend];
+
+        const updatedTargetFriends = Array.isArray(user.friends)
+          ? [...user.friends, newFriend]
+          : [currentUser];
+
+        // Update the friends column of the logged in user with the new array
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({ friends: updatedFriends })
+          .eq("public_id", id);
+
+        if (updateError) {
+          console.log("Error updating friends:", updateError.message);
+        }
+
+        // Update the friends column of the requesting user with the new array
+        const { error: updateError1 } = await supabase
+          .from("users")
+          .update({ friends: updatedTargetFriends })
+          .eq("public_id", targetId);
+
+        if (updateError1) {
+          console.log("Error updating friends:", updateError1.message);
+        }
+      }
+
+      await deleteRequest(targetId);
+    };
+
+    const handleDecline = async (targetId) => {
+      await deleteRequest(targetId);
     };
 
     useEffect(() => {
@@ -170,7 +253,7 @@ function Friends() {
         .channel("friend-requests-changes")
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "friend-requests" },
+          { event: "*", schema: "public", table: "friend_requests" },
           (payload) => {
             fetchRequests();
           }
@@ -191,8 +274,20 @@ function Friends() {
               <span>{nicknames[req.requesting_user_id] || "Loading..."}</span>
               <Avatar otherUserId={req.requesting_user_id} />
               <div className="buttons">
-                <button className="accept">Accept</button>
-                <button className="decline">Decline</button>
+                <button
+                  className="accept"
+                  onClick={() => handleAccept(req.requesting_user_id)}
+                >
+                  Accept
+                </button>
+                <button
+                  className="decline"
+                  onClick={() => {
+                    handleDecline(req.requesting_user_id);
+                  }}
+                >
+                  Decline
+                </button>
               </div>
             </div>
           );
@@ -203,10 +298,79 @@ function Friends() {
     );
   }
 
+  function Friends() {
+    const [friends, setFriends] = useState([]);
+    useEffect(() => {
+      const fetchFriends = async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .select("friends")
+          .eq("public_id", id)
+          .single();
+
+        if (error) {
+          console.log(error.message);
+          setFriends([]);
+          return;
+        }
+
+        const friendIds = data.friends.map((f) => f.public_id);
+
+        if (friendIds.length === 0) {
+          setFriends([]);
+          return;
+        }
+
+        const { data: users, error: usersError } = await supabase
+          .from("users")
+          .select("public_id, nickname")
+          .in("public_id", friendIds);
+
+        if (usersError || !users) {
+          setFriends([]);
+          return;
+        }
+
+        const friendsWithNicknames = data.friends.map((friend) => {
+          let username;
+          users.forEach((u) => {
+            if (u.public_id === friend.public_id) {
+              username = `${u.nickname}#${u.public_id.slice(0, 6)}`;
+            }
+          });
+          return {
+            ...friend,
+            nickname: username,
+          };
+        });
+
+        setFriends(friendsWithNicknames);
+      };
+      fetchFriends();
+    }, []);
+
+    return (
+      <div className="friends-list-wrapper">
+        {friends.length === 0 ? (
+          <div>You have no friends!</div>
+        ) : (
+          friends.map((friend) => {
+            return (
+              <div className="friend" key={friend.public_id}>
+                <Avatar otherUserId={friend.public_id} />
+                <span>{friend.nickname}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
   const renderContent = () => {
     switch (selectedSection) {
       case "friends":
-        return <div>Friends</div>;
+        return <Friends />;
       case "add":
         return <AddFriends />;
       case "requests":
