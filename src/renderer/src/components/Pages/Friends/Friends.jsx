@@ -58,6 +58,7 @@ function Friends() {
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState();
     const [disableRequest, setDisableRequest] = useState(false);
+    const [stateMsg, setStateMsg] = useState(null);
 
     const handleSendRequest = async () => {
       const { error } = await supabase.from("friend_requests").insert([
@@ -69,6 +70,12 @@ function Friends() {
 
       if (error) {
         console.log(`Error sending friend request: ${error}`);
+      } else {
+        setDisableRequest(true);
+        setStateMsg("Friend request sent!");
+        setTimeout(() => {
+          setStateMsg(null);
+        }, 5000);
       }
     };
 
@@ -140,6 +147,7 @@ function Friends() {
             >
               Send Friend Request
             </button>
+            {stateMsg ? <span className="state-msg">{stateMsg}</span> : null}
           </div>
         ) : null}
       </>
@@ -300,6 +308,12 @@ function Friends() {
 
   function Friends() {
     const [friends, setFriends] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const handleRemoveFriend = async () => {
+      console.log("die!")
+    }
+
     useEffect(() => {
       const fetchFriends = async () => {
         const { data, error } = await supabase
@@ -311,54 +325,85 @@ function Friends() {
         if (error) {
           console.log(error.message);
           setFriends([]);
+          setLoading(false);
           return;
         }
 
-        const friendIds = data.friends.map((f) => f.public_id);
+        const friendIds = Array.isArray(data?.friends)
+          ? data.friends.map((f) => f.public_id)
+          : [];
 
         if (friendIds.length === 0) {
           setFriends([]);
+          setLoading(false);
           return;
         }
 
         const { data: users, error: usersError } = await supabase
           .from("users")
-          .select("public_id, nickname")
+          .select("public_id, nickname, last_logon")
           .in("public_id", friendIds);
 
         if (usersError || !users) {
           setFriends([]);
+          setLoading(false);
           return;
         }
 
         const friendsWithNicknames = data.friends.map((friend) => {
           let username;
+          let lastLogon;
           users.forEach((u) => {
             if (u.public_id === friend.public_id) {
               username = `${u.nickname}#${u.public_id.slice(0, 6)}`;
+              lastLogon = u.last_logon;
             }
           });
           return {
             ...friend,
             nickname: username,
+            lastLogon: lastLogon,
           };
         });
 
         setFriends(friendsWithNicknames);
+        setLoading(false);
       };
+
       fetchFriends();
+
+      const channel = supabase
+        .channel("friends-changes")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "users" },
+          (payload) => {
+            fetchFriends();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }, []);
 
     return (
       <div className="friends-list-wrapper">
         {friends.length === 0 ? (
-          <div>You have no friends!</div>
+          loading ? (
+            <div>Loading...</div>
+          ) : (
+            <div>You have no friends!</div>
+          )
         ) : (
           friends.map((friend) => {
             return (
               <div className="friend" key={friend.public_id}>
                 <Avatar otherUserId={friend.public_id} />
                 <span>{friend.nickname}</span>
+                <span>{`Last online: ${friend.lastLogon}`}</span>
+                <button className="unfriend-btn">Remove Friend</button>
               </div>
             );
           })
