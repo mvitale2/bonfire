@@ -7,6 +7,7 @@ import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
+import remarkEmoji from "remark-emoji"
 
 const MessagePage = () => {
   const [messages, setMessages] = useState([]);
@@ -106,6 +107,7 @@ const MessagePage = () => {
               </div>
               <div className="message-content">
                 <ReactMarkdown
+                  remarkPlugins={[remarkEmoji]}
                   rehypePlugins={[
                     [
                       rehypeExternalLinks,

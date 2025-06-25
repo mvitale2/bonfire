@@ -27,6 +27,7 @@
     "react-router-dom": "^7.6.0",
     "react-widgets": "^5.8.6",
     "rehype-external-links": "^3.0.0",
+    "remark-emoji": "^5.0.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
