@@ -5,9 +5,11 @@ import UserInfo from "./components/Pages/UserInfo/UserInfo.jsx";
 import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
 import { Route, Routes } from "react-router-dom";
 import { UserContext } from "./UserContext.jsx";
-import MessagePage from "./components/Pages/Message/Message.jsx";
+import Message from "./components/Pages/Message/message.jsx";
 import Friends from "./components/Pages/Friends/Friends.jsx";
 import defaultAvatar from "./assets/default_avatar.png";
+
+
 
 function App() {
   const [nickname, setNickname] = useState("");
@@ -15,13 +17,15 @@ function App() {
   const [avatar, setAvatar] = useState(defaultAvatar);
 
   return (
-    <UserContext.Provider value={{ nickname, setNickname, id, setId, avatar, setAvatar }}>
+    <UserContext.Provider
+      value={{ nickname, setNickname, id, setId, avatar, setAvatar }}
+    >
       <Routes>
         <Route index element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/user-info" element={<UserInfo />} />
         <Route path="/user-settings" element={<UserSettings />} />
-        <Route path="/messages" element={<MessagePage />} />
+        <Route path="/messages/:roomId?" element={<Message />} />
         <Route path="/friends" element={<Friends />} />
         <Route path="/login" element={<Login />} />
       </Routes>

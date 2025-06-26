@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../../../UserContext.jsx";
 import supabase from "../../../../Supabase.jsx";
 import "./message.css";
@@ -6,20 +7,41 @@ import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
-import Avatar from "../../UI Components/Avatar/Avatar.jsx";
+import defaultAvatar from "../../../assets/default_avatar.png";
 
-const MessagePage = () => {
+
+const Message = () => {
+  const { roomId } = useParams(); // Group room ID (optional)
+  const navigate = useNavigate();
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const { nickname, id } = useContext(UserContext);
+  const [groups, setGroups] = useState([]);
   const messagesEndRef = useRef(null);
+  const { nickname, id } = useContext(UserContext);
 
+  // Fetch group chat list
+  useEffect(() => {
+    const fetchGroups = async () => {
+      const { data, error } = await supabase
+        .from("chat_rooms")
+        .select("id, name");
+      if (!error) setGroups(data);
+    };
+    fetchGroups();
+  }, []);
+
+  // Fetch messages for selected room
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from("message_view")
         .select("*")
         .order("created_at", { ascending: true });
+
+      const { data, error } = roomId
+        ? await query.eq("room_id", roomId)
+        : await query.is("room_id", null);
 
       if (error) {
         console.error("Error fetching messages:", error.message);
@@ -29,8 +51,9 @@ const MessagePage = () => {
     };
 
     fetchMessages();
-  }, []);
+  }, [roomId]);
 
+  // Realtime updates
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
@@ -44,13 +67,7 @@ const MessagePage = () => {
             .eq("message_id", payload.new.id)
             .single();
 
-          if (error) {
-            console.error(
-              "Error fetching new message from view:",
-              error.message
-            );
-          } else {
-            // console.log("New message from view:", data);
+          if (!error && (!roomId || data.room_id === roomId)) {
             setMessages((prev) => [...prev, data]);
           }
         }
@@ -60,9 +77,9 @@ const MessagePage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [roomId]);
 
-  // Auto-scroll to bottom
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -70,21 +87,15 @@ const MessagePage = () => {
   // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
+    if (!id) return alert("User ID is missing.");
 
-    if (!id) {
-      alert("User ID missing.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("messages")
-      .insert([
-        {
-          content: newMessage,
-          user_id: id,
-        },
-      ])
-      .select();
+    const { error } = await supabase.from("messages").insert([
+      {
+        content: newMessage,
+        user_id: id,
+        room_id: roomId || null,
+      },
+    ]);
 
     if (error) {
       console.error("Error sending message:", error.message);
@@ -96,13 +107,44 @@ const MessagePage = () => {
   return (
     <>
       <Tray nickname={nickname} />
+
       <div className="messages-page">
+        {/* Chat group selector */}
+        <div style={{ width: "100%", padding: "10px" }}>
+          <select
+            value={roomId || ""}
+            onChange={(e) => {
+              const selected = e.target.value;
+              navigate(selected ? `/messages/${selected}` : "/messages");
+            }}
+          >
+            <option value="">🌐 Global Chat</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Message List */}
         <div className="messages-list">
           {messages.map((msg) => (
-            <div key={msg.id} className="message">
+            <div key={msg.message_id || msg.id} className="message">
               <div className="message-time">
-                <Avatar otherUserId={msg.user_id} />
-                <span>{`${msg.nickname} - ${new Date(msg.created_at).toLocaleString()}`}</span>
+                <img
+                  src={msg.profile_pic_url || defaultAvatar}
+                  alt="avatar"
+                  className="avatar"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = defaultAvatar;
+                  }}
+                />
+
+                <span>
+                  {msg.nickname} – {new Date(msg.created_at).toLocaleString()}
+                </span>
               </div>
               <div className="message-content">
                 <ReactMarkdown
@@ -110,8 +152,8 @@ const MessagePage = () => {
                     [
                       rehypeExternalLinks,
                       {
-                        rel: ["noopener noreferrer nofollow"],
-                        target: ["_blank"],
+                        rel: ["noopener", "noreferrer", "nofollow"],
+                        target: "_blank",
                       },
                     ],
                   ]}
@@ -124,6 +166,7 @@ const MessagePage = () => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input field */}
         <div className="message-input-container">
           <div className="input-with-button">
             <input
@@ -149,4 +192,4 @@ const MessagePage = () => {
   );
 };
 
-export default MessagePage;
+export default Message;
