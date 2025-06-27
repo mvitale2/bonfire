@@ -45,12 +45,16 @@ function Friends() {
       .eq("public_id", id)
       .single();
 
+    console.log(data);
+
     if (error) {
       console.log(`Error fetching friends: ${error.message}`);
       return false;
+    } else if (data === null) {
+      return false;
+    } else {
+      return data.friends.some((friend) => friend.public_id === targetId);
     }
-
-    return data.friends.some((friend) => friend.public_id === targetId);
   };
 
   function AddFriends() {
@@ -181,20 +185,27 @@ function Friends() {
         since: new Date().toISOString(),
       };
 
-      // Fetch the current friends array first
-      const { data: user, error } = await supabase
+      // Fetch the current friends array of the logged in user
+      const { data: userFriends, error } = await supabase
         .from("users")
         .select("friends")
         .eq("public_id", id)
         .single();
 
-      if (!error && user) {
-        const updatedFriends = Array.isArray(user.friends)
-          ? [...user.friends, currentUser]
+      // Fetch the current friends array of the target user
+      const { data: targetUserFriends, targetError } = await supabase
+        .from("users")
+        .select("friends")
+        .eq("public_id", targetId)
+        .single();
+
+      if (!error && !targetError && userFriends && targetUserFriends) {
+        const updatedFriends = Array.isArray(userFriends.friends)
+          ? [...userFriends.friends, newFriend]
           : [newFriend];
 
-        const updatedTargetFriends = Array.isArray(user.friends)
-          ? [...user.friends, newFriend]
+        const updatedTargetFriends = Array.isArray(targetUserFriends.friends)
+          ? [...targetUserFriends.friends, currentUser]
           : [currentUser];
 
         // Update the friends column of the logged in user with the new array
@@ -310,9 +321,46 @@ function Friends() {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const handleRemoveFriend = async () => {
-      console.log("die!")
-    }
+    const handleRemoveFriend = async (targetId) => {
+      const { data: friends, error } = await supabase
+        .from("users")
+        .select("friends")
+        .eq("public_id", id)
+        .single();
+
+      if (error) {
+        console.log(`Error retrieving friends: ${error.message}`);
+        return;
+      }
+
+      const updatedFriends = Array.isArray(friends.friends)
+        ? friends.friends.filter((f) => f.public_id !== targetId)
+        : [];
+
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ friends: updatedFriends })
+        .eq("public_id", id);
+
+      if (updateError) {
+        console.log(`Error updating friends: ${updateError.message}`);
+      }
+
+      const { data: targetFriends } = await supabase
+        .from("users")
+        .select("friends")
+        .eq("public_id", targetId)
+        .single();
+
+      const updatedTargetFriends = Array.isArray(targetFriends.friends)
+        ? targetFriends.friends.filter((f) => f.public_id !== id)
+        : [];
+
+      await supabase
+        .from("users")
+        .update({ friends: updatedTargetFriends })
+        .eq("public_id", targetId);
+    };
 
     useEffect(() => {
       const fetchFriends = async () => {
@@ -403,7 +451,12 @@ function Friends() {
                 <Avatar otherUserId={friend.public_id} />
                 <span>{friend.nickname}</span>
                 <span>{`Last online: ${friend.lastLogon}`}</span>
-                <button className="unfriend-btn">Remove Friend</button>
+                <button
+                  className="unfriend-btn"
+                  onClick={() => handleRemoveFriend(friend.public_id)}
+                >
+                  Remove Friend
+                </button>
               </div>
             );
           })
