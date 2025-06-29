@@ -106,7 +106,7 @@ function Login() {
         >
           Login
         </button>
-        <p>{message}</p>
+        {message ? <p>{message}</p> : null}
         <Link to="/create-account">Register</Link>
       </form>
     </>

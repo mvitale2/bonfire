@@ -12,7 +12,7 @@ import remarkEmoji from "remark-emoji"
 
 
 const Message = () => {
-  const { roomId } = useParams(); // Group room ID (optional)
+  const { roomId } = useParams();
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
@@ -115,8 +115,7 @@ const Message = () => {
           <select
             value={roomId || ""}
             onChange={(e) => {
-              const selected = e.target.value;
-              navigate(selected ? `/messages/${selected}` : "/messages");
+              navigate(`/messages/${e.target.value}`);
             }}
           >
             <option value="">🌐 Global Chat</option>
