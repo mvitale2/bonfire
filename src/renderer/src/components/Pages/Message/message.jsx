@@ -8,6 +8,7 @@ import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
+import remarkEmoji from "remark-emoji"
 
 
 const Message = () => {
@@ -148,6 +149,7 @@ const Message = () => {
               </div>
               <div className="message-content">
                 <ReactMarkdown
+                  remarkPlugins={[remarkEmoji]}
                   rehypePlugins={[
                     [
                       rehypeExternalLinks,

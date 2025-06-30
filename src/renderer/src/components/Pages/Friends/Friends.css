@@ -43,4 +43,64 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.friends-wrapper .right input {
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.friends-wrapper .right .selected-user-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1em;
+  background-color: var(--background-color-5);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.friends-wrapper .right .friend-requests-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friend-requests-wrapper .friend-request {
+  background-color: var(--background-color-5);
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friend-requests-wrapper .friend-request .buttons {
+  display: flex;
+  gap: 0.5em;
+}
+
+.friends-wrapper .right .friends-list-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friends-list-wrapper .friend {
+  background-color: var(--background-color-5);
+  border-radius: 10px;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
 }

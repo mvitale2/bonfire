@@ -51,6 +51,11 @@ button {
   transition: all ease 0.3s;
 }
 
+button:disabled {
+  cursor: not-allowed !important;
+  background-color: var(--accent-color-3) !important;
+}
+
 button:hover {
   cursor: pointer;
   background-color: var(--font-color-4);
@@ -77,4 +82,43 @@ input {
   color: var(--font-color-1);
   padding: 5px;
   font-size: 24px;
+}
+
+.active {
+  background-color: var(--background-color-2);
+}
+
+/* so that the bg color doesn't change on hover for active selection */
+.active:hover {
+  background-color: var(--background-color-2) !important;
+}
+
+.rw-list {
+  background-color: var(--background-color-5);
+  padding: 1em;
+  border-radius: 0 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.rw-list-option {
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 5px;
+  transition: all ease 0.1s;
+}
+
+.rw-list-option:hover {
+  background-color: var(--background-color-3) !important;
+}
+
+.rw-state-selected {
+  background: var(--background-color-2);
+}
+
+.rw-state-selected:hover {
+  background: var(--background-color-2) !important;
 }
