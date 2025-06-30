@@ -7,6 +7,7 @@ import "./Login.css";
 
 function Login() {
   const [secretKey, setSecretKey] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
   const { setNickname, setId, setAvatar } = useContext(UserContext);
@@ -55,6 +56,17 @@ function Login() {
         setNickname(authenticatedUser.nickname);
         setId(authenticatedUser.public_id);
         setAvatar(authenticatedUser.profile_pic_url);
+        // store in localStorage if "Remember Me" is checked
+        if (rememberMe) {
+          localStorage.setItem(
+            "rememberedUser",
+            JSON.stringify({
+            nickname: authenticatedUser.nickname,
+            id: authenticatedUser.public_id,
+            avatar: authenticatedUser.profile_pic_url,
+            })
+          );
+        }
         setMessage(`Welcome back, ${authenticatedUser.nickname}`);
         setTimeout(() => {
           navigate("/messages");
@@ -85,31 +97,31 @@ function Login() {
   };
 
   return (
-    <>
-      <form className="login-form">
-        <label htmlFor="secret-key" className="key-label">
-          <h1>Enter your secret key:</h1>
+    <form className="login-form">
+      <label htmlFor="secret-key" className="key-label">
+        <h1>Enter your secret key:</h1>
+      </label>
+      <input
+        type="password"
+        id="secret-key"
+        onChange={(e) => setSecretKey(e.target.value)}
+      />
+      <div className="remember-me-checkbox">
+        <label>
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />{" "}
+          Remember Me
         </label>
-        <input
-          ref={inputRef}
-          type="password"
-          id="secret-key"
-          onChange={handleChange}
-          value={secretKey}
-        />
-        <button
-          type="submit"
-          id="submit-btn"
-          className="submit-btn"
-          onClick={handleClick}
-          disabled={disableLogin}
-        >
-          Login
-        </button>
-        <p>{message}</p>
-        <Link to="/create-account">Register</Link>
-      </form>
-    </>
+      </div>
+      <button type="submit" className="submit-btn" onClick={handleClick}>
+        Login
+      </button>
+      <p>{message}</p>
+      <Link to="/create-account">Register</Link>
+     </form>
   );
 }
 
