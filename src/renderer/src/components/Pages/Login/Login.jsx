@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase";
@@ -12,9 +12,22 @@ function Login() {
   const navigate = useNavigate();
   const { setNickname, setId, setAvatar } = useContext(UserContext);
   const now = new Date().toISOString();
+  const [disableLogin, setDisbleLogin] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    // so that after logout everything should work
+    setSecretKey("");
+    setMessage(null);
+    setDisbleLogin(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleClick = async (e) => {
     e.preventDefault();
+    setDisbleLogin(true);
 
     try {
       // get all users
@@ -57,6 +70,7 @@ function Login() {
         setMessage(`Welcome back, ${authenticatedUser.nickname}`);
         setTimeout(() => {
           navigate("/messages");
+          setDisbleLogin(false);
         }, 2000);
         const { error } = await supabase
           .from("users")
@@ -64,13 +78,16 @@ function Login() {
           .eq("public_id", authenticatedUser.public_id);
         if (error) {
           console.log("Error uploading login to supabase: ", error.message);
+          setDisbleLogin(false);
         }
       } else {
         setMessage("Invalid key.");
+        setDisbleLogin(false);
       }
     } catch (err) {
       console.log("Error during login:", err.message);
       setMessage("An unexpected error occurred. Please try again.");
+      setDisbleLogin(false);
     }
   };
 
@@ -104,7 +121,7 @@ function Login() {
       </button>
       <p>{message}</p>
       <Link to="/create-account">Register</Link>
-    </form>
+     </form>
   );
 }
 

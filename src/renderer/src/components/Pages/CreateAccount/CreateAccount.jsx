@@ -67,7 +67,12 @@ function CreateAccount() {
             <h1>Enter a nickname:</h1>
           </label>
           <span>You can change your nickname in the app at any time</span>
-          <input type="text" id="nickname" onChange={handleChange} />
+          <input
+            type="text"
+            id="nickname"
+            onChange={handleChange}
+            value={nickname}
+          />
           <button type="submit" className="submit-btn" onClick={handleSubmit}>
             Register
           </button>

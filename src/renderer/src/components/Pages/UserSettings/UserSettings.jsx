@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -264,7 +264,7 @@ function UserSettings() {
     const confirmLogout = window.confirm("Are you sure you want to log out?");
     if (!confirmLogout) return;
 
-    //Ends session, clears local storage, and redirects to login page
+    // Ends session, clears local storage, and redirects to login page
     await supabase.auth.signOut();
     localStorage.clear();
     navigate("/login");
