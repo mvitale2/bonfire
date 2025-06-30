@@ -114,16 +114,29 @@
   display: none;
 }
 
-.avatar-file-upload {
-  display: inline-block;
-  padding: 0.5em 1em;
-  background-color: var(--accent-color-3);
+.avatar-upload-btn {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
   border-radius: 5px;
+  border: none;
   cursor: pointer;
-  transition: background 0.3s;
-  color: var(--background-color-5)
+  font-size: 1rem;
 }
 
-.avatar-file-upload:hover {
-  background-color: var(--font-color-4);
+.avatar-upload-btn:hover {
+  background-color: #0056b3;
+}
+
+.account-info {
+  background-color: #0152a3;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.account-info div {
+  margin-bottom: 10px;
+  margin-top: 10px;
 }

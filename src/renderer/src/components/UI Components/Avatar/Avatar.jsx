@@ -5,7 +5,7 @@ import fetchProfilePicture from "../../../fetchProfilePicture.jsx";
 import "./Avatar.css";
 
 function Avatar({ otherUserId = null }) {
-  const { avatar, id } = useContext(UserContext);
+  const { avatar, id, hideProfilePic } = useContext(UserContext);
   const idToUse = otherUserId != null ? otherUserId : id;
   const [otherAvatar, setOtherAvatar] = useState(defaultAvatar);
 
@@ -13,7 +13,7 @@ function Avatar({ otherUserId = null }) {
     let isMounted = true;
     if (otherUserId) {
       fetchProfilePicture(idToUse).then((url) => {
-        if (isMounted) setOtherAvatar(url);
+        if (isMounted && url) setOtherAvatar(url);
       });
     }
     return () => {
@@ -21,15 +21,23 @@ function Avatar({ otherUserId = null }) {
     };
   }, [otherUserId, idToUse]);
 
+  const finalSrc = otherUserId
+    ? otherAvatar
+    : hideProfilePic || !avatar
+    ? defaultAvatar
+    : avatar;
+
   return (
     <div className="avatar-div">
-      {avatar && (
-        <img
-          className="avatar"
-          src={otherUserId ? otherAvatar : avatar || defaultAvatar}
-          alt="avatar"
-        ></img>
-      )}
+      <img
+        className="avatar"
+        src={finalSrc}
+        alt="avatar"
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = defaultAvatar;
+        }}
+      />
     </div>
   );
 }
