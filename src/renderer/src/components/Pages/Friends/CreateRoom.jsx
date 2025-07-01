@@ -84,7 +84,7 @@ const CreateRoom = () => {
       console.error("Failed to add members:", memberErr);
     } else {
       alert("Group chat created!");
-      navigate(`/group/${room.id}`); // ✅ redirect to group chat page
+      navigate(`/messages/${room.id}`);
     }
   };
 
