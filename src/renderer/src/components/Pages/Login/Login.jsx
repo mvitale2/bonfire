@@ -61,9 +61,9 @@ function Login() {
           localStorage.setItem(
             "rememberedUser",
             JSON.stringify({
-            nickname: authenticatedUser.nickname,
-            id: authenticatedUser.public_id,
-            avatar: authenticatedUser.profile_pic_url,
+              nickname: authenticatedUser.nickname,
+              id: authenticatedUser.public_id,
+              avatar: authenticatedUser.profile_pic_url,
             })
           );
         }
@@ -116,12 +116,17 @@ function Login() {
           Remember Me
         </label>
       </div>
-      <button type="submit" className="submit-btn" onClick={handleClick}>
+      <button
+        type="submit"
+        className="submit-btn"
+        onClick={handleClick}
+        disabled={disableLogin}
+      >
         Login
       </button>
       {message ? <p>{message}</p> : null}
       <Link to="/create-account">Register</Link>
-     </form>
+    </form>
   );
 }
 

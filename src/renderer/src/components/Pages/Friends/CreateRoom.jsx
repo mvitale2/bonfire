@@ -4,7 +4,6 @@ import supabase from "../../../../Supabase.jsx";
 import { UserContext } from "../../../UserContext.jsx";
 import getFriends from "../../../getFriends.jsx";
 import getNickname from "../../../getNickname.jsx";
-import "./Checkmarks.css"
 
 const CreateRoom = () => {
   const { id: userId } = useContext(UserContext);
