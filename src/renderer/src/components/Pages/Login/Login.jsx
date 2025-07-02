@@ -107,7 +107,7 @@ function Login() {
         onChange={(e) => setSecretKey(e.target.value)}
       />
       <div className="remember-me-checkbox">
-        <label>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             checked={rememberMe}

@@ -1,5 +1,10 @@
-label {
+.checkbox-label {
   cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
 }
 
 input[type="checkbox"] {

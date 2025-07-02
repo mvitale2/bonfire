@@ -93,7 +93,7 @@ const CreateRoom = () => {
           const username = `${nickname}#${friend.public_id.slice(0, 6)}`;
           return (
             <li key={friend.public_id} className="friend-select">
-              <label>
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={selectedFriends.includes(friend.public_id)}

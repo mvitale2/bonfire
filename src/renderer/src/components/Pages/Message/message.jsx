@@ -152,6 +152,7 @@ const Message = () => {
                 </div>
                 <div className="message-content">
                   <ReactMarkdown
+                    remarkPlugins={[remarkEmoji]}
                     rehypePlugins={[
                       [
                         rehypeExternalLinks,

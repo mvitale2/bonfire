@@ -138,11 +138,3 @@
 .friends-wrapper .right .friends-group-chat-wrapper ul .friend-select {
   width: 100%;
 }
-
-.friends-wrapper .right .friends-group-chat-wrapper ul .friend-select label {
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 1em;
-}
