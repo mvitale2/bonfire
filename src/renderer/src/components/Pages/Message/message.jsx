@@ -19,7 +19,7 @@ const Message = () => {
   const [newMessage, setNewMessage] = useState("");
   const [groups, setGroups] = useState([]);
   const messagesEndRef = useRef(null);
-  const { nickname, id } = useContext(UserContext);
+  const { nickname, id, avatar, hideNickname, hideProfilePic } = useContext(UserContext);
 
   // Fetch group chat list
   useEffect(() => {
@@ -129,43 +129,48 @@ const Message = () => {
 
         {/* Message List */}
         <div className="messages-list">
-          {messages.map((msg) => (
-            <div key={msg.message_id || msg.id} className="message">
-              <div className="message-time">
-                <img
-                  src={msg.profile_pic_url || defaultAvatar}
-                  alt="avatar"
-                  className="avatar"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = defaultAvatar;
-                  }}
-                />
+          {messages.map((msg) => {
+            const isCurrentUser = msg.user_id === id;
+            const displayName = isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
+            const displayAvatar = isCurrentUser && hideProfilePic ? defaultAvatar : msg.profile_pic_url || defaultAvatar;
 
-                <span>
-                  {msg.nickname} – {new Date(msg.created_at).toLocaleString()}
-                </span>
+            return (
+              <div key={msg.message_id || msg.id} className="message">
+                <div className="message-time">
+                  <img
+                    src={displayAvatar}
+                    alt="avatar"
+                    className="avatar"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = defaultAvatar;
+                    }}
+                  />
+                  <span>
+                    {displayName} – {new Date(msg.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <div className="message-content">
+                  <ReactMarkdown
+                    rehypePlugins={[
+                      [
+                        rehypeExternalLinks,
+                        {
+                          rel: ["noopener", "noreferrer", "nofollow"],
+                          target: "_blank",
+                        },
+                      ],
+                    ]}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
               </div>
-              <div className="message-content">
-                <ReactMarkdown
-                  remarkPlugins={[remarkEmoji]}
-                  rehypePlugins={[
-                    [
-                      rehypeExternalLinks,
-                      {
-                        rel: ["noopener", "noreferrer", "nofollow"],
-                        target: "_blank",
-                      },
-                    ],
-                  ]}
-                >
-                  {msg.content}
-                </ReactMarkdown>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
+
 
         {/* Input field */}
         <div className="message-input-container">
