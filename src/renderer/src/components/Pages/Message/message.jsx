@@ -8,8 +8,9 @@ import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
-import remarkEmoji from "remark-emoji"
-
+import remarkEmoji from "remark-emoji";
+import getNickname from "../../../getNickname.jsx";
+import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 
 const Message = () => {
   const { roomId } = useParams();
@@ -17,20 +18,89 @@ const Message = () => {
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [groupIds, setGroupIds] = useState([]);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [memberNicknames, setMemberNicknames] = useState([]);
   const messagesEndRef = useRef(null);
-  const { nickname, id, avatar, hideNickname, hideProfilePic } = useContext(UserContext);
+  const { nickname, id, hideNickname, hideProfilePic } =
+    useContext(UserContext);
 
-  // Fetch group chat list
+  useEffect(() => {
+    async function fetchNicknames() {
+      const members = groupMembers.filter((m) => m.room_id === roomId);
+      const nicknameMap = {};
+      for (const m of members) {
+        const result = await getNickname(m.user_id);
+        nicknameMap[m.user_id] = result?.nickname || m.user_id;
+      }
+      setMemberNicknames(nicknameMap);
+    }
+    if (roomId && groupMembers.length > 0) fetchNicknames();
+  }, [roomId, groupMembers]);
+
+  // fetch the groups the user is a member of
+  useEffect(() => {
+    const fetchUserGroups = async () => {
+      const { data, error } = await supabase
+        .from("chat_room_members")
+        .select("room_id")
+        .eq("user_id", id);
+
+      if (error) {
+        console.log(`Error retrieving groups: ${error.message}`);
+        return;
+      }
+
+      setGroupIds(data);
+    };
+    if (id) fetchUserGroups();
+  }, [id]);
+
+  // fetch group info
   useEffect(() => {
     const fetchGroups = async () => {
+      const ids = groupIds.map((g) => g.room_id);
+
+      if (ids.length === 0) {
+        setGroups([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("chat_rooms")
-        .select("id, name");
+        .select("id, name")
+        .in("id", ids);
       if (!error) setGroups(data);
+      else setGroups([]);
     };
-    fetchGroups();
-  }, []);
+    if (groupIds.length > 0) fetchGroups();
+  }, [groupIds]);
+
+  useEffect(() => {
+    const fetchGroupMembers = async () => {
+      const ids = groupIds.map((g) => g.room_id);
+
+      if (ids.length === 0) {
+        setGroupMembers([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("chat_room_members")
+        .select("room_id, user_id")
+        .in("room_id", ids);
+
+      if (error) {
+        console.log(`Error retrieving group members: ${error.message}`);
+        return;
+      }
+
+      setGroupMembers(data);
+    };
+
+    if (groupIds.length > 0) fetchGroupMembers();
+  }, [groupIds]);
 
   // Fetch messages for selected room
   useEffect(() => {
@@ -108,13 +178,13 @@ const Message = () => {
   return (
     <>
       <Tray nickname={nickname} />
-
       <div className="messages-page">
         {/* Chat group selector */}
-        <div style={{ width: "100%", padding: "10px" }}>
+        <div>
           <select
             value={roomId || ""}
             onChange={(e) => {
+              console.log(e.target.value);
               navigate(`/messages/${e.target.value}`);
             }}
           >
@@ -131,8 +201,12 @@ const Message = () => {
         <div className="messages-list">
           {messages.map((msg) => {
             const isCurrentUser = msg.user_id === id;
-            const displayName = isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
-            const displayAvatar = isCurrentUser && hideProfilePic ? defaultAvatar : msg.profile_pic_url || defaultAvatar;
+            const displayName =
+              isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
+            const displayAvatar =
+              isCurrentUser && hideProfilePic
+                ? defaultAvatar
+                : msg.profile_pic_url || defaultAvatar;
 
             return (
               <div key={msg.message_id || msg.id} className="message">
@@ -170,30 +244,45 @@ const Message = () => {
             );
           })}
           <div ref={messagesEndRef} />
-        </div>
-
-
-        {/* Input field */}
-        <div className="message-input-container">
-          <div className="input-with-button">
-            <input
-              type="text"
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="message-input"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <button onClick={handleSendMessage}>
-              <IoSend />
-            </button>
+          {/* Input field */}
+          <div className="message-input-container">
+            <div className="input-with-button">
+              <input
+                type="text"
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="message-input"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <button onClick={handleSendMessage}>
+                <IoSend />
+              </button>
+            </div>
           </div>
         </div>
+        {roomId && (
+          <div className="group-members-list">
+            <h4>Members</h4>
+            <ul>
+              {groupMembers
+                .filter((m) => m.room_id === roomId)
+                .map((m) => (
+                  <li key={m.user_id}>
+                    <div className="user">
+                      <Avatar otherUserId={m.user_id} />
+                      <p>{`${memberNicknames[m.user_id]}#${m.user_id.slice(0, 6)}`}</p>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
       </div>
     </>
   );
