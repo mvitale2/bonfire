@@ -2,37 +2,44 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 }
 
 .messages-page .messages-list {
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: stretch;
   gap: 0.8em;
-  overflow-y: scroll;
+  overflow-y: auto;
   background-color: var(--background-color-5);
   padding: 10px;
 }
 
-.messages-page .messages-list .message {
+.messages-page .messages-list .messages {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.messages-page .messages-list .messages .message {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
 }
 
-.messages-page .messages-list .message .message-time {
+.messages-page .messages-list .messages .message .message-time {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 0.5em;
 }
 
-.messages-page .messages-list .message .message-content {
+.messages-page .messages-list .messages .message .message-content {
   border-top: var(--background-color-2) 1px solid;
   padding-top: 5px;
 }
@@ -40,6 +47,7 @@
 .messages-page .message-input-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
   padding: 12px;
 
@@ -50,7 +58,11 @@
 
 .messages-page .message-input-container .input-with-button {
   position: relative;
-  width: 50%;
+  width: 100%;
+
+  @media (width > 1650px) {
+    width: 50%;
+  }
 }
 
 .messages-page .message-input-container .input-with-button .message-input {
@@ -80,8 +92,10 @@
 }
 
 .messages-page .message-input-container .input-with-button button:hover {
-  color: var(--font-color-4)
+  color: var(--font-color-4);
 }
+
+/* group members panel */
 
 .messages-page .group-members-list {
   margin: 2em;
@@ -105,6 +119,10 @@
   gap: 1em;
 }
 
+.messages-page .group-members-list ul li {
+  width: 100%;
+}
+
 .messages-page .group-members-list ul li .user {
   padding: 0.5em;
   background-color: var(--background-color-3);
@@ -113,4 +131,44 @@
 
 .messages-page .group-members-list ul li .user p {
   margin-top: 0.5em;
+  text-align: center;
+}
+
+/* groups panel */
+.messages-page .groups-panel {
+  background-color: var(--background-color-5);
+  height: 100vh;
+  padding: 1em;
+}
+
+.messages-page .groups-panel .groups {
+  display: flex;
+  gap: 1em;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.messages-page .groups-panel .groups .group {
+  background-color: var(--background-color-3);
+  padding: 10px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.messages-page .groups-panel .groups .selected {
+  background-color: var(--accent-color-3);
+  cursor: not-allowed;
+}
+
+.messages-page .groups-panel .groups .group:hover {
+  background-color: var(--accent-color-3);
 }

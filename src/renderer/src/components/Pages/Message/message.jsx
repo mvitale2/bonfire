@@ -11,6 +11,7 @@ import defaultAvatar from "../../../assets/default_avatar.png";
 import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
+import rehypeHighlight from "rehype-highlight";
 
 const Message = () => {
   const { roomId } = useParams();
@@ -22,6 +23,7 @@ const Message = () => {
   const [groupMembers, setGroupMembers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [memberNicknames, setMemberNicknames] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState([]);
   const messagesEndRef = useRef(null);
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
@@ -180,69 +182,85 @@ const Message = () => {
       <Tray nickname={nickname} />
       <div className="messages-page">
         {/* Chat group selector */}
-        <div>
-          <select
-            value={roomId || ""}
-            onChange={(e) => {
-              console.log(e.target.value);
-              navigate(`/messages/${e.target.value}`);
-            }}
-          >
-            <option value="">🌐 Global Chat</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
+        <div className="groups-panel">
+          <div className="groups">
+            <div
+              className={`group ${selectedGroup === "🌐" ? "selected" : null}`}
+              onClick={() => {
+                setSelectedGroup("🌐");
+                navigate(`/messages`);
+              }}
+            >
+              <p className="group-name">🌐</p>
+            </div>
+            {groups.map((group) => {
+              return (
+                <div
+                  className={`group ${selectedGroup === group.id ? "selected" : null}`}
+                  disabled={selectedGroup === group.id ? true : false}
+                  onClick={() => {
+                    setSelectedGroup(`${group.id}`);
+                    navigate(`/messages/${group.id}`);
+                  }}
+                >
+                  <p className="group-name">{group.name}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Message List */}
         <div className="messages-list">
-          {messages.map((msg) => {
-            const isCurrentUser = msg.user_id === id;
-            const displayName =
-              isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
-            const displayAvatar =
-              isCurrentUser && hideProfilePic
-                ? defaultAvatar
-                : msg.profile_pic_url || defaultAvatar;
+          <div className="messages">
+            {messages.map((msg) => {
+              const isCurrentUser = msg.user_id === id;
+              const displayName =
+                isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
+              const displayAvatar =
+                isCurrentUser && hideProfilePic
+                  ? defaultAvatar
+                  : msg.profile_pic_url || defaultAvatar;
 
-            return (
-              <div key={msg.message_id || msg.id} className="message">
-                <div className="message-time">
-                  <img
-                    src={displayAvatar}
-                    alt="avatar"
-                    className="avatar"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = defaultAvatar;
-                    }}
-                  />
-                  <span>
-                    {displayName} – {new Date(msg.created_at).toLocaleString()}
-                  </span>
+              return (
+                <div key={msg.message_id || msg.id} className="message">
+                  <div className="message-time">
+                    <img
+                      src={displayAvatar}
+                      alt="avatar"
+                      className="avatar"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = defaultAvatar;
+                      }}
+                    />
+                    <span>
+                      {displayName} –{" "}
+                      {new Date(msg.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="message-content">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkEmoji]}
+                      rehypePlugins={[
+                        rehypeHighlight,
+                        [
+                          rehypeExternalLinks,
+                          {
+                            rel: ["noopener", "noreferrer", "nofollow"],
+                            target: "_blank",
+                          },
+                        ],
+                      ]}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
-                <div className="message-content">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkEmoji]}
-                    rehypePlugins={[
-                      [
-                        rehypeExternalLinks,
-                        {
-                          rel: ["noopener", "noreferrer", "nofollow"],
-                          target: "_blank",
-                        },
-                      ],
-                    ]}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
           <div ref={messagesEndRef} />
           {/* Input field */}
           <div className="message-input-container">
