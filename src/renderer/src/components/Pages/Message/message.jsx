@@ -99,7 +99,7 @@ const Message = () => {
     return () => {
       supabase.removeChannel(groupChannel);
     };
-  }, []);
+  }, [groupIds]);
 
   // Fetch messages for selected room
   useEffect(() => {
