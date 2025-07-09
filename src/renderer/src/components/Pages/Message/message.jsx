@@ -235,7 +235,7 @@ const Message = () => {
                       }}
                     />
                     <span>
-                      {displayName} –{" "}
+                      {displayName} –
                       {new Date(msg.created_at).toLocaleString()}
                     </span>
                   </div>
