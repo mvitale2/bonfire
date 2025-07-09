@@ -11,3 +11,8 @@
 .login-form .submit-btn {
   font-size: 24px;
 }
+
+input {
+  position: relative;
+  z-index: 1001;
+}

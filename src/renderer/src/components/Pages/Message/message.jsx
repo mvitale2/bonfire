@@ -8,7 +8,7 @@ import { IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
-import remarkEmoji from "remark-emoji"
+import remarkEmoji from "remark-emoji";
 
 
 const Message = () => {

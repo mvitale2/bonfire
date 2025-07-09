@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -214,6 +214,19 @@ export const UserProvider = ({ children }) => {
 
   // Load user data including privacy prefs here
   useEffect(() => {
+    const saved = localStorage.getItem("rememberedUser");
+    if (saved) {
+      try {
+        const user = JSON.parse(saved);
+        setNickname(user.nickname);
+        setId(user.id);
+        setAvatar(user.avatar);
+        console.log("Auto-login: loaded user from localStorage");
+      } catch (err) {
+        console.error("Failed to parse remembered user:", err);
+        localStorage.removeItem("rememberedUser");
+      }
+    }
     const loadUser = async () => {
       const { data, error } = await supabase
         .from("users")
@@ -255,7 +268,7 @@ export const UserProvider = ({ children }) => {
 function UserSettings() {
   console.log("UserSettings render");
   const [selectedSection, setSelectedSection] = useState("profile"); // Default section
-  const { nickname, setNickname, id, setAvatar } = useContext(UserContext);
+  const { nickname, setNickname, id, setId, setAvatar } = useContext(UserContext);
   const [userInfo, setUserInfo] = useState(null); //Displays user info in account section
   const navigate = useNavigate();
   // console.log(nickname);
@@ -267,6 +280,12 @@ function UserSettings() {
     // Ends session, clears local storage, and redirects to login page
     await supabase.auth.signOut();
     localStorage.clear();
+    // probably not necessary but makes sure that the user is not remembered
+    localStorage.removeItem("rememberedUser");
+
+    // edits local storage so that changes are effective immediately
+    setId("");
+    setNickname("");
     navigate("/login");
   };
   

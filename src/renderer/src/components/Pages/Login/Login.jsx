@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect , useRef } from "react";
 import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase";
@@ -10,24 +10,25 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
-  const { setNickname, setId, setAvatar } = useContext(UserContext);
+  const { id, setNickname, setId, setAvatar } = useContext(UserContext);
   const now = new Date().toISOString();
-  const [disableLogin, setDisbleLogin] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef();
 
   useEffect(() => {
-    // so that after logout everything should work
-    setSecretKey("");
-    setMessage(null);
-    setDisbleLogin(false);
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    console.log("Focusing input...");
+    inputRef.current?.focus();
   }, []);
+
+  // so that after logout everything should work
+  useEffect(() => {
+    if (id) {
+      console.log("Auto-login detected, navigating to /messages...");
+      navigate("/messages");
+    }
+  }, [id]);
 
   const handleClick = async (e) => {
     e.preventDefault();
-    setDisbleLogin(true);
 
     try {
       // get all users
@@ -56,44 +57,39 @@ function Login() {
         setNickname(authenticatedUser.nickname);
         setId(authenticatedUser.public_id);
         setAvatar(authenticatedUser.profile_pic_url);
+
         // store in localStorage if "Remember Me" is checked
         if (rememberMe) {
           localStorage.setItem(
             "rememberedUser",
             JSON.stringify({
-            nickname: authenticatedUser.nickname,
-            id: authenticatedUser.public_id,
-            avatar: authenticatedUser.profile_pic_url,
+              nickname: authenticatedUser.nickname,
+              id: authenticatedUser.public_id,
+              avatar: authenticatedUser.profile_pic_url,
             })
           );
         }
+
         setMessage(`Welcome back, ${authenticatedUser.nickname}`);
         setTimeout(() => {
           navigate("/messages");
-          setDisbleLogin(false);
         }, 2000);
+
         const { error } = await supabase
           .from("users")
           .update({ last_logon: now })
           .eq("public_id", authenticatedUser.public_id);
+
         if (error) {
           console.log("Error uploading login to supabase: ", error.message);
-          setDisbleLogin(false);
         }
       } else {
         setMessage("Invalid key.");
-        setDisbleLogin(false);
       }
     } catch (err) {
       console.log("Error during login:", err.message);
       setMessage("An unexpected error occurred. Please try again.");
-      setDisbleLogin(false);
     }
-  };
-
-  const handleChange = (e) => {
-    const newText = e.target.value;
-    setSecretKey(newText);
   };
 
   return (
@@ -102,6 +98,7 @@ function Login() {
         <h1>Enter your secret key:</h1>
       </label>
       <input
+        ref={inputRef}
         type="password"
         id="secret-key"
         onChange={(e) => setSecretKey(e.target.value)}
@@ -112,6 +109,9 @@ function Login() {
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
+            onKeyDown={(e) => console.log("Key pressed:", e.key)}
+            onFocus={() => console.log("Input focused")}
+            autoComplete="off"
           />{" "}
           Remember Me
         </label>
@@ -121,7 +121,7 @@ function Login() {
       </button>
       <p>{message}</p>
       <Link to="/create-account">Register</Link>
-     </form>
+    </form>
   );
 }
 
