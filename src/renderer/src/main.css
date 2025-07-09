@@ -122,3 +122,30 @@ input {
 .rw-state-selected:hover {
   background: var(--background-color-2) !important;
 }
+/* Add to your CreateRoom.css or a global CSS file */
+.rooms-list-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--background-color-2);
+  border-radius: 6px;
+  background: var(--background-color-5);
+  padding: 0.5em 0.7em;
+  margin-bottom: 1em;
+  display: flex;
+  justify-content: center;
+}
+
+.rooms-list-scroll ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  text-align: center; /* Center text in list items */
+}
+.rooms-list-scroll li {
+  padding: 0.3em 0;
+  border-bottom: 1px solid var(--background-color-2);
+}
+.rooms-list-scroll li:last-child {
+  border-bottom: none;
+}

@@ -104,7 +104,7 @@ function Login() {
         onChange={(e) => setSecretKey(e.target.value)}
       />
       <div className="remember-me-checkbox">
-        <label>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             checked={rememberMe}
@@ -116,10 +116,15 @@ function Login() {
           Remember Me
         </label>
       </div>
-      <button type="submit" className="submit-btn" onClick={handleClick}>
+      <button
+        type="submit"
+        className="submit-btn"
+        onClick={handleClick}
+        disabled={disableLogin}
+      >
         Login
       </button>
-      <p>{message}</p>
+      {message ? <p>{message}</p> : null}
       <Link to="/create-account">Register</Link>
     </form>
   );

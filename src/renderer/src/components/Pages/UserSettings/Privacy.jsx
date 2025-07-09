@@ -30,7 +30,7 @@ const Privacy = () => {
     <section className="setting">
       <h3>Privacy Settings</h3>
 
-      <label>
+      <label className="checkbox-label">
         <input
           type="checkbox"
           checked={hideNickname}
@@ -39,7 +39,7 @@ const Privacy = () => {
         Hide my nickname (show "Anonymous")
       </label>
 
-      <label>
+      <label className="checkbox-label">
         <input
           type="checkbox"
           checked={hideProfilePic}

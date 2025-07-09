@@ -8,7 +8,7 @@ import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import Privacy from "./Privacy.jsx";
 import defaultAvatar from "../../../assets/default_avatar.png";
 
-  // profile settings
+// profile settings
 const Profile = ({ id, nickname, setNickname, setAvatar }) => {
   console.log("Profile render");
   // Avatar stuff
@@ -230,7 +230,9 @@ export const UserProvider = ({ children }) => {
     const loadUser = async () => {
       const { data, error } = await supabase
         .from("users")
-        .select("nickname, profile_pic_url, public_id, hide_nickname, hide_profile_pic")
+        .select(
+          "nickname, profile_pic_url, public_id, hide_nickname, hide_profile_pic"
+        )
         .eq("public_id", id)
         .single();
 
@@ -288,7 +290,6 @@ function UserSettings() {
     setNickname("");
     navigate("/login");
   };
-  
 
   // Account settings
   const Account = () => {
@@ -313,22 +314,28 @@ function UserSettings() {
       if (id) fetchUserInfo();
     }, [id]);
 
-
     return (
       <>
         {userInfo ? (
-          <div className="account-info">
+          <div className="account-info setting">
             <h2>Account Info</h2>
-            <div><strong>Key:</strong> {userInfo.key}</div>
-            <div><strong>Public ID:</strong> {userInfo.public_id}</div>
-            <div><strong>Nickname:</strong> {hideNickname ? "Anonymous" : userInfo.nickname}</div>
             <div>
-              <strong>Profile Picture:</strong><br />
+              <strong>Key:</strong> {userInfo.key}
+            </div>
+            <div>
+              <strong>Public ID:</strong> {userInfo.public_id}
+            </div>
+            <div>
+              <strong>Nickname:</strong>{" "}
+              {hideNickname ? "Anonymous" : userInfo.nickname}
+            </div>
+            <div>
+              <strong>Profile Picture:</strong>
+              <br />
               <img
                 src={hideProfilePic ? defaultAvatar : userInfo.profile_pic_url}
                 alt="Profile"
                 className="profile-pic"
-                style={{ width: "100px", borderRadius: "8px" }}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = "/default_avatar.png"; // fallback if link is broken
