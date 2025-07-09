@@ -11,6 +11,8 @@ const CreateRoom = () => {
   const [friends, setFriends] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [nicknames, setNicknames] = useState({});
+  const [rooms, setRooms] = useState([]);
+  const [loadingRoomId, setLoadingRoomId] = useState(null); // <-- Spinner state
   const navigate = useNavigate();
 
   // Fetch user's friends
@@ -33,6 +35,56 @@ const CreateRoom = () => {
     }
     if (friends.length > 0) fetchNicknames();
   }, [friends]);
+
+  // Fetch rooms and subscribe to realtime changes
+  useEffect(() => {
+    let channel;
+    async function fetchRooms() {
+      const { data, error } = await supabase
+        .from("chat_rooms")
+        .select("*")
+        .eq("creator_user_id", userId);
+
+      if (!error && data) setRooms(data);
+    }
+    fetchRooms();
+
+    channel = supabase
+      .channel("chat-rooms-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_rooms" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setRooms((prev) => [...prev, payload.new]);
+          } else if (payload.eventType === "UPDATE") {
+            setRooms((prev) =>
+              prev.map((room) =>
+                room.id === payload.new.id ? payload.new : room
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            setRooms((prev) =>
+              prev.filter((room) => room.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // Watch for the new room to appear in rooms, then navigate
+  useEffect(() => {
+    if (loadingRoomId && rooms.some((room) => room.id === loadingRoomId)) {
+      // Room is now in the list, safe to navigate
+      setLoadingRoomId(null);
+      navigate(`/messages/${loadingRoomId}`);
+    }
+  }, [rooms, loadingRoomId, navigate]);
 
   const toggleFriend = (id) => {
     setSelectedFriends((prev) =>
@@ -72,8 +124,7 @@ const CreateRoom = () => {
     if (memberErr) {
       console.error("Failed to add members:", memberErr);
     } else {
-      alert("Group chat created!");
-      navigate(`/messages/${room.id}`);
+      setLoadingRoomId(room.id); // Show spinner and wait for realtime update
     }
   };
 
@@ -85,6 +136,7 @@ const CreateRoom = () => {
         placeholder="Room name"
         value={roomName}
         onChange={(e) => setRoomName(e.target.value)}
+        disabled={!!loadingRoomId}
       />
       <h4>Invite Friends</h4>
       <ul>
@@ -98,6 +150,7 @@ const CreateRoom = () => {
                   type="checkbox"
                   checked={selectedFriends.includes(friend.public_id)}
                   onChange={() => toggleFriend(friend.public_id)}
+                  disabled={!!loadingRoomId}
                 />
                 {username}
               </label>
@@ -105,10 +158,23 @@ const CreateRoom = () => {
           );
         })}
       </ul>
-
-      <button onClick={createGroupChat}>
-        Create Room
+      <button onClick={createGroupChat} disabled={!!loadingRoomId}>
+        {loadingRoomId ? "Creating..." : "Create Room"}
       </button>
+      {loadingRoomId && (
+        <div style={{ margin: "1em 0", textAlign: "center" }}>
+          <span className="spinner" />
+          <span style={{ marginLeft: 8 }}>Waiting for room to appear...</span>
+        </div>
+      )}
+      <h4>Your Rooms</h4>
+      <div className="rooms-list-scroll">
+        <ul>
+          {rooms.map((room) => (
+            <li key={room.id}>{room.name}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

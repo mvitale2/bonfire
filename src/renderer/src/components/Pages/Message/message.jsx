@@ -21,16 +21,40 @@ const Message = () => {
   const messagesEndRef = useRef(null);
   const { nickname, id, avatar, hideNickname, hideProfilePic } = useContext(UserContext);
 
-  // Fetch group chat list
   useEffect(() => {
     const fetchGroups = async () => {
       const { data, error } = await supabase
         .from("chat_rooms")
         .select("id, name");
-      if (!error) setGroups(data);
+
+      if (!error) setGroups(data || []);
     };
+
     fetchGroups();
+
+    const groupChannel = supabase
+      .channel("realtime-chat_rooms")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_rooms",
+        },
+        (payload) => {
+          // Append the new room
+          const newRoom = payload.new;
+          setGroups((prev) => [...prev, newRoom]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(groupChannel);
+    };
   }, []);
+
+
 
   // Fetch messages for selected room
   useEffect(() => {
