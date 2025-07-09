@@ -2,48 +2,37 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase.jsx";
 import { UserContext } from "../../../UserContext.jsx";
+import getFriends from "../../../getFriends.jsx";
+import getNickname from "../../../getNickname.jsx";
 
 const CreateRoom = () => {
   const { id: userId } = useContext(UserContext);
   const [roomName, setRoomName] = useState("");
   const [friends, setFriends] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState([]);
+  const [nicknames, setNicknames] = useState({});
   const navigate = useNavigate();
 
   // Fetch user's friends
   useEffect(() => {
-    const fetchFriends = async () => {
-      if (!userId || userId.length !== 36) {
-        console.error("Invalid or missing user ID");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("friend_requests")
-        .select("target_user_id, requesting_user_id")
-        .or(`target_user_id.eq.${userId},requesting_user_id.eq.${userId}`);
-
-      if (error) {
-        console.error("Error loading friends:", error);
-        return;
-      }
-
-      const friendIds = data
-        .map((r) =>
-          r.target_user_id === userId ? r.requesting_user_id : r.target_user_id
-        )
-        .filter(Boolean);
-
-      const { data: friendUsers } = await supabase
-        .from("users")
-        .select("public_id, nickname")
-        .in("public_id", friendIds);
-
-      setFriends(friendUsers || []);
-    };
-
+    async function fetchFriends() {
+      const retrievedFriends = await getFriends(userId);
+      setFriends(retrievedFriends);
+    }
     fetchFriends();
   }, [userId]);
+
+  useEffect(() => {
+    async function fetchNicknames() {
+      const nicknameMap = {};
+      for (const friend of friends) {
+        const result = await getNickname(friend.public_id);
+        nicknameMap[friend.public_id] = result?.nickname || "Unknown";
+      }
+      setNicknames(nicknameMap);
+    }
+    if (friends.length > 0) fetchNicknames();
+  }, [friends]);
 
   const toggleFriend = (id) => {
     setSelectedFriends((prev) =>
@@ -89,33 +78,35 @@ const CreateRoom = () => {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div className="friends-group-chat-wrapper">
       <h3>Create Group Chat</h3>
       <input
         type="text"
         placeholder="Room name"
         value={roomName}
         onChange={(e) => setRoomName(e.target.value)}
-        style={{ padding: "0.5rem", width: "100%", marginBottom: "1rem" }}
       />
-
       <h4>Invite Friends</h4>
-      <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-        {friends.map((friend) => (
-          <li key={friend.public_id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedFriends.includes(friend.public_id)}
-                onChange={() => toggleFriend(friend.public_id)}
-              />
-              {" "}{friend.nickname}
-            </label>
-          </li>
-        ))}
+      <ul>
+        {friends.map((friend) => {
+          const nickname = nicknames[friend.public_id];
+          const username = `${nickname}#${friend.public_id.slice(0, 6)}`;
+          return (
+            <li key={friend.public_id} className="friend-select">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={selectedFriends.includes(friend.public_id)}
+                  onChange={() => toggleFriend(friend.public_id)}
+                />
+                {username}
+              </label>
+            </li>
+          );
+        })}
       </ul>
 
-      <button onClick={createGroupChat} style={{ marginTop: "1rem" }}>
+      <button onClick={createGroupChat}>
         Create Room
       </button>
     </div>

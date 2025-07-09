@@ -46,8 +46,6 @@ function Friends() {
       .eq("public_id", id)
       .single();
 
-    console.log(data);
-
     if (error) {
       console.log(`Error fetching friends: ${error.message}`);
       return false;
@@ -106,6 +104,7 @@ function Friends() {
     return (
       <>
         <div className="search">
+          <h3>Search for Users by Nickname</h3>
           <Combobox
             data={users}
             hideCaret

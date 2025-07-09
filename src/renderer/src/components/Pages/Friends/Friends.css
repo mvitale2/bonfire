@@ -47,8 +47,15 @@
   gap: 1em;
 }
 
-.friends-wrapper .right input {
+.friends-wrapper .right .search input {
   border-radius: 10px 10px 0 0 !important;
+}
+
+.friends-wrapper .right .search {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .friends-wrapper .right .selected-user-wrapper {
@@ -103,4 +110,31 @@
   align-items: center;
   justify-content: center;
   gap: 1em;
+}
+
+.friends-wrapper .right .friends-group-chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-wrapper .right .friends-group-chat-wrapper h4 {
+  margin-top: 2em;
+}
+
+.friends-wrapper .right .friends-group-chat-wrapper ul {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  gap: 1em;
+}
+
+.friends-wrapper .right .friends-group-chat-wrapper ul .friend-select {
+  width: 100%;
 }

@@ -41,6 +41,10 @@
   border-radius: 10px;
 }
 
+.user-settings-wrapper .right .account-info {
+  align-items: flex-start;
+}
+
 .user-settings-wrapper .right .nickname .nick-form {
   display: flex;
   flex-direction: column;
@@ -103,18 +107,4 @@
 
 .avatar-file-upload input {
   display: none;
-}
-
-.avatar-file-upload {
-  display: inline-block;
-  padding: 0.5em 1em;
-  background-color: var(--accent-color-3);
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
-  color: var(--background-color-5)
-}
-
-.avatar-file-upload:hover {
-  background-color: var(--font-color-4);
 }
