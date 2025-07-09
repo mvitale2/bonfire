@@ -149,3 +149,9 @@ input {
 .rooms-list-scroll li:last-child {
   border-bottom: none;
 }
+
+code {
+  background-color: var(--background-color-4);
+  padding: 0.1em;
+  border-radius: 3px;
+}

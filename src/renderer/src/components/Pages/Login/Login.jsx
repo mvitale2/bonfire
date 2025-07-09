@@ -9,6 +9,7 @@ function Login() {
   const [secretKey, setSecretKey] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState(null);
+  const [disableLogin, setDisableLogin] = useState(false)
   const navigate = useNavigate();
   const { id, setNickname, setId, setAvatar } = useContext(UserContext);
   const now = new Date().toISOString();
@@ -29,6 +30,7 @@ function Login() {
 
   const handleClick = async (e) => {
     e.preventDefault();
+    setDisableLogin(true)
 
     try {
       // get all users
@@ -90,6 +92,8 @@ function Login() {
       console.log("Error during login:", err.message);
       setMessage("An unexpected error occurred. Please try again.");
     }
+
+    setDisableLogin(false)
   };
 
   return (
