@@ -158,24 +158,23 @@ const CreateRoom = () => {
           );
         })}
       </ul>
-
       <button onClick={createGroupChat} disabled={!!loadingRoomId}>
         {loadingRoomId ? "Creating..." : "Create Room"}
       </button>
-
       {loadingRoomId && (
         <div style={{ margin: "1em 0", textAlign: "center" }}>
           <span className="spinner" />
           <span style={{ marginLeft: 8 }}>Waiting for room to appear...</span>
         </div>
       )}
-
       <h4>Your Rooms</h4>
-      <ul>
-        {rooms.map((room) => (
-          <li key={room.id}>{room.name}</li>
-        ))}
-      </ul>
+      <div className="rooms-list-scroll">
+        <ul>
+          {rooms.map((room) => (
+            <li key={room.id}>{room.name}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
