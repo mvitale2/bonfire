@@ -23,7 +23,7 @@ const Message = () => {
   const [groupMembers, setGroupMembers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [memberNicknames, setMemberNicknames] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("🌐");
   const messagesEndRef = useRef(null);
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
@@ -239,7 +239,7 @@ const Message = () => {
             {messages.map((msg) => {
               const isCurrentUser = msg.user_id === id;
               const displayName =
-                isCurrentUser && hideNickname ? "Anonymous" : msg.nickname;
+                isCurrentUser && hideNickname ? "Anonymous" : `${msg.nickname}#${msg.user_id.slice(0, 6)}`;
               const displayAvatar =
                 isCurrentUser && hideProfilePic
                   ? defaultAvatar
@@ -247,7 +247,7 @@ const Message = () => {
 
               return (
                 <div key={msg.message_id || msg.id} className="message">
-                  <div className="message-time">
+                  <div className="message-left">
                     <img
                       src={displayAvatar}
                       alt="avatar"
@@ -257,26 +257,36 @@ const Message = () => {
                         e.target.src = defaultAvatar;
                       }}
                     />
-                    <span>
-                      {displayName} –{new Date(msg.created_at).toLocaleString()}
-                    </span>
                   </div>
-                  <div className="message-content">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkEmoji]}
-                      rehypePlugins={[
-                        rehypeHighlight,
-                        [
-                          rehypeExternalLinks,
-                          {
-                            rel: ["noopener", "noreferrer", "nofollow"],
-                            target: "_blank",
-                          },
-                        ],
-                      ]}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
+                  <div className="message-right">
+                    <div className="message-time">
+                      <span className="display-name">{displayName}</span>
+                      <span className="time">
+                        {new Date(msg.created_at).toLocaleDateString()}{" "}
+                        {new Date(msg.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
+                    </div>
+                    <div className="message-content">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkEmoji]}
+                        rehypePlugins={[
+                          rehypeHighlight,
+                          [
+                            rehypeExternalLinks,
+                            {
+                              rel: ["noopener", "noreferrer", "nofollow"],
+                              target: "_blank",
+                            },
+                          ],
+                        ]}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               );
@@ -316,7 +326,8 @@ const Message = () => {
                   <li key={m.user_id}>
                     <div className="user">
                       <Avatar otherUserId={m.user_id} />
-                      <p>{`${memberNicknames[m.user_id]}#${m.user_id.slice(0, 6)}`}</p>
+                      <p>{`${memberNicknames[m.user_id]}`}</p>
+                      <p>{`#${m.user_id.slice(0, 6)}`}</p>
                     </div>
                   </li>
                 ))}
