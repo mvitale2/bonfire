@@ -84,11 +84,11 @@ export default function CallPanel({
           event: "INSERT",
           schema: "public",
           table: "signals",
-          filter: `room_id=eq.${roomId},to_user_id=eq.${selfId}`,
+          filter: `room_id=eq.${roomId}`,
         },
         async ({ new: sig }) => {
-          const { type, payload, from_user_id } = sig;
-          if (type === "offer") {
+          const { type, payload, from_user_id, to_user_id } = sig;
+          if (type === "offer" && to_user_id === selfId) {
             setIncomingOffer({ sdp: payload, from: from_user_id });
           } else if (type === "answer") {
             await pc.current?.setRemoteDescription(payload);
@@ -120,7 +120,7 @@ export default function CallPanel({
     });
   };
 
-  const endCall = () => {
+  const endCall = async () => {
     try {
       pc.current?.close();
     } catch (_) {}
@@ -132,6 +132,12 @@ export default function CallPanel({
       remoteV.current.srcObject.getTracks().forEach((t) => t.stop());
       remoteV.current.srcObject = null;
     }
+
+    await supabase
+      .from("signals")
+      .update({ ended_at: new Date().toISOString() })
+      .eq("room_id", roomId);
+
     onClose();
   };
 
@@ -161,5 +167,5 @@ export default function CallPanel({
 
       <button onClick={endCall}>✖ End Call</button>
     </div>
-    );
+  );
 }

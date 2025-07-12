@@ -21,6 +21,8 @@ function Friends() {
   // ⚡ NEW: realtime listener → pop CallPanel on incoming offer
   // ───────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!id) return;
+
     const incoming = supabase
       .channel(`incoming-${id}`)
       .on(
@@ -29,11 +31,11 @@ function Friends() {
           event: "INSERT",
           schema: "public",
           table: "signals",
-          filter: `to_user_id=eq.${id},type=eq.offer`,
+          filter: `to_user_id=eq.${id}`,
         },
         ({ new: sig }) => {
           // only if not already in a call
-          if (!callCtx) {
+          if (sig.type === "offer" && !callCtx) {
             console.log("receiving call");
             setCallCtx({
               roomId: sig.room_id,
@@ -47,7 +49,10 @@ function Friends() {
 
     console.log("listening for calls");
 
-    return () => supabase.removeChannel(incoming);
+    return () => {
+      console.log("stopped listening for calls");
+      supabase.removeChannel(incoming);
+    };
   }, [id, callCtx]);
   // ───────────────────────────────────────────────────────────
 
