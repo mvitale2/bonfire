@@ -12,6 +12,7 @@ import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
+import CallPage from "../webrtc/callpage.jsx"; // <-- import
 
 const Message = () => {
   const { roomId } = useParams();
@@ -24,6 +25,8 @@ const Message = () => {
   const [groups, setGroups] = useState([]);
   const [memberNicknames, setMemberNicknames] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState([]);
+  const [showCall, setShowCall] = useState(false);
+  const [calleeId, setCalleeId] = useState(null);
   const messagesEndRef = useRef(null);
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
@@ -200,6 +203,12 @@ const Message = () => {
     }
   };
 
+  // Start a call with a selected member
+  const handleStartCall = (userId) => {
+    setCalleeId(userId);
+    setShowCall(true);
+  };
+
   return (
     <>
       <Tray nickname={nickname} />
@@ -317,10 +326,24 @@ const Message = () => {
                     <div className="user">
                       <Avatar otherUserId={m.user_id} />
                       <p>{`${memberNicknames[m.user_id]}#${m.user_id.slice(0, 6)}`}</p>
+                      {m.user_id !== id && (
+                        <button
+                          style={{ marginLeft: 8 }}
+                          onClick={() => handleStartCall(m.user_id)}
+                        >
+                          Start Call
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
             </ul>
+          </div>
+        )}
+        {/* Call Modal */}
+        {showCall && calleeId && (
+          <div className="call-modal">
+            <CallPage callee={calleeId} onClose={() => setShowCall(false)} />
           </div>
         )}
       </div>
