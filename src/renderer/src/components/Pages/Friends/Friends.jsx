@@ -6,10 +6,12 @@ import supabase from "../../../../Supabase.jsx";
 import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
+import CallPanel from "./CallPanel.jsx";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
   const [selectedSection, setSelectedSection] = useState("friends");
+  const [callCtx, setCallCtx] = useState(null);
 
   const checkForRequest = async (otherId) => {
     const { data: sentRequests, error: sentError } = await supabase
@@ -18,7 +20,7 @@ function Friends() {
       .eq("requesting_user_id", id);
 
     if (sentError) {
-      console.log(`Error checking requests: ${error}`);
+      console.log(`Error checking requests: ${sentError}`);
     }
 
     const { data: receivedRequests, error: receivedError } = await supabase
@@ -27,7 +29,7 @@ function Friends() {
       .eq("target_user_id", id);
 
     if (receivedError) {
-      console.log(`Error checking requests: ${error}`);
+      console.log(`Error checking requests: ${receivedError}`);
     }
 
     const found =
@@ -317,7 +319,7 @@ function Friends() {
     );
   }
 
-  function Friends() {
+  function FriendsList() {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -436,6 +438,30 @@ function Friends() {
       };
     }, []);
 
+    // --- Add this function for starting a call ---
+    const handleStartCall = async (peerId) => {
+      // Create or find a DM room for this pair
+      const roomName = [`dm`, id.slice(0, 4), peerId.slice(0, 4)]
+        .sort()
+        .join("-");
+      const { data: existing } = await supabase
+        .from("chat_rooms")
+        .select("id")
+        .eq("name", roomName)
+        .maybeSingle();
+
+      let roomId = existing?.id;
+      if (!roomId) {
+        const { data } = await supabase
+          .from("chat_rooms")
+          .insert({ name: roomName, creator_user_id: id })
+          .select()
+          .single();
+        roomId = data.id;
+      }
+      setCallCtx({ roomId, peerId });
+    };
+
     return (
       <div className="friends-list-wrapper">
         {friends.length === 0 ? (
@@ -451,6 +477,12 @@ function Friends() {
                 <Avatar otherUserId={friend.public_id} />
                 <span>{friend.nickname}</span>
                 <span>{`Last online: ${friend.lastLogon}`}</span>
+                <button
+                  className="call-btn"
+                  onClick={() => handleStartCall(friend.public_id)}
+                >
+                  📞 Call
+                </button>
                 <button
                   className="unfriend-btn"
                   onClick={() => handleRemoveFriend(friend.public_id)}
@@ -468,7 +500,7 @@ function Friends() {
   const renderContent = () => {
     switch (selectedSection) {
       case "friends":
-        return <Friends />;
+        return <FriendsList />;
       case "add":
         return <AddFriends />;
       case "requests":
@@ -485,6 +517,35 @@ function Friends() {
       <Tray nickname={nickname} />
       <div className="friends-wrapper">
         <div className="left">
+          {/* Test Call Myself button */}
+          <button
+            onClick={async () => {
+              // Create or find a DM room with yourself
+              const selfId = id;
+              const roomName = [`dm`, selfId.slice(0, 4), selfId.slice(0, 4)]
+                .sort()
+                .join("-");
+              const { data: existing } = await supabase
+                .from("chat_rooms")
+                .select("id")
+                .eq("name", roomName)
+                .maybeSingle();
+
+              let roomId = existing?.id;
+              if (!roomId) {
+                const { data } = await supabase
+                  .from("chat_rooms")
+                  .insert({ name: roomName, creator_user_id: selfId })
+                  .select()
+                  .single();
+                roomId = data.id;
+              }
+              setCallCtx({ roomId, peerId: selfId });
+            }}
+            style={{ margin: "1em", width: "90%" }}
+          >
+            Test Call Myself
+          </button>
           <ul>
             <li
               className={selectedSection === "friends" ? "active" : ""}
@@ -514,6 +575,17 @@ function Friends() {
         </div>
         <div className="right">{renderContent()}</div>
       </div>
+      {/* Floating Call Modal */}
+      {callCtx && (
+        <div className="call-modal">
+          <CallPanel
+            roomId={callCtx.roomId}
+            selfId={id}
+            peerId={callCtx.peerId}
+            onClose={() => setCallCtx(null)}
+          />
+        </div>
+      )}
     </>
   );
 }

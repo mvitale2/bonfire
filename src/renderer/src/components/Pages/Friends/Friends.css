@@ -138,3 +138,17 @@
 .friends-wrapper .right .friends-group-chat-wrapper ul .friend-select {
   width: 100%;
 }
+
+.call-modal {
+  position: fixed;
+  top: 10vh;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 400px;
+  z-index: 1000;
+  background: #222;
+  border-radius: 10px;
+  box-shadow: 0 4px 32px #000a;
+  padding: 16px;
+}
