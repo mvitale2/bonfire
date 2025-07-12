@@ -459,7 +459,7 @@ function Friends() {
           .single();
         roomId = data.id;
       }
-      setCallCtx({ roomId, peerId });
+      setCallCtx({ roomId, peerId, audioOnly: true }); // voice only
     };
 
     return (
@@ -540,11 +540,11 @@ function Friends() {
                   .single();
                 roomId = data.id;
               }
-              setCallCtx({ roomId, peerId: selfId });
+              setCallCtx({ roomId, peerId: selfId, audioOnly: true }); // voice only
             }}
             style={{ margin: "1em", width: "90%" }}
           >
-            Test Call Myself
+            Test Voice Call Myself
           </button>
           <ul>
             <li
@@ -583,6 +583,7 @@ function Friends() {
             selfId={id}
             peerId={callCtx.peerId}
             onClose={() => setCallCtx(null)}
+            audioOnly={callCtx.audioOnly}
           />
         </div>
       )}
