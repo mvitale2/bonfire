@@ -1,4 +1,3 @@
-// src/renderer/src/components/Pages/Friends/CallPanel.jsx
 import { useRef, useState, useEffect } from "react";
 import supabase from "../../../../Supabase.jsx";
 
@@ -21,18 +20,13 @@ export default function CallPanel({
   onClose,
   audioOnly = false,
 }) {
-  /* video / audio elements */
   const localV = useRef(null);
   const remoteV = useRef(null);
   const pc = useRef(null);
 
-  /* UI state */
-  const [incomingOffer, setIncomingOffer] = useState(null); // store offer SDP
+  const [incomingOffer, setIncomingOffer] = useState(null);
   const [accepted, setAccepted] = useState(false);
 
-  /*-------------------------------------------------------
-      Ensure RTCPeerConnection + local media
-  -------------------------------------------------------*/
   const ensurePeerAndStream = async () => {
     if (pc.current) return;
 
@@ -63,9 +57,6 @@ export default function CallPanel({
     stream.getTracks().forEach((t) => pc.current.addTrack(t, stream));
   };
 
-  /*-------------------------------------------------------
-      Outgoing call (caller) – run once on mount
-  -------------------------------------------------------*/
   useEffect(() => {
     (async () => {
       await ensurePeerAndStream();
@@ -84,9 +75,6 @@ export default function CallPanel({
     // eslint-disable-next-line
   }, []);
 
-  /*-------------------------------------------------------
-      Realtime listener (offers / answers / candidates)
-  -------------------------------------------------------*/
   useEffect(() => {
     const chan = supabase
       .channel(`sig-${roomId}-${selfId}`)
@@ -101,7 +89,6 @@ export default function CallPanel({
         async ({ new: sig }) => {
           const { type, payload, from_user_id } = sig;
           if (type === "offer") {
-            // I'm the callee and UI not accepted yet
             setIncomingOffer({ sdp: payload, from: from_user_id });
           } else if (type === "answer") {
             await pc.current?.setRemoteDescription(payload);
@@ -115,9 +102,6 @@ export default function CallPanel({
     return () => supabase.removeChannel(chan);
   }, [roomId, selfId]);
 
-  /*-------------------------------------------------------
-      Accept an incoming offer
-  -------------------------------------------------------*/
   const acceptCall = async () => {
     setAccepted(true);
     const offer = incomingOffer.sdp;
@@ -136,9 +120,6 @@ export default function CallPanel({
     });
   };
 
-  /*-------------------------------------------------------
-      Cleanup
-  -------------------------------------------------------*/
   const endCall = () => {
     try {
       pc.current?.close();
@@ -156,9 +137,6 @@ export default function CallPanel({
 
   useEffect(() => endCall, []); // run on unmount
 
-  /*-------------------------------------------------------
-      UI
-  -------------------------------------------------------*/
   return (
     <div className="call-box">
       {incomingOffer && !accepted && (
@@ -183,5 +161,5 @@ export default function CallPanel({
 
       <button onClick={endCall}>✖ End Call</button>
     </div>
-  );
+    );
 }
