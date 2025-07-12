@@ -34,7 +34,7 @@ function Friends() {
         ({ new: sig }) => {
           // only if not already in a call
           if (!callCtx) {
-            console.log("receiving call")
+            console.log("receiving call");
             setCallCtx({
               roomId: sig.room_id,
               peerId: sig.from_user_id,
@@ -45,7 +45,7 @@ function Friends() {
       )
       .subscribe();
 
-    console.log("listening for calls")
+    console.log("listening for calls");
 
     return () => supabase.removeChannel(incoming);
   }, [id, callCtx]);
@@ -385,8 +385,10 @@ function Friends() {
     };
 
     const handleCall = async (targetId) => {
+      const roomId = crypto.randomUUID();
+
       setCallCtx({
-        roomId: data.room_id,
+        roomId: roomId,
         peerId: targetId,
         audioOnly: true,
       });
