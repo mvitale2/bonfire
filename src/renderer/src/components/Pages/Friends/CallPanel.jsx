@@ -1,119 +1,187 @@
+// src/renderer/src/components/Pages/Friends/CallPanel.jsx
 import { useRef, useState, useEffect } from "react";
+import supabase from "../../../../Supabase.jsx";
+
+/*---------------------------------------------------------
+  signals helper
+---------------------------------------------------------*/
+const sendSignal = ({ roomId, from, to, type, payload }) =>
+  supabase.from("signals").insert({
+    room_id: roomId,
+    from_user_id: from,
+    to_user_id: to,
+    type,
+    payload,
+  });
 
 export default function CallPanel({
   roomId,
   selfId,
   peerId,
   onClose,
-  audioOnly,
+  audioOnly = false,
 }) {
+  /* video / audio elements */
   const localV = useRef(null);
   const remoteV = useRef(null);
   const pc = useRef(null);
 
-  // --- Notification state for incoming call ---
-  const [incomingOffer, setIncomingOffer] = useState(null);
+  /* UI state */
+  const [incomingOffer, setIncomingOffer] = useState(null); // store offer SDP
   const [accepted, setAccepted] = useState(false);
 
-  // --- Helper: Start peer and stream ---
+  /*-------------------------------------------------------
+      Ensure RTCPeerConnection + local media
+  -------------------------------------------------------*/
   const ensurePeerAndStream = async () => {
     if (pc.current) return;
+
     pc.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
+
+    pc.current.onicecandidate = (ev) => {
+      if (ev.candidate)
+        sendSignal({
+          roomId,
+          from: selfId,
+          to: peerId,
+          type: "candidate",
+          payload: ev.candidate.toJSON(),
+        });
+    };
 
     pc.current.ontrack = (ev) => {
       remoteV.current.srcObject = ev.streams[0];
     };
 
-    pc.current.onicecandidate = (ev) => {
-      // send candidate to peer (implement your signaling here)
-    };
-
-    // camera + mic or just mic
     const stream = await navigator.mediaDevices.getUserMedia({
       video: audioOnly ? false : true,
       audio: true,
     });
-    stream.getTracks().forEach((t) => pc.current.addTrack(t, stream));
     localV.current.srcObject = stream;
+    stream.getTracks().forEach((t) => pc.current.addTrack(t, stream));
   };
 
-  // --- End call and cleanup ---
+  /*-------------------------------------------------------
+      Outgoing call (caller) – run once on mount
+  -------------------------------------------------------*/
+  useEffect(() => {
+    (async () => {
+      await ensurePeerAndStream();
+
+      const offer = await pc.current.createOffer();
+      await pc.current.setLocalDescription(offer);
+
+      await sendSignal({
+        roomId,
+        from: selfId,
+        to: peerId,
+        type: "offer",
+        payload: offer,
+      });
+    })();
+    // eslint-disable-next-line
+  }, []);
+
+  /*-------------------------------------------------------
+      Realtime listener (offers / answers / candidates)
+  -------------------------------------------------------*/
+  useEffect(() => {
+    const chan = supabase
+      .channel(`sig-${roomId}-${selfId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signals",
+          filter: `room_id=eq.${roomId},to_user_id=eq.${selfId}`,
+        },
+        async ({ new: sig }) => {
+          const { type, payload, from_user_id } = sig;
+          if (type === "offer") {
+            // I'm the callee and UI not accepted yet
+            setIncomingOffer({ sdp: payload, from: from_user_id });
+          } else if (type === "answer") {
+            await pc.current?.setRemoteDescription(payload);
+          } else if (type === "candidate") {
+            await pc.current?.addIceCandidate(payload);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(chan);
+  }, [roomId, selfId]);
+
+  /*-------------------------------------------------------
+      Accept an incoming offer
+  -------------------------------------------------------*/
+  const acceptCall = async () => {
+    setAccepted(true);
+    const offer = incomingOffer.sdp;
+    await ensurePeerAndStream();
+
+    await pc.current.setRemoteDescription(offer);
+    const answer = await pc.current.createAnswer();
+    await pc.current.setLocalDescription(answer);
+
+    await sendSignal({
+      roomId,
+      from: selfId,
+      to: incomingOffer.from,
+      type: "answer",
+      payload: answer,
+    });
+  };
+
+  /*-------------------------------------------------------
+      Cleanup
+  -------------------------------------------------------*/
   const endCall = () => {
-    if (pc.current) {
-      pc.current.close();
-      pc.current = null;
-    }
-    if (localV.current && localV.current.srcObject) {
-      localV.current.srcObject.getTracks().forEach((track) => track.stop());
+    try {
+      pc.current?.close();
+    } catch (_) {}
+    if (localV.current?.srcObject) {
+      localV.current.srcObject.getTracks().forEach((t) => t.stop());
       localV.current.srcObject = null;
     }
-    if (remoteV.current && remoteV.current.srcObject) {
-      remoteV.current.srcObject.getTracks().forEach((track) => track.stop());
+    if (remoteV.current?.srcObject) {
+      remoteV.current.srcObject.getTracks().forEach((t) => t.stop());
       remoteV.current.srcObject = null;
     }
     onClose();
   };
 
-  // --- Accept incoming call (for notification) ---
-  const acceptCall = async () => {
-    setAccepted(true);
-    await ensurePeerAndStream();
-    // set remote description, create answer, send answer (implement signaling)
-  };
+  useEffect(() => endCall, []); // run on unmount
 
-  useEffect(() => {
-    return endCall;
-    // eslint-disable-next-line
-  }, []);
-
+  /*-------------------------------------------------------
+      UI
+  -------------------------------------------------------*/
   return (
-    <div
-      style={{
-        background: "#222",
-        padding: 16,
-        borderRadius: 8,
-        textAlign: "center",
-      }}
-    >
-      <div>
-        <audio
-          ref={localV}
-          autoPlay
-          muted
-          playsInline
-          style={{
-            width: 180,
-            marginRight: 8,
-            display: audioOnly ? "block" : "none",
-          }}
-        />
-        {!audioOnly && (
-          <video
-            ref={localV}
-            autoPlay
-            muted
-            playsInline
-            style={{ width: 180, marginRight: 8 }}
-          />
-        )}
-        <audio
-          ref={remoteV}
-          autoPlay
-          playsInline
-          style={{ width: 180, display: audioOnly ? "block" : "none" }}
-        />
-        {!audioOnly && (
-          <video ref={remoteV} autoPlay playsInline style={{ width: 180 }} />
-        )}
-      </div>
-      <div style={{ marginTop: 12 }}>
-        {/* Add notification UI for incoming call here if needed */}
-        <button onClick={endCall} style={{ background: "#c00", color: "#fff" }}>
-          ✖ End Call
-        </button>
-      </div>
+    <div className="call-box">
+      {incomingOffer && !accepted && (
+        <div className="incoming-banner">
+          Incoming call…
+          <button onClick={acceptCall}>Accept</button>
+          <button onClick={endCall}>Decline</button>
+        </div>
+      )}
+
+      {!audioOnly ? (
+        <>
+          <video ref={localV} autoPlay muted playsInline />
+          <video ref={remoteV} autoPlay playsInline />
+        </>
+      ) : (
+        <>
+          <audio ref={localV} autoPlay muted />
+          <audio ref={remoteV} autoPlay />
+        </>
+      )}
+
+      <button onClick={endCall}>✖ End Call</button>
     </div>
   );
 }

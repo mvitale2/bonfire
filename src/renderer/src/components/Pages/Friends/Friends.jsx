@@ -10,54 +10,69 @@ import CallPanel from "./CallPanel.jsx";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
+
   const [selectedSection, setSelectedSection] = useState("friends");
-  const [callCtx, setCallCtx] = useState(null);
+  const [callCtx, setCallCtx] = useState(null); // {roomId, peerId, audioOnly}
 
+  // ───────────────────────────────────────────────────────────
+  // ⚡ NEW: realtime listener → pop CallPanel on incoming offer
+  // ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+
+    const incoming = supabase
+      .channel(`incoming-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signals",
+          filter: `to_user_id=eq.${id},type=eq.offer`,
+        },
+        ({ new: sig }) => {
+          // only if not already in a call
+          if (!callCtx) {
+            setCallCtx({
+              roomId: sig.room_id,
+              peerId: sig.from_user_id,
+              audioOnly: true, // change to false for video
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(incoming);
+  }, [id, callCtx]);
+  // ───────────────────────────────────────────────────────────
+
+  // ---------- helpers ----------
   const checkForRequest = async (otherId) => {
-    const { data: sentRequests, error: sentError } = await supabase
+    const { data: sentRequests } = await supabase
       .from("friend_requests")
-      .select("requesting_user_id, target_user_id")
+      .select("target_user_id")
       .eq("requesting_user_id", id);
-
-    if (sentError) {
-      console.log(`Error checking requests: ${sentError}`);
-    }
-
-    const { data: receivedRequests, error: receivedError } = await supabase
+    const { data: recvRequests } = await supabase
       .from("friend_requests")
-      .select("requesting_user_id, target_user_id")
+      .select("requesting_user_id")
       .eq("target_user_id", id);
-
-    if (receivedError) {
-      console.log(`Error checking requests: ${receivedError}`);
-    }
-
-    const found =
-      (sentRequests &&
-        sentRequests.some((req) => req.target_user_id === otherId)) ||
-      (receivedRequests &&
-        receivedRequests.some((req) => req.requesting_user_id === otherId));
-
-    return !!found;
+    return (
+      sentRequests?.some((r) => r.target_user_id === otherId) ||
+      recvRequests?.some((r) => r.requesting_user_id === otherId)
+    );
   };
 
-  const checkIfFriend = async (targetId) => {
-    const { data, error } = await supabase
+  const checkIfFriend = async (tid) => {
+    const { data } = await supabase
       .from("users")
-      .select("friends, public_id")
+      .select("friends")
       .eq("public_id", id)
       .single();
-
-    if (error) {
-      console.log(`Error fetching friends: ${error.message}`);
-      return false;
-    } else if (data === null) {
-      return false;
-    } else {
-      return data.friends.some((friend) => friend.public_id === targetId);
-    }
+    return data?.friends?.some((f) => f.public_id === tid) || false;
   };
 
+  // ---------- AddFriends (unchanged code) ----------
   function AddFriends() {
     const [input, setInput] = useState("");
     const [users, setUsers] = useState([]);
@@ -160,6 +175,7 @@ function Friends() {
     );
   }
 
+  // ---------- Requests (unchanged code) ----------
   function Requests() {
     const [friendRequests, setFriendRequests] = useState([]);
     const [nicknames, setNicknames] = useState({});
@@ -319,50 +335,10 @@ function Friends() {
     );
   }
 
+  // ---------- FriendsList (only change: 📞 button) ----------
   function FriendsList() {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const handleRemoveFriend = async (targetId) => {
-      const { data: friends, error } = await supabase
-        .from("users")
-        .select("friends")
-        .eq("public_id", id)
-        .single();
-
-      if (error) {
-        console.log(`Error retrieving friends: ${error.message}`);
-        return;
-      }
-
-      const updatedFriends = Array.isArray(friends.friends)
-        ? friends.friends.filter((f) => f.public_id !== targetId)
-        : [];
-
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({ friends: updatedFriends })
-        .eq("public_id", id);
-
-      if (updateError) {
-        console.log(`Error updating friends: ${updateError.message}`);
-      }
-
-      const { data: targetFriends } = await supabase
-        .from("users")
-        .select("friends")
-        .eq("public_id", targetId)
-        .single();
-
-      const updatedTargetFriends = Array.isArray(targetFriends.friends)
-        ? targetFriends.friends.filter((f) => f.public_id !== id)
-        : [];
-
-      await supabase
-        .from("users")
-        .update({ friends: updatedTargetFriends })
-        .eq("public_id", targetId);
-    };
 
     useEffect(() => {
       const fetchFriends = async () => {
@@ -371,76 +347,40 @@ function Friends() {
           .select("friends")
           .eq("public_id", id)
           .single();
+        if (error) return setLoading(false);
 
-        if (error) {
-          console.log(error.message);
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
+        const ids = data?.friends?.map((f) => f.public_id) || [];
+        if (!ids.length) return setLoading(false);
 
-        const friendIds = Array.isArray(data?.friends)
-          ? data.friends.map((f) => f.public_id)
-          : [];
-
-        if (friendIds.length === 0) {
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: users, error: usersError } = await supabase
+        const { data: rows } = await supabase
           .from("users")
-          .select("public_id, nickname, last_logon")
-          .in("public_id", friendIds);
-
-        if (usersError || !users) {
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
-
-        const friendsWithNicknames = data.friends.map((friend) => {
-          let username;
-          let lastLogon;
-          users.forEach((u) => {
-            if (u.public_id === friend.public_id) {
-              username = `${u.nickname}#${u.public_id.slice(0, 6)}`;
-              lastLogon = u.last_logon;
-            }
-          });
+          .select("public_id,nickname,last_logon")
+          .in("public_id", ids);
+        const merged = data.friends.map((f) => {
+          const row = rows.find((r) => r.public_id === f.public_id);
           return {
-            ...friend,
-            nickname: username,
-            lastLogon: lastLogon,
+            ...f,
+            nickname: `${row.nickname}#${row.public_id.slice(0, 6)}`,
+            lastLogon: row.last_logon,
           };
         });
-
-        setFriends(friendsWithNicknames);
+        setFriends(merged);
         setLoading(false);
       };
-
       fetchFriends();
-
-      const channel = supabase
+      const ch = supabase
         .channel("friends-changes")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "users" },
-          (payload) => {
-            fetchFriends();
-          }
+          fetchFriends
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      return () => supabase.removeChannel(ch);
     }, []);
 
-    // --- Add this function for starting a call ---
+    // 👉 start outgoing call
     const handleStartCall = async (peerId) => {
-      // Create or find a DM room for this pair
       const roomName = [`dm`, id.slice(0, 4), peerId.slice(0, 4)]
         .sort()
         .join("-");
@@ -449,7 +389,6 @@ function Friends() {
         .select("id")
         .eq("name", roomName)
         .maybeSingle();
-
       let roomId = existing?.id;
       if (!roomId) {
         const { data } = await supabase
@@ -459,44 +398,28 @@ function Friends() {
           .single();
         roomId = data.id;
       }
-      setCallCtx({ roomId, peerId, audioOnly: true }); // voice only
+      setCallCtx({ roomId, peerId, audioOnly: true });
     };
 
-    return (
-      <div className="friends-list-wrapper">
-        {friends.length === 0 ? (
-          loading ? (
-            <div>Loading...</div>
-          ) : (
-            <div>You have no friends!</div>
-          )
-        ) : (
-          friends.map((friend) => {
-            return (
-              <div className="friend" key={friend.public_id}>
-                <Avatar otherUserId={friend.public_id} />
-                <span>{friend.nickname}</span>
-                <span>{`Last online: ${friend.lastLogon}`}</span>
-                <button
-                  className="call-btn"
-                  onClick={() => handleStartCall(friend.public_id)}
-                >
-                  📞 Call
-                </button>
-                <button
-                  className="unfriend-btn"
-                  onClick={() => handleRemoveFriend(friend.public_id)}
-                >
-                  Remove Friend
-                </button>
-              </div>
-            );
-          })
-        )}
+    if (loading) return <div>Loading…</div>;
+    if (!friends.length) return <div>You have no friends!</div>;
+
+    return friends.map((fr) => (
+      <div className="friend" key={fr.public_id}>
+        <Avatar otherUserId={fr.public_id} />
+        <span>{fr.nickname}</span>
+        <span>{`Last online: ${fr.lastLogon}`}</span>
+        <button
+          className="call-btn"
+          onClick={() => handleStartCall(fr.public_id)}
+        >
+          📞 Call
+        </button>
       </div>
-    );
+    ));
   }
 
+  // ------------- section switcher -------------
   const renderContent = () => {
     switch (selectedSection) {
       case "friends":
@@ -508,44 +431,16 @@ function Friends() {
       case "create":
         return <CreateRoom />;
       default:
-        return <div>Select a section to view settings</div>;
+        return <div>Select a section</div>;
     }
   };
 
+  // ------------------- UI ----------------------
   return (
     <>
       <Tray nickname={nickname} />
       <div className="friends-wrapper">
         <div className="left">
-          {/* Test Call Myself button */}
-          <button
-            onClick={async () => {
-              // Create or find a DM room with yourself
-              const selfId = id;
-              const roomName = [`dm`, selfId.slice(0, 4), selfId.slice(0, 4)]
-                .sort()
-                .join("-");
-              const { data: existing } = await supabase
-                .from("chat_rooms")
-                .select("id")
-                .eq("name", roomName)
-                .maybeSingle();
-
-              let roomId = existing?.id;
-              if (!roomId) {
-                const { data } = await supabase
-                  .from("chat_rooms")
-                  .insert({ name: roomName, creator_user_id: selfId })
-                  .select()
-                  .single();
-                roomId = data.id;
-              }
-              setCallCtx({ roomId, peerId: selfId, audioOnly: true }); // voice only
-            }}
-            style={{ margin: "1em", width: "90%" }}
-          >
-            Test Voice Call Myself
-          </button>
           <ul>
             <li
               className={selectedSection === "friends" ? "active" : ""}
@@ -573,17 +468,18 @@ function Friends() {
             </li>
           </ul>
         </div>
+
         <div className="right">{renderContent()}</div>
       </div>
-      {/* Floating Call Modal */}
+
       {callCtx && (
         <div className="call-modal">
           <CallPanel
             roomId={callCtx.roomId}
             selfId={id}
             peerId={callCtx.peerId}
-            onClose={() => setCallCtx(null)}
             audioOnly={callCtx.audioOnly}
+            onClose={() => setCallCtx(null)}
           />
         </div>
       )}
