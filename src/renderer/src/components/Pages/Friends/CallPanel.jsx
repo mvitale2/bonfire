@@ -88,7 +88,13 @@ export default function CallPanel({
         },
         async ({ new: sig }) => {
           const { type, payload, from_user_id, to_user_id } = sig;
-          if (type === "offer" && to_user_id === selfId) {
+          if (
+            type === "offer" &&
+            to_user_id === selfId &&
+            from_user_id !== selfId &&
+            !incomingOffer &&
+            new Date(sig.created_at) > new Date(Date.now() - 1000 * 60) // only last minute
+          ) {
             setIncomingOffer({ sdp: payload, from: from_user_id });
           } else if (type === "answer") {
             await pc.current?.setRemoteDescription(payload);
