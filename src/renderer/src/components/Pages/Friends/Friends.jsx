@@ -12,7 +12,7 @@ import CallPanel from "./CallPanel.jsx";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [selectedSection, setSelectedSection] = useState("friends");
   const [callCtx, setCallCtx] = useState(null); // {roomId, peerId, audioOnly}
@@ -21,8 +21,6 @@ function Friends() {
   // ⚡ NEW: realtime listener → pop CallPanel on incoming offer
   // ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!id) return;
-
     const incoming = supabase
       .channel(`incoming-${id}`)
       .on(
@@ -36,6 +34,7 @@ function Friends() {
         ({ new: sig }) => {
           // only if not already in a call
           if (!callCtx) {
+            console.log("receiving call")
             setCallCtx({
               roomId: sig.room_id,
               peerId: sig.from_user_id,
@@ -45,6 +44,8 @@ function Friends() {
         }
       )
       .subscribe();
+
+    console.log("listening for calls")
 
     return () => supabase.removeChannel(incoming);
   }, [id, callCtx]);
@@ -75,7 +76,6 @@ function Friends() {
     return data?.friends?.some((f) => f.public_id === tid) || false;
   };
 
-  // ---------- AddFriends (unchanged code) ----------
   function AddFriends() {
     const [input, setInput] = useState("");
     const [users, setUsers] = useState([]);
@@ -385,17 +385,6 @@ function Friends() {
     };
 
     const handleCall = async (targetId) => {
-      const { data, error } = await supabase
-        .from("signals")
-        .insert({ from_user_id: id, to_user_id: targetId, type: "offer" })
-        .select()
-        .single();
-
-      if (error) {
-        console.log(`Error calling user: ${error.message}`);
-        return;
-      }
-
       setCallCtx({
         roomId: data.room_id,
         peerId: targetId,
@@ -441,34 +430,6 @@ function Friends() {
         .subscribe();
       return () => supabase.removeChannel(ch);
     }, []);
-
-    useEffect(() => {
-      if (!id) return;
-
-      const incoming = supabase
-        .channel(`incoming-${id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "signals",
-            filter: `to_user_id=eq.${id},type=eq.offer`,
-          },
-          ({ new: sig }) => {
-            if (!callCtx) {
-              setCallCtx({
-                roomId: sig.room_id,
-                peerId: sign.from_user_id,
-                audioOnly: true,
-              });
-            }
-          }
-        )
-        .subscribe();
-      
-      return () => supabase.removeChannel(incoming)
-    }, [id, callCtx]);
 
     if (loading) return <div>Loading…</div>;
     if (!friends.length) return <div>You have no friends!</div>;
