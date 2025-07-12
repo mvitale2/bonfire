@@ -6,10 +6,13 @@ import supabase from "../../../../Supabase.jsx";
 import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
+import { MdCall } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
   const [selectedSection, setSelectedSection] = useState("friends");
+  const navigate = useNavigate();
 
   const checkForRequest = async (otherId) => {
     const { data: sentRequests, error: sentError } = await supabase
@@ -362,6 +365,21 @@ function Friends() {
         .eq("public_id", targetId);
     };
 
+    const handleCall = async (targetId) => {
+      const { data, error } = await supabase
+        .from("signals")
+        .insert({ from_user_id: id, to_user_id: targetId, type: "offer" })
+        .select()
+        .single();
+
+      if (error) {
+        console.log(`Error calling user: ${error.message}`);
+        return;
+      }
+
+      navigate(`/call/${data.room_id}`);
+    };
+
     useEffect(() => {
       const fetchFriends = async () => {
         const { data, error } = await supabase
@@ -451,6 +469,9 @@ function Friends() {
                 <Avatar otherUserId={friend.public_id} />
                 <span>{friend.nickname}</span>
                 <span>{`Last online: ${friend.lastLogon}`}</span>
+                <button className="call-btn" onClick={() => handleCall(friend.public_id)}>
+                  <MdCall />
+                </button>
                 <button
                   className="unfriend-btn"
                   onClick={() => handleRemoveFriend(friend.public_id)}
