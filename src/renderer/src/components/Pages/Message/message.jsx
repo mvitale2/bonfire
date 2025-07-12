@@ -12,6 +12,7 @@ import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
+import CallPage from "../webrtc/callpage.jsx"; // <-- import
 
 const Message = () => {
   const { roomId } = useParams();
@@ -198,6 +199,12 @@ const Message = () => {
     } else {
       setNewMessage("");
     }
+  };
+
+  // Start a call with a selected member
+  const handleStartCall = (userId) => {
+    setCalleeId(userId);
+    setShowCall(true);
   };
 
   return (

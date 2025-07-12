@@ -1,5 +1,6 @@
 import { UserContext } from "../../../UserContext.jsx";
 import { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Friends.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import supabase from "../../../../Supabase.jsx";
@@ -7,58 +8,74 @@ import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import CallPanel from "./CallPanel.jsx";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
-  const [selectedSection, setSelectedSection] = useState("friends");
   const navigate = useNavigate();
 
+  const [selectedSection, setSelectedSection] = useState("friends");
+  const [callCtx, setCallCtx] = useState(null); // {roomId, peerId, audioOnly}
+
+  // ───────────────────────────────────────────────────────────
+  // ⚡ NEW: realtime listener → pop CallPanel on incoming offer
+  // ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+
+    const incoming = supabase
+      .channel(`incoming-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signals",
+          filter: `to_user_id=eq.${id},type=eq.offer`,
+        },
+        ({ new: sig }) => {
+          // only if not already in a call
+          if (!callCtx) {
+            setCallCtx({
+              roomId: sig.room_id,
+              peerId: sig.from_user_id,
+              audioOnly: true, // change to false for video
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(incoming);
+  }, [id, callCtx]);
+  // ───────────────────────────────────────────────────────────
+
+  // ---------- helpers ----------
   const checkForRequest = async (otherId) => {
-    const { data: sentRequests, error: sentError } = await supabase
+    const { data: sentRequests } = await supabase
       .from("friend_requests")
-      .select("requesting_user_id, target_user_id")
+      .select("target_user_id")
       .eq("requesting_user_id", id);
-
-    if (sentError) {
-      console.log(`Error checking requests: ${error}`);
-    }
-
-    const { data: receivedRequests, error: receivedError } = await supabase
+    const { data: recvRequests } = await supabase
       .from("friend_requests")
-      .select("requesting_user_id, target_user_id")
+      .select("requesting_user_id")
       .eq("target_user_id", id);
-
-    if (receivedError) {
-      console.log(`Error checking requests: ${error}`);
-    }
-
-    const found =
-      (sentRequests &&
-        sentRequests.some((req) => req.target_user_id === otherId)) ||
-      (receivedRequests &&
-        receivedRequests.some((req) => req.requesting_user_id === otherId));
-
-    return !!found;
+    return (
+      sentRequests?.some((r) => r.target_user_id === otherId) ||
+      recvRequests?.some((r) => r.requesting_user_id === otherId)
+    );
   };
 
-  const checkIfFriend = async (targetId) => {
-    const { data, error } = await supabase
+  const checkIfFriend = async (tid) => {
+    const { data } = await supabase
       .from("users")
-      .select("friends, public_id")
+      .select("friends")
       .eq("public_id", id)
       .single();
-
-    if (error) {
-      console.log(`Error fetching friends: ${error.message}`);
-      return false;
-    } else if (data === null) {
-      return false;
-    } else {
-      return data.friends.some((friend) => friend.public_id === targetId);
-    }
+    return data?.friends?.some((f) => f.public_id === tid) || false;
   };
 
+  // ---------- AddFriends (unchanged code) ----------
   function AddFriends() {
     const [input, setInput] = useState("");
     const [users, setUsers] = useState([]);
@@ -161,6 +178,7 @@ function Friends() {
     );
   }
 
+  // ---------- Requests (unchanged code) ----------
   function Requests() {
     const [friendRequests, setFriendRequests] = useState([]);
     const [nicknames, setNicknames] = useState({});
@@ -320,7 +338,8 @@ function Friends() {
     );
   }
 
-  function Friends() {
+  // ---------- FriendsList ----------
+  function FriendsList() {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -377,7 +396,11 @@ function Friends() {
         return;
       }
 
-      navigate(`/call/${data.room_id}`);
+      setCallCtx({
+        roomId: data.room_id,
+        peerId: targetId,
+        audioOnly: true,
+      });
     };
 
     useEffect(() => {
@@ -387,72 +410,68 @@ function Friends() {
           .select("friends")
           .eq("public_id", id)
           .single();
+        if (error) return setLoading(false);
 
-        if (error) {
-          console.log(error.message);
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
+        const ids = data?.friends?.map((f) => f.public_id) || [];
+        if (!ids.length) return setLoading(false);
 
-        const friendIds = Array.isArray(data?.friends)
-          ? data.friends.map((f) => f.public_id)
-          : [];
-
-        if (friendIds.length === 0) {
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: users, error: usersError } = await supabase
+        const { data: rows } = await supabase
           .from("users")
-          .select("public_id, nickname, last_logon")
-          .in("public_id", friendIds);
-
-        if (usersError || !users) {
-          setFriends([]);
-          setLoading(false);
-          return;
-        }
-
-        const friendsWithNicknames = data.friends.map((friend) => {
-          let username;
-          let lastLogon;
-          users.forEach((u) => {
-            if (u.public_id === friend.public_id) {
-              username = `${u.nickname}#${u.public_id.slice(0, 6)}`;
-              lastLogon = u.last_logon;
-            }
-          });
+          .select("public_id,nickname,last_logon")
+          .in("public_id", ids);
+        const merged = data.friends.map((f) => {
+          const row = rows.find((r) => r.public_id === f.public_id);
           return {
-            ...friend,
-            nickname: username,
-            lastLogon: lastLogon,
+            ...f,
+            nickname: `${row.nickname}#${row.public_id.slice(0, 6)}`,
+            lastLogon: row.last_logon,
           };
         });
-
-        setFriends(friendsWithNicknames);
+        setFriends(merged);
         setLoading(false);
       };
-
       fetchFriends();
-
-      const channel = supabase
+      const ch = supabase
         .channel("friends-changes")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "users" },
-          (payload) => {
-            fetchFriends();
+          fetchFriends
+        )
+        .subscribe();
+      return () => supabase.removeChannel(ch);
+    }, []);
+
+    useEffect(() => {
+      if (!id) return;
+
+      const incoming = supabase
+        .channel(`incoming-${id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "signals",
+            filter: `to_user_id=eq.${id},type=eq.offer`,
+          },
+          ({ new: sig }) => {
+            if (!callCtx) {
+              setCallCtx({
+                roomId: sig.room_id,
+                peerId: sign.from_user_id,
+                audioOnly: true,
+              });
+            }
           }
         )
         .subscribe();
+      
+      return () => supabase.removeChannel(incoming)
+    }, [id, callCtx]);
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }, []);
+    if (loading) return <div>Loading…</div>;
+    if (!friends.length) return <div>You have no friends!</div>;
 
     return (
       <div className="friends-list-wrapper">
@@ -469,7 +488,10 @@ function Friends() {
                 <Avatar otherUserId={friend.public_id} />
                 <span>{friend.nickname}</span>
                 <span>{`Last online: ${friend.lastLogon}`}</span>
-                <button className="call-btn" onClick={() => handleCall(friend.public_id)}>
+                <button
+                  className="call-btn"
+                  onClick={() => handleCall(friend.public_id)}
+                >
                   <MdCall />
                 </button>
                 <button
@@ -486,10 +508,11 @@ function Friends() {
     );
   }
 
+  // ------------- section switcher -------------
   const renderContent = () => {
     switch (selectedSection) {
       case "friends":
-        return <Friends />;
+        return <FriendsList />;
       case "add":
         return <AddFriends />;
       case "requests":
@@ -497,10 +520,11 @@ function Friends() {
       case "create":
         return <CreateRoom />;
       default:
-        return <div>Select a section to view settings</div>;
+        return <div>Select a section</div>;
     }
   };
 
+  // ------------------- UI ----------------------
   return (
     <>
       <Tray nickname={nickname} />
@@ -533,8 +557,21 @@ function Friends() {
             </li>
           </ul>
         </div>
+
         <div className="right">{renderContent()}</div>
       </div>
+
+      {callCtx && (
+        <div className="call-modal">
+          <CallPanel
+            roomId={callCtx.roomId}
+            selfId={id}
+            peerId={callCtx.peerId}
+            audioOnly={callCtx.audioOnly}
+            onClose={() => setCallCtx(null)}
+          />
+        </div>
+      )}
     </>
   );
 }
