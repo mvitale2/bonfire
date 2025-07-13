@@ -38,7 +38,7 @@ function Call() {
       setRemoteStream(event.streams[0]);
     };
 
-    pc.oncennectionstatechange = () => {
+    pc.onconnectionstatechange = () => {
       console.log("Connection state:", pc.connectionState);
       console.log("Connection state:", pc.connectionState);
       if (pc.connectionState === "connected") {
@@ -53,17 +53,6 @@ function Call() {
 
     return pc;
   };
-
-  useEffect(() => {
-    if (!localStream) return;
-    if (!peerConnectionRef.current) {
-      const pc = createPeerConnection();
-      localStream
-        .getTracks()
-        .forEach((track) => pc.addTrack(track, localStream));
-      peerConnectionRef.current = pc;
-    }
-  }, [localStream]);
 
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -84,6 +73,15 @@ function Call() {
         },
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
+          if (!localStream) return;
+          if (!peerConnectionRef.current) {
+            const pc = createPeerConnection();
+            localStream
+              .getTracks()
+              .forEach((track) => pc.addTrack(track, localStream));
+            peerConnectionRef.current = pc;
+          }
+
           const pc = peerConnectionRef.current;
 
           console.log(`Offer detected: ${type}`)
