@@ -120,6 +120,9 @@ function Call() {
         .eq("room_id", roomId)
         .single();
 
+      console.log(data.from_user_id)
+      console.log(data.to_user_id)
+
       if (error) {
         console.log(`Error retrieving target user id: ${error.message}`);
         return;
