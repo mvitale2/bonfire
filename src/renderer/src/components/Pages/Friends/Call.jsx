@@ -55,6 +55,23 @@ function Call() {
   };
 
   useEffect(() => {
+    const pc = peerConnectionRef.current;
+    if (!pc) return;
+
+    const handleStateChange = () => {
+      setConnectionMessage(pc.connectionState);
+    };
+
+    pc.addEventListener("connectionstatechange", handleStateChange);
+
+    setConnectionMessage(pc.connectionState);
+
+    return () => {
+      pc.removeEventListener("connectionsstatechagne", handleStateChange);
+    };
+  }, [peerConnectionRef.current]);
+
+  useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       setLocalStream(stream);
     });
@@ -84,12 +101,13 @@ function Call() {
 
           const pc = peerConnectionRef.current;
 
-          console.log(`Offer detected: ${type}`)
+          console.log(`Offer detected: ${type}`);
 
           if (type === "answer") {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
             );
+            console.log("connection sucecsff");
           } else if (type === "candidate") {
             await pc.addIceCandidate(
               new RTCIceCandidate(JSON.parse(candidate))
