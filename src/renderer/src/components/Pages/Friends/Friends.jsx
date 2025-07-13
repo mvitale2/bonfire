@@ -8,62 +8,12 @@ import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
-import CallPanel from "./CallPanel.jsx";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
   // const navigate = useNavigate();
 
   const [selectedSection, setSelectedSection] = useState("friends");
-  const [callCtx, setCallCtx] = useState(null); // {roomId, peerId, audioOnly}
-
-  // real-time listener for incoming calls
-  useEffect(() => {
-    if (!id) return;
-
-    const incoming = supabase
-      .channel(`incoming-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "signals",
-          filter: `to_user_id=eq.${id}`,
-        },
-        ({ new: sig }) => {
-          // only if not already in a call
-          if (sig.type === "offer" && !callCtx) {
-            console.log("receiving call");
-            setCallCtx({
-              roomId: sig.room_id,
-              peerId: sig.from_user_id, // Set peerId to caller's id for receiver
-              audioOnly: true, // change to false for video
-              initiator: false, // receiver
-            });
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "signals",
-          filter: `to_user_id=eq.${id}`,
-        },
-        () =>
-          setCallCtx({ event: null, schema: null, table: null, filter: null })
-      )
-      .subscribe();
-
-    console.log("listening for calls");
-
-    return () => {
-      console.log("stopped listening for calls");
-      supabase.removeChannel(incoming);
-    };
-  }, [id, callCtx]);
 
   const checkForRequest = async (otherId) => {
     const { data: sentRequests } = await supabase
@@ -398,13 +348,6 @@ function Friends() {
     };
 
     const handleCall = async (targetId) => {
-      const roomId = crypto.randomUUID();
-      setCallCtx({
-        roomId: roomId,
-        peerId: targetId,
-        audioOnly: true,
-        initiator: true, // caller
-      });
     };
 
     useEffect(() => {
@@ -536,18 +479,6 @@ function Friends() {
 
         <div className="right">{renderContent()}</div>
       </div>
-
-      {callCtx && (
-        <div className="call-modal">
-          <CallPanel
-            roomId={callCtx.roomId}
-            selfId={id}
-            peerId={callCtx.peerId}
-            audioOnly={callCtx.audioOnly}
-            onClose={() => setCallCtx(null)}
-          />
-        </div>
-      )}
     </>
   );
 }
