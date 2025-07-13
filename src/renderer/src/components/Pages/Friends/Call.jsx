@@ -83,14 +83,14 @@ function Call() {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const { type, sdp, candidate } = payload.new;
+          const { type, payload: signalPayload, candidate } = payload.new;
           const pc = peerConnectionRef.current;
 
           console.log(`Offer detected: ${type}`)
 
           if (type === "answer") {
             await pc.setRemoteDescription(
-              new RTCSessionDescription({ type, sdp })
+              new RTCSessionDescription(signalPayload)
             );
           } else if (type === "candidate") {
             await pc.addIceCandidate(
