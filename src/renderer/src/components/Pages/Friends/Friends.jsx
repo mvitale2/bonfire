@@ -51,7 +51,7 @@ function Friends() {
           table: "signals",
           filter: `to_user_id=eq.${id}`,
         },
-        setCallCtx({ event: null, schema: null, table: null, filter: null })
+        () => setCallCtx({ event: null, schema: null, table: null, filter: null })
       )
       .subscribe();
 
