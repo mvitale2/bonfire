@@ -144,6 +144,7 @@ function Call() {
         .from("signals")
         .select("from_user_id, to_user_id")
         .eq("room_id", roomId)
+        .eq("type", "offer")
         .single();
 
       if (error) {
