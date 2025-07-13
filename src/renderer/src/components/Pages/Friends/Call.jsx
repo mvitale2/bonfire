@@ -12,6 +12,7 @@ function Call() {
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [connectionMessage, setConnectionMessage] = useState(null);
   const peerConnectionRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,6 +36,19 @@ function Call() {
 
     pc.ontrack = (event) => {
       setRemoteStream(event.streams[0]);
+    };
+
+    pc.oncennectionstatechange = () => {
+      console.log("Connection state:", pc.connectionState);
+      console.log("Connection state:", pc.connectionState);
+      if (pc.connectionState === "connected") {
+        setConnectionMessage("Connected");
+      } else if (
+        pc.connectionState == "failed" ||
+        pc.connectionState === "disconnected"
+      ) {
+        setConnectionMessage("Disconnected");
+      }
     };
 
     return pc;
@@ -124,13 +138,13 @@ function Call() {
           filter: `room_id=eq.${roomId}`,
         },
         () => {
-          alert("The call has ended. ");
+          alert("The call has ended.");
           navigate("/friends");
         }
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel)
+    return () => supabase.removeChannel(channel);
   }, [roomId, navigate]);
 
   useEffect(() => {
@@ -162,6 +176,11 @@ function Call() {
           <Avatar />
           <Avatar otherUserId={targetId} />
         </div>
+        {connectionMessage ? (
+          <div className="connection-status-wrapper">
+            <p className="connection-status">{connectionMessage}</p>
+          </div>
+        ) : null}
         <div className="action-tray">
           <button className="end-call" onClick={handleEndCall}>
             <MdCallEnd />
