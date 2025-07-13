@@ -19,6 +19,7 @@ export default function CallPanel({
   peerId,
   onClose,
   audioOnly = false,
+  initiator = false,
 }) {
   const localV = useRef(null);
   const remoteV = useRef(null);
@@ -26,7 +27,7 @@ export default function CallPanel({
 
   const [incomingOffer, setIncomingOffer] = useState(null);
   const [accepted, setAccepted] = useState(false);
-  const [isInitiator, setIsInitiator] = useState(false);
+  // Use initiator prop directly
 
   const ensurePeerAndStream = async () => {
     if (pc.current) return;
@@ -60,9 +61,7 @@ export default function CallPanel({
 
   useEffect(() => {
     (async () => {
-      // Only set initiator and send offer if peerId is a non-empty string
-      if (typeof peerId === "string" && peerId.length > 0) {
-        setIsInitiator(true);
+      if (initiator) {
         await ensurePeerAndStream();
         const offer = await pc.current.createOffer();
         await pc.current.setLocalDescription(offer);
@@ -73,11 +72,9 @@ export default function CallPanel({
           type: "offer",
           payload: offer,
         });
-      } else {
-        setIsInitiator(false);
       }
     })();
-  }, [peerId]);
+  }, [initiator, peerId]);
 
   useEffect(() => {
     const chan = supabase
@@ -153,7 +150,7 @@ export default function CallPanel({
 
   return (
     <div className="call-box">
-      {incomingOffer && !accepted && !isInitiator && (
+      {incomingOffer && !accepted && !initiator && (
         <div className="incoming-banner">
           Incoming call…
           <button onClick={acceptCall}>Accept</button>

@@ -37,8 +37,9 @@ function Friends() {
             console.log("receiving call");
             setCallCtx({
               roomId: sig.room_id,
-              peerId: null, // Do not set peerId for receiver
+              peerId: sig.from_user_id, // Set peerId to caller's id for receiver
               audioOnly: true, // change to false for video
+              initiator: false, // receiver
             });
           }
         }
@@ -398,11 +399,11 @@ function Friends() {
 
     const handleCall = async (targetId) => {
       const roomId = crypto.randomUUID();
-
       setCallCtx({
         roomId: roomId,
         peerId: targetId,
         audioOnly: true,
+        initiator: true, // caller
       });
     };
 
