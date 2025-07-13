@@ -97,6 +97,8 @@ function Call() {
   // connection state handlers
   useEffect(() => {
     const pc = peerConnectionRef.current;
+    console.log("Peer Connection:")
+    console.log(pc)
     if (!pc) return;
 
     const handleStateChange = () => {
