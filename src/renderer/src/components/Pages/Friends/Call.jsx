@@ -125,8 +125,8 @@ function Call() {
         return;
       } else {
         accepting === true
-          ? setTargetId(data.from_user_id)
-          : setTargetId(data.to_user_id);
+          ? setTargetId(data.to_user_id)
+          : setTargetId(data.from_user_id);
       }
     };
 
