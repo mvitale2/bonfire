@@ -26,6 +26,7 @@ export default function CallPanel({
 
   const [incomingOffer, setIncomingOffer] = useState(null);
   const [accepted, setAccepted] = useState(false);
+  const [isInitiator, setIsInitiator] = useState(false);
 
   const ensurePeerAndStream = async () => {
     if (pc.current) return;
@@ -59,20 +60,22 @@ export default function CallPanel({
 
   useEffect(() => {
     (async () => {
-      await ensurePeerAndStream();
-
-      const offer = await pc.current.createOffer();
-      await pc.current.setLocalDescription(offer);
-
-      await sendSignal({
-        roomId,
-        from: selfId,
-        to: peerId,
-        type: "offer",
-        payload: offer,
-      });
+      // If this user is the initiator (has a peerId), send offer
+      if (peerId) {
+        setIsInitiator(true);
+        await ensurePeerAndStream();
+        const offer = await pc.current.createOffer();
+        await pc.current.setLocalDescription(offer);
+        await sendSignal({
+          roomId,
+          from: selfId,
+          to: peerId,
+          type: "offer",
+          payload: offer,
+        });
+      }
     })();
-  }, []);
+  }, [peerId]);
 
   useEffect(() => {
     const chan = supabase
@@ -92,7 +95,8 @@ export default function CallPanel({
             to_user_id === selfId &&
             from_user_id !== selfId &&
             !incomingOffer &&
-            new Date(sig.created_at) > new Date(Date.now() - 1000 * 60) // only last minute
+            !isInitiator &&
+            new Date(sig.created_at) > new Date(Date.now() - 1000 * 60)
           ) {
             setIncomingOffer({ sdp: payload, from: from_user_id });
           } else if (type === "answer") {
@@ -105,7 +109,7 @@ export default function CallPanel({
       .subscribe();
 
     return () => supabase.removeChannel(chan);
-  }, [roomId, selfId]);
+  }, [roomId, selfId, incomingOffer, isInitiator]);
 
   const acceptCall = async () => {
     setAccepted(true);
@@ -138,10 +142,7 @@ export default function CallPanel({
       remoteV.current.srcObject = null;
     }
 
-    await supabase
-      .from("signals")
-      .delete()
-      .eq("room_id", roomId);
+    await supabase.from("signals").delete().eq("room_id", roomId);
 
     onClose();
   };
@@ -150,7 +151,7 @@ export default function CallPanel({
 
   return (
     <div className="call-box">
-      {incomingOffer && !accepted && (
+      {incomingOffer && !accepted && !isInitiator && (
         <div className="incoming-banner">
           Incoming call…
           <button onClick={acceptCall}>Accept</button>
