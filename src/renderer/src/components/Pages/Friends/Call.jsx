@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import supabase from "../../../../Supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import Avatar from "../../UI Components/Avatar/Avatar";
@@ -6,9 +6,11 @@ import { MdCallEnd } from "react-icons/md";
 // import Tray from "../../UI Components/Tray/Tray";
 import { useParams } from "react-router-dom";
 import "./Call.css";
+import { UserContext } from "../../../UserContext";
 
 function Call() {
   const { roomId } = useParams();
+  const { id } = useContext(UserContext)
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -125,13 +127,13 @@ function Call() {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const { type, payload: signalPayload, candidate } = payload.new;
+          const { type, payload: signalPayload, candidate, from_user_id } = payload.new;
 
           const pc = peerConnectionRef.current;
 
           console.log(`Signal detected: ${type}`);
 
-          if (type === "answer") {
+          if (type === "answer" && from_user_id != id) {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
             );
