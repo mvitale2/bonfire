@@ -17,9 +17,7 @@ function Friends() {
   const [selectedSection, setSelectedSection] = useState("friends");
   const [callCtx, setCallCtx] = useState(null); // {roomId, peerId, audioOnly}
 
-  // ───────────────────────────────────────────────────────────
-  // ⚡ NEW: realtime listener → pop CallPanel on incoming offer
-  // ───────────────────────────────────────────────────────────
+  // real-time listener for incoming calls
   useEffect(() => {
     if (!id) return;
 
@@ -54,9 +52,7 @@ function Friends() {
       supabase.removeChannel(incoming);
     };
   }, [id, callCtx]);
-  // ───────────────────────────────────────────────────────────
 
-  // ---------- helpers ----------
   const checkForRequest = async (otherId) => {
     const { data: sentRequests } = await supabase
       .from("friend_requests")

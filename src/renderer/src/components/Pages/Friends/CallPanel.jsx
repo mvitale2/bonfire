@@ -72,7 +72,6 @@ export default function CallPanel({
         payload: offer,
       });
     })();
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -141,13 +140,13 @@ export default function CallPanel({
 
     await supabase
       .from("signals")
-      .update({ ended_at: new Date().toISOString() })
+      .delete()
       .eq("room_id", roomId);
 
     onClose();
   };
 
-  useEffect(() => endCall, []); // run on unmount
+  useEffect(() => endCall, []);
 
   return (
     <div className="call-box">
