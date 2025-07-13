@@ -1,6 +1,6 @@
 import { UserContext } from "../../../UserContext.jsx";
 import { useContext, useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Friends.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import supabase from "../../../../Supabase.jsx";
@@ -11,7 +11,7 @@ import { MdCall } from "react-icons/md";
 
 function Friends() {
   const { nickname, id } = useContext(UserContext);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -348,6 +348,21 @@ function Friends() {
     };
 
     const handleCall = async (targetId) => {
+      const randId = crypto.randomUUID();
+      const { data, error } = await supabase
+        .from("signals")
+        .insert({ room_id: randId, from_user_id: id, to_user_id: targetId, type: "offer", payload: {
+          "type": "offer",
+        } })
+        .select()
+        .single();
+
+      if (error) {
+        console.log(`Error calling user: ${error.message}`);
+        return;
+      }
+
+      navigate(`/call/${data.room_id}`);
     };
 
     useEffect(() => {
