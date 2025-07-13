@@ -113,6 +113,27 @@ function Call() {
   };
 
   useEffect(() => {
+    const channel = supabase
+      .channel("call-ended-listener")
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "signals",
+          filter: `room_id=eq.${roomId}`,
+        },
+        () => {
+          alert("The call has ended. ");
+          navigate("/friends");
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel)
+  }, [roomId, navigate]);
+
+  useEffect(() => {
     const fetchTargetAvatar = async () => {
       const { data, error } = await supabase
         .from("signals")
@@ -120,15 +141,11 @@ function Call() {
         .eq("room_id", roomId)
         .single();
 
-      console.log(`From user: ${data.from_user_id}`)
-      console.log(`To user: ${data.to_user_id}`)
-      console.log(`Accepting: ${accepting}`)
-
       if (error) {
         console.log(`Error retrieving target user id: ${error.message}`);
         return;
       } else {
-        accepting === true
+        accepting === "true"
           ? setTargetId(data.from_user_id)
           : setTargetId(data.to_user_id);
       }
