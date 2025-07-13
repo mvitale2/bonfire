@@ -86,18 +86,9 @@ function Call() {
           const { type, sdp, candidate } = payload.new;
           const pc = peerConnectionRef.current;
 
-          if (type === "offer") {
-            await pc.setRemoteDescription(
-              new RTCSessionDescription({ type, sdp })
-            );
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await supabase.from("signals").insert({
-              room_id: roomId,
-              type: "answer",
-              sdp: answer.sdp,
-            });
-          } else if (type === "answer") {
+          console.log(`Offer detected: ${type}`)
+
+          if (type === "answer") {
             await pc.setRemoteDescription(
               new RTCSessionDescription({ type, sdp })
             );

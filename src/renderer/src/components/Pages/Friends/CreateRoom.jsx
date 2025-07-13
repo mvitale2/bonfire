@@ -29,7 +29,7 @@ const CreateRoom = () => {
       const nicknameMap = {};
       for (const friend of friends) {
         const result = await getNickname(friend.public_id);
-        nicknameMap[friend.public_id] = result?.nickname || "Unknown";
+        nicknameMap[friend.public_id] = result || "Unknown";
       }
       setNicknames(nicknameMap);
     }
