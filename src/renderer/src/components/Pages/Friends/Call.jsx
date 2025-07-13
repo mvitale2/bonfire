@@ -90,7 +90,7 @@ function Call() {
         },
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
-          if (!localStream) return;
+          // if (!localStream) return;
           if (!peerConnectionRef.current) {
             const pc = createPeerConnection();
             localStream
