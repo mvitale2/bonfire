@@ -124,7 +124,7 @@ function Call() {
         console.log(`Error retrieving target user id: ${error.message}`);
         return;
       } else {
-        accepting
+        accepting === true
           ? setTargetId(data.from_user_id)
           : setTargetId(data.to_user_id);
       }
