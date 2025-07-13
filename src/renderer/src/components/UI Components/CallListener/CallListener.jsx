@@ -27,7 +27,7 @@ function CallListener() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "UPDATE",
           schema: "public",
           table: "signals",
           filter: `to_user_id=eq.${id}`,
