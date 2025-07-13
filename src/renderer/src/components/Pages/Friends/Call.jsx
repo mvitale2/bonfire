@@ -65,11 +65,9 @@ function Call() {
 
       const { error } = await supabase
         .from("signals")
-        .update("payload", {
-          type: offer.type,
-          sdp: offer.sdp,
-        })
-        .eq("room_id", roomId);
+        .update({ payload: { type: offer.type, sdp: offer.sdp } })
+        .eq("room_id", roomId)
+        .eq("type", "offer");
 
       if (error) {
         console.log(`Error updating payload: ${error.message}`);
@@ -92,9 +90,9 @@ function Call() {
   }, []);
 
   useEffect(() => {
-    console.log("Local audio stream:")
-    console.log(localStream)
-  }, [localStream])
+    console.log("Local audio stream:");
+    console.log(localStream);
+  }, [localStream]);
 
   // connection state handlers
   useEffect(() => {
