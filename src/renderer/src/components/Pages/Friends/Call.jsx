@@ -90,7 +90,7 @@ function Call() {
         },
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
-          // if (!localStream) return;
+          if (!localStream) return;
           if (!peerConnectionRef.current) {
             const pc = createPeerConnection();
             localStream
@@ -118,7 +118,7 @@ function Call() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [roomId]);
+  }, [roomId, localStream]);
 
   const handleEndCall = async () => {
     const { error } = await supabase
