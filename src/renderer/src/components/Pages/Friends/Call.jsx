@@ -75,6 +75,11 @@ function Call() {
         console.log(`Error updating payload: ${error.message}`);
         return;
       }
+
+      return () => {
+        pc.close()
+        peerConnectionRef.current = null;
+      }
     }
 
     // get audio
