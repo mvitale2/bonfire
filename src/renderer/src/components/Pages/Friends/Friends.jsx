@@ -349,12 +349,6 @@ function Friends() {
 
     const handleCall = async (targetId) => {
       const randId = crypto.randomUUID();
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
 
       const { data, error } = await supabase
         .from("signals")
@@ -363,10 +357,6 @@ function Friends() {
           from_user_id: id,
           to_user_id: targetId,
           type: "offer",
-          payload: {
-            type: offer.type,
-            sdp: offer.sdp,
-          },
         })
         .select()
         .single();

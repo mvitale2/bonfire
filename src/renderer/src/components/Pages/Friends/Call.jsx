@@ -54,6 +54,37 @@ function Call() {
     return pc;
   };
 
+  // send offer on mount if the user is the initator
+  // also get the audio tracks
+  useEffect(async () => {
+    if (accepting != "true") {
+      const pc = createPeerConnection();
+      peerConnectionRef.current = pc;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const { error } = await supabase
+        .from("signals")
+        .update("payload", {
+          type: offer.type,
+          sdp: offer.sdp,
+        })
+        .eq("room_id", roomId);
+
+      if (error) {
+        console.log(`Error updating payload: ${error.message}`);
+        return;
+      }
+    }
+
+    // get audio
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      setLocalStream(stream);
+    });
+    console.log(localStream);
+  }, []);
+
+  // connection state handlers
   useEffect(() => {
     const pc = peerConnectionRef.current;
     if (!pc) return;
@@ -71,12 +102,7 @@ function Call() {
     };
   }, [peerConnectionRef.current]);
 
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      setLocalStream(stream);
-    });
-  }, []);
-
+  // signal listener
   useEffect(() => {
     const channel = supabase
       .channel("webrtc-signals")
@@ -90,38 +116,11 @@ function Call() {
         },
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
-          console.log(`Local stream: ${localStream}`);
-          if (!localStream) {
-            console.log("Local stream is not defined")
-            console.log(localStream)
-            return
-          };
-          if (!peerConnectionRef.current) {
-            const pc = createPeerConnection();
-            localStream
-              .getTracks()
-              .forEach((track) => pc.addTrack(track, localStream));
-            peerConnectionRef.current = pc;
-          }
 
           const pc = peerConnectionRef.current;
 
-          console.log(`Offer detected: ${type}`);
-          if (type === "offer") {
-            await pc.setRemoteDescription(
-              new RTCSessionDescription(signalPayload)
-            );
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await supabase.from("signals").insert({
-              room_id: roomId,
-              type: "answer",
-              payload: {
-                type: answer.type,
-                sdp: answer.sdp,
-              },
-            });
-          }
+          console.log(`Signal detected: ${type}`);
+
           if (type === "answer") {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
@@ -137,7 +136,7 @@ function Call() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [roomId, localStream]);
+  }, [roomId]);
 
   const handleEndCall = async () => {
     const { error } = await supabase
@@ -152,6 +151,7 @@ function Call() {
     }
   };
 
+  // end call listener
   useEffect(() => {
     const channel = supabase
       .channel("call-ended-listener")
@@ -173,6 +173,7 @@ function Call() {
     return () => supabase.removeChannel(channel);
   }, [roomId, navigate]);
 
+  // avatar fetcher
   useEffect(() => {
     const fetchTargetAvatar = async () => {
       const { data, error } = await supabase
