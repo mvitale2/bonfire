@@ -13,7 +13,7 @@ async function getNickname(pubId) {
     return null;
   }
 
-  return data;
+  return data.nickname;
 }
 
 export default getNickname;
