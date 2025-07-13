@@ -56,8 +56,8 @@ function Call() {
 
   // send offer on mount if the user is the initator
   // also get the audio tracks
-  useEffect(async () => {
-    if (accepting != "true") {
+  useEffect(() => {
+    const updateOffer = async () => {
       const pc = createPeerConnection();
       peerConnectionRef.current = pc;
       const offer = await pc.createOffer();
@@ -77,11 +77,14 @@ function Call() {
       }
 
       return () => {
-        pc.close()
+        pc.close();
         peerConnectionRef.current = null;
-      }
-    }
+      };
+    };
 
+    if (accepting != "true") {
+      updateOffer();
+    }
     // get audio
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       setLocalStream(stream);
