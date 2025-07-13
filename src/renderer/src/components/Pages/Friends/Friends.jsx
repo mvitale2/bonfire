@@ -37,7 +37,7 @@ function Friends() {
             console.log("receiving call");
             setCallCtx({
               roomId: sig.room_id,
-              peerId: sig.from_user_id,
+              peerId: null, // Do not set peerId for receiver
               audioOnly: true, // change to false for video
             });
           }
@@ -51,7 +51,8 @@ function Friends() {
           table: "signals",
           filter: `to_user_id=eq.${id}`,
         },
-        () => setCallCtx({ event: null, schema: null, table: null, filter: null })
+        () =>
+          setCallCtx({ event: null, schema: null, table: null, filter: null })
       )
       .subscribe();
 
