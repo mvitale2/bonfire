@@ -42,15 +42,16 @@ function Friends() {
             });
           }
         }
-      ).on(
+      )
+      .on(
         "postgres_changes",
         {
           event: "DELETE",
           schema: "public",
           table: "signals",
-          filter:`to_user_id=eq.${id}`,
+          filter: `to_user_id=eq.${id}`,
         },
-        setCallCtx(null)
+        setCallCtx({ event: null, schema: null, table: null, filter: null })
       )
       .subscribe();
 
