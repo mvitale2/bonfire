@@ -362,7 +362,7 @@ function Friends() {
         return;
       }
 
-      navigate(`/call/${data.room_id}`);
+      navigate(`/call/${data.room_id}?accepting=true`);
     };
 
     useEffect(() => {

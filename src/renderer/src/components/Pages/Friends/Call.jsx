@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import supabase from "../../../../Supabase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Avatar from "../../UI Components/Avatar/Avatar";
 import { MdCallEnd } from "react-icons/md";
 // import Tray from "../../UI Components/Tray/Tray";
@@ -14,6 +14,9 @@ function Call() {
   const [remoteStream, setRemoteStream] = useState(null);
   const peerConnectionRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const accepting = params.get("accepting");
 
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
@@ -41,10 +44,12 @@ function Call() {
     if (!localStream) return;
     if (!peerConnectionRef.current) {
       const pc = createPeerConnection();
-      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream))
-      peerConnectionRef.current = pc
+      localStream
+        .getTracks()
+        .forEach((track) => pc.addTrack(track, localStream));
+      peerConnectionRef.current = pc;
     }
-  }, [localStream])
+  }, [localStream]);
 
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -67,7 +72,7 @@ function Call() {
           const { type, sdp, candidate } = payload.new;
           const pc = peerConnectionRef.current;
 
-          if (type === offer) {
+          if (type === "offer") {
             await pc.setRemoteDescription(
               new RTCSessionDescription({ type, sdp })
             );
@@ -119,7 +124,9 @@ function Call() {
         console.log(`Error retrieving target user id: ${error.message}`);
         return;
       } else {
-        setTargetId(data.to_user_id);
+        accepting
+          ? setTargetId(data.from_user_id)
+          : setTargetId(data.to_user_id);
       }
     };
 
