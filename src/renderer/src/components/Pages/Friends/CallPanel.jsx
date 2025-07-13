@@ -60,8 +60,8 @@ export default function CallPanel({
 
   useEffect(() => {
     (async () => {
-      // If this user is the initiator (has a peerId), send offer
-      if (peerId) {
+      // Only set initiator and send offer if peerId is a non-empty string
+      if (typeof peerId === "string" && peerId.length > 0) {
         setIsInitiator(true);
         await ensurePeerAndStream();
         const offer = await pc.current.createOffer();
@@ -73,6 +73,8 @@ export default function CallPanel({
           type: "offer",
           payload: offer,
         });
+      } else {
+        setIsInitiator(false);
       }
     })();
   }, [peerId]);

@@ -1,6 +1,6 @@
 import { UserContext } from "../../../UserContext.jsx";
 import { useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import "./Friends.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import supabase from "../../../../Supabase.jsx";
