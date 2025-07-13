@@ -89,8 +89,12 @@ function Call() {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       setLocalStream(stream);
     });
-    console.log(localStream);
   }, []);
+
+  useEffect(() => {
+    console.log("Local audio stream:")
+    console.log(localStream)
+  }, [localStream])
 
   // connection state handlers
   useEffect(() => {
