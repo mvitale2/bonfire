@@ -116,7 +116,7 @@ function Call() {
     const fetchTargetAvatar = async () => {
       const { data, error } = await supabase
         .from("signals")
-        .select("to_user_id")
+        .select("from_user_id, to_user_id")
         .eq("room_id", roomId)
         .single();
 

@@ -32,9 +32,9 @@ function CallListener() {
           table: "signals",
           filter: `to_user_id=eq.${id}`,
         },
-        (payload) => {
+        async (payload) => {
           const { room_id, from_user_id } = payload.new;
-          const nickname = getNickname(from_user_id).nickname
+          const nickname = await getNickname(from_user_id)
           if (window.confirm(`Incoming call from ${nickname}#${from_user_id.slice(0, 6)}. Accept?`)) {
             navigate(`/call/${room_id}`);
           } else {
