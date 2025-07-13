@@ -8,11 +8,11 @@ function CallListener() {
   const { id } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const handleEndCall = async () => {
+  const handleEndCall = async (room) => {
     const { error } = await supabase
       .from("signals")
       .delete()
-      .eq("room_id", roomId);
+      .eq("room_id", room);
 
     if (error) {
       console.log(`Error ending call: ${error.message}`);
@@ -78,7 +78,7 @@ function CallListener() {
               }
               navigate(`/call/${room_id}?accepting=true`);
             } else {
-              handleEndCall();
+              handleEndCall(room_id);
             }
           }
         }

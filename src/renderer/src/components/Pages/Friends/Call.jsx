@@ -91,7 +91,11 @@ function Call() {
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
           console.log(`Local stream: ${localStream}`);
-          if (!localStream) return;
+          if (!localStream) {
+            console.log("Local stream is not defined")
+            console.log(localStream)
+            return
+          };
           if (!peerConnectionRef.current) {
             const pc = createPeerConnection();
             localStream
