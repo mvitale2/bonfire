@@ -108,7 +108,7 @@ export default function CallPanel({
       .subscribe();
 
     return () => supabase.removeChannel(chan);
-  }, [roomId, selfId, incomingOffer, isInitiator]);
+  }, [roomId, selfId, incomingOffer]);
 
   const acceptCall = async () => {
     setAccepted(true);
