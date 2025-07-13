@@ -90,6 +90,7 @@ function Call() {
         },
         async (payload) => {
           const { type, payload: signalPayload, candidate } = payload.new;
+          console.log(`Local stream: ${localStream}`);
           if (!localStream) return;
           if (!peerConnectionRef.current) {
             const pc = createPeerConnection();
@@ -102,7 +103,21 @@ function Call() {
           const pc = peerConnectionRef.current;
 
           console.log(`Offer detected: ${type}`);
-
+          if (type === "offer") {
+            await pc.setRemoteDescription(
+              new RTCSessionDescription(signalPayload)
+            );
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            await supabase.from("signals").insert({
+              room_id: roomId,
+              type: "answer",
+              payload: {
+                type: answer.type,
+                sdp: answer.sdp,
+              },
+            });
+          }
           if (type === "answer") {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
