@@ -10,7 +10,7 @@ import { UserContext } from "../../../UserContext";
 
 function Call() {
   const { roomId } = useParams();
-  const { id } = useContext(UserContext)
+  const { id } = useContext(UserContext);
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -65,26 +65,26 @@ function Call() {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const { error } = await supabase
-        .from("signals")
-        .update({ payload: { type: offer.type, sdp: offer.sdp } })
-        .eq("room_id", roomId)
-        .eq("type", "offer");
+      if (accepting != "true") {
+        const { error } = await supabase
+          .from("signals")
+          .update({ payload: { type: offer.type, sdp: offer.sdp } })
+          .eq("room_id", roomId)
+          .eq("type", "offer");
 
-      if (error) {
-        console.log(`Error updating payload: ${error.message}`);
-        return;
+        if (error) {
+          console.log(`Error updating payload: ${error.message}`);
+          return;
+        }
       }
-
+      
       return () => {
         pc.close();
         peerConnectionRef.current = null;
       };
     };
 
-    if (accepting != "true") {
-      updateOffer();
-    }
+    updateOffer();
     // get audio
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       setLocalStream(stream);
@@ -99,8 +99,8 @@ function Call() {
   // connection state handlers
   useEffect(() => {
     const pc = peerConnectionRef.current;
-    console.log("Peer Connection:")
-    console.log(pc)
+    console.log("Peer Connection:");
+    console.log(pc);
     if (!pc) return;
 
     const handleStateChange = () => {
@@ -129,7 +129,12 @@ function Call() {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const { type, payload: signalPayload, candidate, from_user_id } = payload.new;
+          const {
+            type,
+            payload: signalPayload,
+            candidate,
+            from_user_id,
+          } = payload.new;
 
           const pc = peerConnectionRef.current;
 
