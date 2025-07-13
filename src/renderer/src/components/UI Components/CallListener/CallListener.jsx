@@ -36,7 +36,7 @@ function CallListener() {
           const { room_id, from_user_id } = payload.new;
           const nickname = await getNickname(from_user_id)
           if (window.confirm(`Incoming call from ${nickname}#${from_user_id.slice(0, 6)}. Accept?`)) {
-            navigate(`/call/${room_id}`);
+            navigate(`/call/${room_id}?accepting=true`);
           } else {
             handleEndCall();
           }
