@@ -27,6 +27,7 @@ function Call() {
     });
 
     pc.onicecandidate = (event) => {
+      console.log("ICE candidate event:", event.candidate)
       if (event.candidate) {
         supabase.from("signals").insert({
           room_id: roomId,
@@ -40,18 +41,18 @@ function Call() {
       setRemoteStream(event.streams[0]);
     };
 
-    pc.onconnectionstatechange = () => {
-      console.log("Connection state:", pc.connectionState);
-      console.log("Connection state:", pc.connectionState);
-      if (pc.connectionState === "connected") {
-        setConnectionMessage("Connected");
-      } else if (
-        pc.connectionState == "failed" ||
-        pc.connectionState === "disconnected"
-      ) {
-        setConnectionMessage("Disconnected");
-      }
-    };
+    // pc.onconnectionstatechange = () => {
+    //   console.log("Connection state:", pc.connectionState);
+    //   console.log("Connection state:", pc.connectionState);
+    //   if (pc.connectionState === "connected") {
+    //     setConnectionMessage("Connected");
+    //   } else if (
+    //     pc.connectionState == "failed" ||
+    //     pc.connectionState === "disconnected"
+    //   ) {
+    //     setConnectionMessage("Disconnected");
+    //   }
+    // };
 
     return pc;
   };
