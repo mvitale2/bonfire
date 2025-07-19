@@ -64,8 +64,14 @@ function Call() {
     return pc;
   };
 
+  // get audio on mount
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      setLocalStream(stream);
+    });
+  }, []);
+
   // send offer on mount if the user is the initator
-  // also get the audio tracks
   useEffect(() => {
     const updateOffer = async () => {
       const pc = createPeerConnection();
@@ -84,31 +90,6 @@ function Call() {
           console.log(`Error updating payload: ${error.message}`);
           return;
         }
-      } else {
-        const pc = createPeerConnection();
-        peerConnectionRef.current = pc;
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        const { error } = await supabase
-          .from("signals")
-          .insert({
-            room_id: room_id,
-            from_user_id: id,
-            to_user_id: from_user_id,
-            type: "answer",
-            payload: {
-              type: answer.type,
-              sdp: answer.sdp,
-            },
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.log(`Error answering user: ${error.message}`);
-          return;
-        }
       }
 
       return () => {
@@ -118,10 +99,6 @@ function Call() {
     };
 
     updateOffer();
-    // get audio
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      setLocalStream(stream);
-    });
   }, []);
 
   useEffect(() => {
@@ -189,6 +166,52 @@ function Call() {
 
     return () => supabase.removeChannel(channel);
   }, [roomId]);
+
+  // listener for accepting user
+  useEffect(() => {
+    const acceptCall = async () => {
+      if (accepting === "true") {
+        const { data, error } = await supabase
+          .from("signals")
+          .select("payload, from_user_id")
+          .eq("room_id", roomId)
+          .eq("type", "offer")
+          .single();
+
+        if (error || !data?.payload) {
+          console.log("Error fetching offer payload:", error?.message);
+          return;
+        }
+
+        const pc = createPeerConnection();
+        peerConnectionRef.current = pc;
+
+        await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
+
+        if (localStream) {
+          localStream
+            .getTracks()
+            .forEach((track) => pc.addTrack(track, localStream));
+        }
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        await supabase.from("signals").insert({
+          room_id: roomId,
+          from_user_id: id,
+          to_user_id: data.from_user_id,
+          type: "answer",
+          payload: {
+            type: answer.type,
+            sdp: answer.sdp,
+          },
+        });
+      }
+    };
+
+    acceptCall();
+  }, [accepting, localStream]);
 
   const handleEndCall = async () => {
     const { error } = await supabase
