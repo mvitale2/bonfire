@@ -84,6 +84,31 @@ function Call() {
           console.log(`Error updating payload: ${error.message}`);
           return;
         }
+      } else {
+        const pc = createPeerConnection();
+        peerConnectionRef.current = pc;
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        const { error } = await supabase
+          .from("signals")
+          .insert({
+            room_id: room_id,
+            from_user_id: id,
+            to_user_id: from_user_id,
+            type: "answer",
+            payload: {
+              type: answer.type,
+              sdp: answer.sdp,
+            },
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.log(`Error answering user: ${error.message}`);
+          return;
+        }
       }
 
       return () => {
