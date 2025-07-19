@@ -79,33 +79,36 @@ function Call() {
 
   // send offer on mount if the user is the initator
   useEffect(() => {
-    const updateOffer = async () => {
-      const pc = createPeerConnection();
-      peerConnectionRef.current = pc;
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+    if (localStream) {
+      const updateOffer = async () => {
+        const pc = createPeerConnection();
+        peerConnectionRef.current = pc;
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        console.log("ICE gathering state:", pc.iceGatheringState)
 
-      if (accepting != "true") {
-        const { error } = await supabase
-          .from("signals")
-          .update({ payload: { type: offer.type, sdp: offer.sdp } })
-          .eq("room_id", roomId)
-          .eq("type", "offer");
+        if (accepting != "true") {
+          const { error } = await supabase
+            .from("signals")
+            .update({ payload: { type: offer.type, sdp: offer.sdp } })
+            .eq("room_id", roomId)
+            .eq("type", "offer");
 
-        if (error) {
-          console.log(`Error updating payload: ${error.message}`);
-          return;
+          if (error) {
+            console.log(`Error updating payload: ${error.message}`);
+            return;
+          }
         }
-      }
 
-      return () => {
-        pc.close();
-        peerConnectionRef.current = null;
+        return () => {
+          pc.close();
+          peerConnectionRef.current = null;
+        };
       };
-    };
 
-    updateOffer();
-  }, []);
+      updateOffer();
+    }
+  }, [localStream]);
 
   // listener for accepting user
   useEffect(() => {
@@ -127,6 +130,7 @@ function Call() {
         peerConnectionRef.current = pc;
 
         await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
+        console.log("ICE gathering state:", pc.iceGatheringState);
 
         if (localStream) {
           localStream
@@ -148,7 +152,7 @@ function Call() {
           },
         });
 
-        setAnswerSent(true)
+        setAnswerSent(true);
       }
     };
 
