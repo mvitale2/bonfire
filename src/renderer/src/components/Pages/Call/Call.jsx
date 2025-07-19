@@ -46,6 +46,10 @@ function Call() {
       }
     });
 
+    pc.addEventListener("icecandidateerror", (event) => {
+      console.log("ICE error:", event)
+    })
+
     pc.addEventListener("addstream", (event) => {
       setRemoteStream(event.streams[0]);
     });
@@ -83,6 +87,7 @@ function Call() {
       const updateOffer = async () => {
         const pc = createPeerConnection();
         peerConnectionRef.current = pc;
+        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream))
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         console.log("ICE gathering state:", pc.iceGatheringState)
