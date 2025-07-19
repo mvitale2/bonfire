@@ -71,6 +71,11 @@ function Call() {
     });
   }, []);
 
+  useEffect(() => {
+    console.log("Local audio stream:");
+    console.log(localStream);
+  }, [localStream]);
+
   // send offer on mount if the user is the initator
   useEffect(() => {
     const updateOffer = async () => {
@@ -100,72 +105,6 @@ function Call() {
 
     updateOffer();
   }, []);
-
-  useEffect(() => {
-    console.log("Local audio stream:");
-    console.log(localStream);
-  }, [localStream]);
-
-  // connection state handlers
-  useEffect(() => {
-    const pc = peerConnectionRef.current;
-    console.log("Peer Connection:");
-    console.log(pc);
-    if (!pc) return;
-
-    const handleStateChange = () => {
-      setConnectionMessage(pc.connectionState);
-    };
-
-    pc.addEventListener("connectionstatechange", handleStateChange);
-
-    setConnectionMessage(pc.connectionState);
-
-    return () => {
-      pc.removeEventListener("connectionsstatechagne", handleStateChange);
-    };
-  }, [peerConnectionRef.current]);
-
-  // signal listener
-  useEffect(() => {
-    const channel = supabase
-      .channel("webrtc-signals")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "signals",
-          filter: `room_id=eq.${roomId}`,
-        },
-        async (payload) => {
-          const {
-            type,
-            payload: signalPayload,
-            candidate,
-            from_user_id,
-          } = payload.new;
-
-          const pc = peerConnectionRef.current;
-
-          console.log(`Signal detected: ${type}`);
-
-          if (type === "answer" && from_user_id != id) {
-            await pc.setRemoteDescription(
-              new RTCSessionDescription(signalPayload)
-            );
-            console.log("connection sucecsff");
-          } else if (type === "candidate") {
-            await pc.addIceCandidate(
-              new RTCIceCandidate(JSON.parse(candidate))
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [roomId]);
 
   // listener for accepting user
   useEffect(() => {
@@ -212,6 +151,67 @@ function Call() {
 
     acceptCall();
   }, [accepting, localStream]);
+
+  // connection state handlers
+  useEffect(() => {
+    const pc = peerConnectionRef.current;
+    console.log("Peer Connection:");
+    console.log(pc);
+    if (!pc) return;
+
+    const handleStateChange = () => {
+      setConnectionMessage(pc.connectionState);
+    };
+
+    pc.addEventListener("connectionstatechange", handleStateChange);
+
+    setConnectionMessage(pc.connectionState);
+
+    return () => {
+      pc.removeEventListener("connectionsstatechagne", handleStateChange);
+    };
+  }, [peerConnectionRef.current]);
+
+  // signal listener
+  useEffect(() => {
+    const channel = supabase
+      .channel("webrtc-signals")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signals",
+          filter: `room_id=eq.${roomId}`,
+        },
+        async (payload) => {
+          const {
+            type,
+            // payload: signalPayload,
+            candidate,
+            // from_user_id,
+          } = payload.new;
+
+          const pc = peerConnectionRef.current;
+
+          console.log(`Signal detected: ${type}`);
+
+          // if (type === "answer" && from_user_id != id) {
+          //   await pc.setRemoteDescription(
+          //     new RTCSessionDescription(signalPayload)
+          //   );
+          // }
+          if (type === "candidate") {
+            await pc.addIceCandidate(
+              new RTCIceCandidate(JSON.parse(candidate))
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [roomId]);
 
   const handleEndCall = async () => {
     const { error } = await supabase
