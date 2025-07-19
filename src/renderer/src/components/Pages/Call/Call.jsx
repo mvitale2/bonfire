@@ -26,11 +26,11 @@ function Call() {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
-        {
-          urls: "turn:162.248.100.4:3479",
-          username: "test",
-          credential: "tset123",
-        },
+        // {
+        //   urls: "turn:162.248.100.4:3479",
+        //   username: "test",
+        //   credential: "tset123",
+        // },
       ],
     });
 
