@@ -23,7 +23,14 @@ function Call() {
 
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: "162.248.100.4:3479",
+          username: "root",
+          credential: import.meta.env.VPS_CREDENTIAL,
+        },
+      ],
     });
 
     pc.addEventListener("icecandidate", (event) => {
