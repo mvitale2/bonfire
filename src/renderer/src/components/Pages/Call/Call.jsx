@@ -28,7 +28,7 @@ function Call() {
         { urls: "stun:stun.l.google.com:19302" },
         {
           urls: "turn:162.248.100.4:3479",
-          username: "root",
+          username: "test",
           credential: toString(import.meta.env.VPS_CREDENTIAL),
         },
       ],
