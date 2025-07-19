@@ -199,11 +199,11 @@ function Call() {
 
           console.log(`Signal detected: ${type}`);
 
-          // if (type === "answer" && from_user_id != id) {
-          //   await pc.setRemoteDescription(
-          //     new RTCSessionDescription(signalPayload)
-          //   );
-          // }
+          if (type === "answer" && from_user_id != id) {
+            await pc.setRemoteDescription(
+              new RTCSessionDescription(signalPayload)
+            );
+          }
           if (type === "candidate") {
             await pc.addIceCandidate(
               new RTCIceCandidate(JSON.parse(candidate))
