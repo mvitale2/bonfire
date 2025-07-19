@@ -5,7 +5,7 @@ import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
 import { Route, Routes } from "react-router-dom";
 import Message from "./components/Pages/Message/message.jsx";
 import Friends from "./components/Pages/Friends/Friends.jsx";
-import Call from "./components/Pages/Friends/Call.jsx";
+import Call from "./components/Pages/Call/Call.jsx";
 import { UserProvider } from "./components/Pages/UserSettings/UserSettings.jsx";
 import "./Checkmarks.css";
 import CallListener from "./components/UI Components/CallListener/CallListener.jsx";
