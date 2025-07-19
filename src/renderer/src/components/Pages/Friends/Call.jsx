@@ -26,8 +26,9 @@ function Call() {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-    pc.onicecandidate = (event) => {
-      console.log("ICE candidate event:", event.candidate)
+    pc.addEventListener("icecandidate", (event) => {
+      console.log("ICE candidate event:", event.candidate);
+      if (!event.candidate) return;
       if (event.candidate) {
         supabase.from("signals").insert({
           room_id: roomId,
@@ -35,24 +36,23 @@ function Call() {
           candidate: JSON.stringify(event.candidate),
         });
       }
-    };
+    });
 
-    pc.ontrack = (event) => {
+    pc.addEventListener("addstream", (event) => {
       setRemoteStream(event.streams[0]);
-    };
+    });
 
-    // pc.onconnectionstatechange = () => {
-    //   console.log("Connection state:", pc.connectionState);
-    //   console.log("Connection state:", pc.connectionState);
-    //   if (pc.connectionState === "connected") {
-    //     setConnectionMessage("Connected");
-    //   } else if (
-    //     pc.connectionState == "failed" ||
-    //     pc.connectionState === "disconnected"
-    //   ) {
-    //     setConnectionMessage("Disconnected");
-    //   }
-    // };
+    pc.addEventListener("connectionstatechange", (event) => {
+      console.log("Connection state:", pc.connectionState);
+      if (pc.connectionState === "connected") {
+        setConnectionMessage("Connected");
+      } else if (
+        pc.connectionState == "failed" ||
+        pc.connectionState === "disconnected"
+      ) {
+        setConnectionMessage("Disconnected");
+      }
+    });
 
     return pc;
   };
@@ -78,7 +78,7 @@ function Call() {
           return;
         }
       }
-      
+
       return () => {
         pc.close();
         peerConnectionRef.current = null;
