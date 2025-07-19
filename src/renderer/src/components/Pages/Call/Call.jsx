@@ -15,6 +15,7 @@ function Call() {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [connectionMessage, setConnectionMessage] = useState(null);
+  const [answerSent, setAnswerSent] = useState(false);
   const peerConnectionRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -109,7 +110,7 @@ function Call() {
   // listener for accepting user
   useEffect(() => {
     const acceptCall = async () => {
-      if (accepting === "true") {
+      if (accepting === "true" && localStream && !answerSent) {
         const { data, error } = await supabase
           .from("signals")
           .select("payload, from_user_id")
@@ -146,11 +147,13 @@ function Call() {
             sdp: answer.sdp,
           },
         });
+
+        setAnswerSent(true)
       }
     };
 
     acceptCall();
-  }, [accepting, localStream]);
+  }, [accepting, localStream, answerSent]);
 
   // connection state handlers
   useEffect(() => {
