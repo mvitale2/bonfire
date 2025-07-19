@@ -190,9 +190,9 @@ function Call() {
         async (payload) => {
           const {
             type,
-            // payload: signalPayload,
+            payload: signalPayload,
             candidate,
-            // from_user_id,
+            from_user_id,
           } = payload.new;
 
           const pc = peerConnectionRef.current;
