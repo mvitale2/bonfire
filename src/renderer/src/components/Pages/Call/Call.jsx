@@ -63,9 +63,6 @@ function Call() {
 
     pc.addEventListener("negotiationneeded", async (event) => {
       console.log("Negotiation needed, sending new offer.");
-      localStream
-        .getTracks()
-        .forEach((track) => pc.addTrack(track, localStream));
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
