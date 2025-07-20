@@ -55,6 +55,10 @@ function Call() {
       if (stream) setRemoteStream(stream);
     });
 
+    pc.addEventListener("negotiationneeded", (event) => {
+      console.log("Negotiation needed:", event)
+    })
+
     return pc;
   };
 
