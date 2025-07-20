@@ -26,11 +26,11 @@ function Call() {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
-        // {
-        //   urls: "turn:162.248.100.4:3479",
-        //   username: "test",
-        //   credential: "tset123",
-        // },
+        {
+          urls: "turn:162.248.100.4:3479",
+          username: "test",
+          credential: "tset123",
+        },
       ],
     });
 
@@ -52,18 +52,6 @@ function Call() {
 
     pc.addEventListener("addstream", (event) => {
       setRemoteStream(event.streams[0]);
-    });
-
-    pc.addEventListener("connectionstatechange", (event) => {
-      console.log("Connection state:", pc.connectionState);
-      if (pc.connectionState === "connected") {
-        setConnectionMessage("Connected");
-      } else if (
-        pc.connectionState == "failed" ||
-        pc.connectionState === "disconnected"
-      ) {
-        setConnectionMessage("Disconnected");
-      }
     });
 
     return pc;
