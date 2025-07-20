@@ -18,6 +18,7 @@ function Call() {
   const [connectionMessage, setConnectionMessage] = useState(null);
   const [answerSent, setAnswerSent] = useState(false);
   const [callended, setCallEnded] = useState(false);
+  const [remoteCandidates, setRemoteCandidates] = useState([]);
   const peerConnectionRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,7 +47,8 @@ function Call() {
           payload: JSON.stringify(event.candidate),
         });
 
-        if (error) console.log(`Error upload ice candidate: ${error.message}`);
+        if (error)
+          console.log(`Error uploading ice candidate: ${error.message}`);
       }
     });
 
@@ -221,11 +223,7 @@ function Call() {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const {
-            type,
-            payload: signalPayload,
-            from_user_id,
-          } = payload.new;
+          const { type, payload: signalPayload, from_user_id } = payload.new;
 
           const pc = peerConnectionRef.current;
 
@@ -253,11 +251,18 @@ function Call() {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
             );
-          }
-          if (type === "candidate") {
-            await pc.addIceCandidate(
-              new RTCIceCandidate(signalPayload)
+
+            remoteCandidates.forEach((candidate) =>
+              pc.addIceCandidate(candidate)
             );
+
+            setRemoteCandidates([])
+          }
+          if (type === "candidate" && from_user_id != id) {
+            setRemoteCandidates((prevCandidates) => [
+              ...prevCandidates,
+              signalPayload,
+            ]);
           }
         }
       )
