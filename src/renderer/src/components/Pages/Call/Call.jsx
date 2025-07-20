@@ -100,16 +100,17 @@ function Call() {
     console.log("ICE gathering state:", peerConnectionRef.iceGatheringState);
   }, [peerConnectionRef.iceGatheringState]);
 
-  // send offer on mount if the user is the initator
+  // send offer on mount if the localStream is loaded
   useEffect(() => {
     setCallEnded(false);
-    if (localStream) {
+
+    if (localStream && !peerConnectionRef.current) {
+      const pc = createPeerConnection();
+      peerConnectionRef.current = pc;
+      localStream
+        .getTracks()
+        .forEach((track) => pc.addTrack(track, localStream));
       const updateOffer = async () => {
-        const pc = createPeerConnection();
-        peerConnectionRef.current = pc;
-        localStream
-          .getTracks()
-          .forEach((track) => pc.addTrack(track, localStream));
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
@@ -253,7 +254,7 @@ function Call() {
               pc.addIceCandidate(candidate)
             );
 
-            setRemoteCandidates([])
+            setRemoteCandidates([]);
           }
           if (type === "candidate" && from_user_id != id) {
             setRemoteCandidates((prevCandidates) => [
