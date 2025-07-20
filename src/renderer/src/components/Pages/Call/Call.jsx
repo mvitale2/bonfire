@@ -161,12 +161,6 @@ function Call() {
         await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
         console.log("ICE gathering state:", pc.iceGatheringState);
 
-        if (localStream) {
-          localStream
-            .getTracks()
-            .forEach((track) => pc.addTrack(track, localStream));
-        }
-
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
