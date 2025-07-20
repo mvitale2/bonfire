@@ -11,11 +11,13 @@ import { UserContext } from "../../../UserContext";
 function Call() {
   const { roomId } = useParams();
   const { id } = useContext(UserContext);
+  const [toUserId, setToUserId] = useState(null);
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [connectionMessage, setConnectionMessage] = useState(null);
   const [answerSent, setAnswerSent] = useState(false);
+  const [callended, setCallEnded] = useState(false);
   const peerConnectionRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,15 +36,17 @@ function Call() {
       ],
     });
 
-    pc.addEventListener("icecandidate", (event) => {
+    pc.addEventListener("icecandidate", async (event) => {
       console.log("ICE candidate event:", event.candidate);
       if (!event.candidate) return;
       if (event.candidate) {
-        supabase.from("signals").insert({
+        const { error } = await supabase.from("signals").insert({
           room_id: roomId,
           type: "candidate",
-          candidate: JSON.stringify(event.candidate),
+          payload: JSON.stringify(event.candidate),
         });
+
+        if (error) console.log(`Error upload ice candidate: ${error.message}`);
       }
     });
 
@@ -55,9 +59,27 @@ function Call() {
       if (stream) setRemoteStream(stream);
     });
 
-    pc.addEventListener("negotiationneeded", (event) => {
-      console.log("Negotiation needed:", event)
-    })
+    pc.addEventListener("negotiationneeded", async (event) => {
+      console.log("Negotiation needed, sending new offer.");
+      localStream
+        .getTracks()
+        .forEach((track) => pc.addTrack(track, localStream));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const { error } = await supabase.from("signals").insert({
+        room_id: roomId,
+        from_user_id: id,
+        to_user_id: toUserId,
+        type: "offer",
+        payload: { type: offer.type, sdp: offer.sdp },
+      });
+
+      if (error) {
+        console.log(`Error uploading new offer: ${error.message}`);
+        return;
+      }
+    });
 
     return pc;
   };
@@ -74,8 +96,14 @@ function Call() {
     console.log(localStream);
   }, [localStream]);
 
+  useEffect(() => {
+    if (!peerConnectionRef) return;
+    console.log("ICE gathering state:", peerConnectionRef.iceGatheringState);
+  }, [peerConnectionRef.iceGatheringState]);
+
   // send offer on mount if the user is the initator
   useEffect(() => {
+    setCallEnded(false);
     if (localStream) {
       const updateOffer = async () => {
         const pc = createPeerConnection();
@@ -85,7 +113,6 @@ function Call() {
           .forEach((track) => pc.addTrack(track, localStream));
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        console.log("ICE gathering state:", pc.iceGatheringState);
 
         if (accepting != "true") {
           const { error } = await supabase
@@ -100,10 +127,10 @@ function Call() {
           }
         }
 
-        return () => {
-          pc.close();
-          peerConnectionRef.current = null;
-        };
+        // return () => {
+        //   pc.close();
+        //   peerConnectionRef.current = null;
+        // };
       };
 
       updateOffer();
@@ -116,7 +143,7 @@ function Call() {
       if (accepting === "true" && localStream && !answerSent) {
         const { data, error } = await supabase
           .from("signals")
-          .select("payload, from_user_id")
+          .select("payload, from_user_id, to_user_id")
           .eq("room_id", roomId)
           .eq("type", "offer")
           .single();
@@ -125,6 +152,8 @@ function Call() {
           console.log("Error fetching offer payload:", error?.message);
           return;
         }
+
+        setToUserId(data.to_user_id);
 
         const pc = createPeerConnection();
         peerConnectionRef.current = pc;
@@ -195,7 +224,6 @@ function Call() {
           const {
             type,
             payload: signalPayload,
-            candidate,
             from_user_id,
           } = payload.new;
 
@@ -203,6 +231,24 @@ function Call() {
 
           console.log(`Signal detected: ${type}`);
 
+          if (type === "offer" && from_user_id != id) {
+            await pc.setRemoteDescription(
+              new RTCSessionDescription(signalPayload)
+            );
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+
+            await supabase.from("signals").insert({
+              room_id: roomId,
+              from_user_id: id,
+              to_user_id: from_user_id,
+              type: "answer",
+              payload: {
+                type: answer.type,
+                sdp: answer.sdp,
+              },
+            });
+          }
           if (type === "answer" && from_user_id != id) {
             await pc.setRemoteDescription(
               new RTCSessionDescription(signalPayload)
@@ -210,7 +256,7 @@ function Call() {
           }
           if (type === "candidate") {
             await pc.addIceCandidate(
-              new RTCIceCandidate(JSON.parse(candidate))
+              new RTCIceCandidate(JSON.parse(signalPayload))
             );
           }
         }
@@ -235,6 +281,7 @@ function Call() {
 
   // end call listener
   useEffect(() => {
+    if (callended) return;
     const channel = supabase
       .channel("call-ended-listener")
       .on(
@@ -247,6 +294,8 @@ function Call() {
         },
         () => {
           alert("The call has ended.");
+          setCallEnded(true);
+          setAnswerSent(false);
           navigate("/friends");
         }
       )
