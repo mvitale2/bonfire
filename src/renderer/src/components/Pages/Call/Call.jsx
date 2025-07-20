@@ -256,7 +256,7 @@ function Call() {
           }
           if (type === "candidate") {
             await pc.addIceCandidate(
-              new RTCIceCandidate(JSON.parse(signalPayload))
+              new RTCIceCandidate(signalPayload)
             );
           }
         }
