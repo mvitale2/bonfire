@@ -53,6 +53,14 @@ function Call() {
       }
     });
 
+    pc.addEventListener("icegatheringstatechange", () => {
+      console.log("ICE gathering state:", pc.iceGatheringState)
+    })
+
+    pc.addEventListener("iceconnectionstatechange", () => {
+      console.log("ICE connection state:", pc.iceConnectionState)
+    })
+
     pc.addEventListener("icecandidateerror", (event) => {
       console.log("ICE error:", event);
     });
@@ -103,10 +111,10 @@ function Call() {
     console.log(localStream);
   }, [localStream]);
 
-  useEffect(() => {
-    if (!peerConnectionRef) return;
-    console.log("ICE gathering state:", peerConnectionRef.iceGatheringState);
-  }, [peerConnectionRef.iceGatheringState]);
+  // useEffect(() => {
+  //   if (!peerConnectionRef.current) return;
+  //   console.log("ICE gathering state:", peerConnectionRef.iceGatheringState);
+  // }, [peerConnectionRef.iceGatheringState]);
 
   // send offer on mount if the localStream is loaded
   useEffect(() => {
