@@ -166,6 +166,7 @@ function Call() {
 
         const pc = createPeerConnection();
         peerConnectionRef.current = pc;
+        
         localStream
           .getTracks()
           .forEach((track) => pc.addTrack(track, localStream));
@@ -173,6 +174,7 @@ function Call() {
         await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
         console.log("ICE gathering state:", pc.iceGatheringState);
 
+        console.log("Generating answer...")
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
