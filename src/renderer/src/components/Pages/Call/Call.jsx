@@ -144,19 +144,18 @@ function Call() {
   // listener for accepting user
   useEffect(() => {
     const acceptCall = async () => {
-      console.log(`Accepting: ${accepting}`);
-      console.log(`Answer sent: ${answerSent}`);
-      console.log(
-        accepting === "true" &&
-          localStream &&
-          !answerSent &&
-          !peerConnectionRef.current
-      );
+      // console.log(`Accepting: ${accepting}`);
+      // console.log(`Answer sent: ${answerSent}`);
+      // console.log(
+      //   accepting === "true" &&
+      //     localStream &&
+      //     !answerSent &&
+      //     !peerConnectionRef.current
+      // );
       if (
         accepting === "true" &&
         localStream &&
-        answerSent === false &&
-        !peerConnectionRef.current
+        answerSent === false
       ) {
         const { data, error } = await supabase
           .from("signals")
