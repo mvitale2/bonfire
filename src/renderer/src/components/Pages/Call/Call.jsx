@@ -144,12 +144,18 @@ function Call() {
   // listener for accepting user
   useEffect(() => {
     const acceptCall = async () => {
-      console.log(`Accepting: ${accepting}`)
-      console.log(`Answer sent: ${answerSent}`)
+      console.log(`Accepting: ${accepting}`);
+      console.log(`Answer sent: ${answerSent}`);
+      console.log(
+        accepting === "true" &&
+          localStream &&
+          !answerSent &&
+          !peerConnectionRef.current
+      );
       if (
         accepting === "true" &&
         localStream &&
-        !answerSent &&
+        answerSent === false &&
         !peerConnectionRef.current
       ) {
         const { data, error } = await supabase
@@ -176,7 +182,7 @@ function Call() {
         await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
         console.log("ICE gathering state:", pc.iceGatheringState);
 
-        console.log("Generating answer...")
+        console.log("Generating answer...");
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
