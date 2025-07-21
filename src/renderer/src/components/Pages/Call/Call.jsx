@@ -115,10 +115,10 @@ function Call() {
         .getTracks()
         .forEach((track) => pc.addTrack(track, localStream));
       const updateOffer = async () => {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
         if (accepting != "true") {
+          console.log("Local stream loaded, sending offer...");
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
           const { error } = await supabase
             .from("signals")
             .update({ payload: { type: offer.type, sdp: offer.sdp } })
