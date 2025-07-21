@@ -58,38 +58,37 @@ function Call() {
     });
 
     pc.addEventListener("track", (event) => {
-      console.log("Detected remote track!")
+      console.log("Detected remote track!");
       const [stream] = event.streams;
       if (stream) setRemoteStream(stream);
     });
 
-    pc.addEventListener("negotiationneeded", async (event) => {
-      if (negotiationStarted.current) return;
-      negotiationStarted.current = true;
+  //   pc.addEventListener("negotiationneeded", async () => {
+  //     if (negotiationStarted.current || pc.signalingState !== "stable") return;
+  //     negotiationStarted.current = true;
+  //     try {
+  //       peerConnectionRef.current = pc;
+  //       const offer = pc.createOffer();
+  //       await pc.setLocalDescription(offer);
 
-      await pc.setLocalDescription()
-      peerConnectionRef.current = pc;
-      const offer = pc.createOffer()
-      
-      const { error } = await supabase
-        .from("signals")
-        .insert({
-          room_id: roomId,
-          from_user_id: id,
-          to_user_id: targetId,
-          payload: { type: offer.type, sdp: offer.sdp },
-          type: "offer",
-        });
+  //       const { error } = await supabase.from("signals").insert({
+  //         room_id: roomId,
+  //         from_user_id: id,
+  //         to_user_id: targetId,
+  //         payload: { type: offer.type, sdp: offer.sdp },
+  //         type: "offer",
+  //       });
 
-      if (error) {
-        console.log(`Error uploading new offer: ${error.message}`)
-        return;
-      }
+  //       if (error) {
+  //         console.log(`Error uploading new offer: ${error.message}`);
+  //         return;
+  //       }
+  //     } finally {
+  //       negotiationStarted.current = false;
+  //     }
+  //   });
 
-      negotiationStarted.current = false
-    });
-
-    return pc;
+  //   return pc;
   };
 
   // get audio on mount
@@ -157,11 +156,7 @@ function Call() {
       //     !answerSent &&
       //     !peerConnectionRef.current
       // );
-      if (
-        accepting === "true" &&
-        localStream &&
-        answerSent === false
-      ) {
+      if (accepting === "true" && localStream && answerSent === false) {
         const { data, error } = await supabase
           .from("signals")
           .select("payload, from_user_id, to_user_id")
