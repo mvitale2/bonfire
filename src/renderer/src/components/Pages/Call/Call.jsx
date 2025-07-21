@@ -16,7 +16,8 @@ function Call() {
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [connectionMessage, setConnectionMessage] = useState(null);
+  const [connectionMessage, setConnectionMessage] =
+    useState("RTC Connecting...");
   const [answerSent, setAnswerSent] = useState(false);
   const [callended, setCallEnded] = useState(false);
   const [remoteCandidates, setRemoteCandidates] = useState([]);
@@ -35,13 +36,18 @@ function Call() {
           username: "test",
           credential: "tset123",
         },
+        {
+          urls: "turns:162.248.100.4:5349",
+          username: "test",
+          credential: "tset123",
+        },
       ],
     });
 
     pc.addEventListener("connectionstatechange", () => {
-      console.log("Connection state:", pc.connectionState)
-      setConnectionMessage(pc.connectionState)
-    })
+      console.log("Connection state:", pc.connectionState);
+      setConnectionMessage(pc.connectionState);
+    });
 
     pc.addEventListener("icecandidate", async (event) => {
       console.log("ICE candidate event:", event.candidate);
@@ -59,12 +65,12 @@ function Call() {
     });
 
     pc.addEventListener("icegatheringstatechange", () => {
-      console.log("ICE gathering state:", pc.iceGatheringState)
-    })
+      console.log("ICE gathering state:", pc.iceGatheringState);
+    });
 
     pc.addEventListener("iceconnectionstatechange", () => {
-      console.log("ICE connection state:", pc.iceConnectionState)
-    })
+      console.log("ICE connection state:", pc.iceConnectionState);
+    });
 
     pc.addEventListener("icecandidateerror", (event) => {
       console.log("ICE error:", event);
@@ -76,30 +82,30 @@ function Call() {
       if (stream) setRemoteStream(stream);
     });
 
-  //   pc.addEventListener("negotiationneeded", async () => {
-  //     if (negotiationStarted.current || pc.signalingState !== "stable") return;
-  //     negotiationStarted.current = true;
-  //     try {
-  //       peerConnectionRef.current = pc;
-  //       const offer = pc.createOffer();
-  //       await pc.setLocalDescription(offer);
+    //   pc.addEventListener("negotiationneeded", async () => {
+    //     if (negotiationStarted.current || pc.signalingState !== "stable") return;
+    //     negotiationStarted.current = true;
+    //     try {
+    //       peerConnectionRef.current = pc;
+    //       const offer = pc.createOffer();
+    //       await pc.setLocalDescription(offer);
 
-  //       const { error } = await supabase.from("signals").insert({
-  //         room_id: roomId,
-  //         from_user_id: id,
-  //         to_user_id: targetId,
-  //         payload: { type: offer.type, sdp: offer.sdp },
-  //         type: "offer",
-  //       });
+    //       const { error } = await supabase.from("signals").insert({
+    //         room_id: roomId,
+    //         from_user_id: id,
+    //         to_user_id: targetId,
+    //         payload: { type: offer.type, sdp: offer.sdp },
+    //         type: "offer",
+    //       });
 
-  //       if (error) {
-  //         console.log(`Error uploading new offer: ${error.message}`);
-  //         return;
-  //       }
-  //     } finally {
-  //       negotiationStarted.current = false;
-  //     }
-  //   });
+    //       if (error) {
+    //         console.log(`Error uploading new offer: ${error.message}`);
+    //         return;
+    //       }
+    //     } finally {
+    //       negotiationStarted.current = false;
+    //     }
+    //   });
 
     return pc;
   };
@@ -115,11 +121,6 @@ function Call() {
     console.log("Local audio stream:");
     console.log(localStream);
   }, [localStream]);
-
-  // useEffect(() => {
-  //   if (!peerConnectionRef.current) return;
-  //   console.log("ICE gathering state:", peerConnectionRef.iceGatheringState);
-  // }, [peerConnectionRef.iceGatheringState]);
 
   // send offer on mount if the localStream is loaded
   useEffect(() => {
