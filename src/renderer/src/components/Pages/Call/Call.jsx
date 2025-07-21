@@ -11,6 +11,7 @@ import { UserContext } from "../../../UserContext";
 function Call() {
   const { roomId } = useParams();
   const { id } = useContext(UserContext);
+  const negotiationStarted = useRef(false);
   const [toUserId, setToUserId] = useState(null);
   const [targetId, setTargetId] = useState("");
   const [localStream, setLocalStream] = useState(null);
@@ -61,24 +62,27 @@ function Call() {
       if (stream) setRemoteStream(stream);
     });
 
-    pc.addEventListener("negotiationneeded", async (event) => {
-      console.log("Negotiation needed, sending new offer.");
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+    // pc.addEventListener("negotiationneeded", async (event) => {
+    //   if (negotiationStarted.current) return;
+    //   negotiationStarted.current = true;
 
-      const { error } = await supabase.from("signals").insert({
-        room_id: roomId,
-        from_user_id: id,
-        to_user_id: toUserId,
-        type: "offer",
-        payload: { type: offer.type, sdp: offer.sdp },
-      });
+    //   console.log("Negotiation needed, sending new offer.");
+    //   const offer = await pc.createOffer();
+    //   await pc.setLocalDescription(offer);
 
-      if (error) {
-        console.log(`Error uploading new offer: ${error.message}`);
-        return;
-      }
-    });
+    //   const { error } = await supabase.from("signals").insert({
+    //     room_id: roomId,
+    //     from_user_id: id,
+    //     to_user_id: toUserId,
+    //     type: "offer",
+    //     payload: { type: offer.type, sdp: offer.sdp },
+    //   });
+
+    //   if (error) {
+    //     console.log(`Error uploading new offer: ${error.message}`);
+    //     return;
+    //   }
+    // });
 
     return pc;
   };
@@ -140,7 +144,12 @@ function Call() {
   // listener for accepting user
   useEffect(() => {
     const acceptCall = async () => {
-      if (accepting === "true" && localStream && !answerSent) {
+      if (
+        accepting === "true" &&
+        localStream &&
+        !answerSent &&
+        !peerConnectionRef.current
+      ) {
         const { data, error } = await supabase
           .from("signals")
           .select("payload, from_user_id, to_user_id")
@@ -157,6 +166,9 @@ function Call() {
 
         const pc = createPeerConnection();
         peerConnectionRef.current = pc;
+        localStream
+          .getTracks()
+          .forEach((track) => pc.addTrack(track, localStream));
 
         await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
         console.log("ICE gathering state:", pc.iceGatheringState);
