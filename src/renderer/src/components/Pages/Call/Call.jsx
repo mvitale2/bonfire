@@ -144,6 +144,8 @@ function Call() {
   // listener for accepting user
   useEffect(() => {
     const acceptCall = async () => {
+      console.log(`Accepting: ${accepting}`)
+      console.log(`Answer sent: ${answerSent}`)
       if (
         accepting === "true" &&
         localStream &&
@@ -166,7 +168,7 @@ function Call() {
 
         const pc = createPeerConnection();
         peerConnectionRef.current = pc;
-        
+
         localStream
           .getTracks()
           .forEach((track) => pc.addTrack(track, localStream));
