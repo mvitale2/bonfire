@@ -38,6 +38,11 @@ function Call() {
       ],
     });
 
+    pc.addEventListener("connectionstatechange", () => {
+      console.log("Connection state:", pc.connectionState)
+      setConnectionMessage(pc.connectionState)
+    })
+
     pc.addEventListener("icecandidate", async (event) => {
       console.log("ICE candidate event:", event.candidate);
       if (!event.candidate) return;
@@ -210,26 +215,6 @@ function Call() {
 
     acceptCall();
   }, [accepting, localStream, answerSent]);
-
-  // connection state handlers
-  useEffect(() => {
-    const pc = peerConnectionRef.current;
-    console.log("Peer Connection:");
-    console.log(pc);
-    if (!pc) return;
-
-    const handleStateChange = () => {
-      setConnectionMessage(pc.connectionState);
-    };
-
-    pc.addEventListener("connectionstatechange", handleStateChange);
-
-    setConnectionMessage(pc.connectionState);
-
-    return () => {
-      pc.removeEventListener("connectionsstatechagne", handleStateChange);
-    };
-  }, [peerConnectionRef.current]);
 
   // signal listener
   useEffect(() => {
