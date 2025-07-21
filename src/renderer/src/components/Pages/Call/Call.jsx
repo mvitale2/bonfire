@@ -88,7 +88,7 @@ function Call() {
   //     }
   //   });
 
-  //   return pc;
+    return pc;
   };
 
   // get audio on mount
