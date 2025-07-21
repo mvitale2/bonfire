@@ -62,27 +62,27 @@ function Call() {
       if (stream) setRemoteStream(stream);
     });
 
-    // pc.addEventListener("negotiationneeded", async (event) => {
-    //   if (negotiationStarted.current) return;
-    //   negotiationStarted.current = true;
+    pc.addEventListener("negotiationneeded", async (event) => {
+      if (negotiationStarted.current) return;
+      negotiationStarted.current = true;
 
-    //   console.log("Negotiation needed, sending new offer.");
-    //   const offer = await pc.createOffer();
-    //   await pc.setLocalDescription(offer);
+      console.log("Negotiation needed, sending new offer.");
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
 
-    //   const { error } = await supabase.from("signals").insert({
-    //     room_id: roomId,
-    //     from_user_id: id,
-    //     to_user_id: toUserId,
-    //     type: "offer",
-    //     payload: { type: offer.type, sdp: offer.sdp },
-    //   });
+      const { error } = await supabase.from("signals").insert({
+        room_id: roomId,
+        from_user_id: id,
+        to_user_id: toUserId,
+        type: "offer",
+        payload: { type: offer.type, sdp: offer.sdp },
+      });
 
-    //   if (error) {
-    //     console.log(`Error uploading new offer: ${error.message}`);
-    //     return;
-    //   }
-    // });
+      if (error) {
+        console.log(`Error uploading new offer: ${error.message}`);
+        return;
+      }
+    });
 
     return pc;
   };
