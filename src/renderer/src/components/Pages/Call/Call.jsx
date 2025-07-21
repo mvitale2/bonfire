@@ -58,6 +58,7 @@ function Call() {
     });
 
     pc.addEventListener("track", (event) => {
+      console.log("Detected remote track!")
       const [stream] = event.streams;
       if (stream) setRemoteStream(stream);
     });
@@ -66,22 +67,26 @@ function Call() {
       if (negotiationStarted.current) return;
       negotiationStarted.current = true;
 
-      console.log("Negotiation needed, sending new offer.");
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      const { error } = await supabase.from("signals").insert({
-        room_id: roomId,
-        from_user_id: id,
-        to_user_id: toUserId,
-        type: "offer",
-        payload: { type: offer.type, sdp: offer.sdp },
-      });
+      await pc.setLocalDescription()
+      peerConnectionRef.current = pc;
+      const offer = pc.createOffer()
+      
+      const { error } = await supabase
+        .from("signals")
+        .insert({
+          room_id: roomId,
+          from_user_id: id,
+          to_user_id: targetId,
+          payload: { type: offer.type, sdp: offer.sdp },
+          type: "offer",
+        });
 
       if (error) {
-        console.log(`Error uploading new offer: ${error.message}`);
+        console.log(`Error uploading new offer: ${error.message}`)
         return;
       }
+
+      negotiationStarted.current = false
     });
 
     return pc;
