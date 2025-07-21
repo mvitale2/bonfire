@@ -42,6 +42,7 @@ function Call() {
           credential: "tset123",
         },
       ],
+      iceTransportPolicy: "relay",
     });
 
     pc.addEventListener("connectionstatechange", () => {
@@ -106,6 +107,8 @@ function Call() {
     //       negotiationStarted.current = false;
     //     }
     //   });
+
+    peerConnectionRef.current = pc;
 
     return pc;
   };
