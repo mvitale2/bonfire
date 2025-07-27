@@ -26,11 +26,12 @@ function CallListener() {
         async (payload) => {
           console.log("detected incoming signal!");
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
+          const signal = JSON.parse(offerPayload)
+          peerRef.current.signal(signal)
           setIncomingCall({
             room_id,
             caller_id: from_user_id,
             receiver: true,
-            payload: offerPayload,
           });
         }
       )
@@ -38,6 +39,10 @@ function CallListener() {
 
     return () => supabase.removeChannel(channel);
   }, [inCall, id]);
+
+  useEffect(() => {
+    console.log(incomingCall)
+  }, [incomingCall])
 
   // Outgoing call listener (user initiates a call)
   useEffect(() => {
@@ -101,7 +106,7 @@ function CallListener() {
     };
   }, [inCall]);
 
-  if (inCall && receiver) {
+  if (incomingCall) {
     return (
       <CallToast
         room_id={incomingCall.room_id}
@@ -110,7 +115,7 @@ function CallListener() {
         payload={incomingCall.payload}
       />
     );
-  } else if (inCall && initiator) {
+  } else if (outgoingCall) {
     return (
       <CallToast
         room_id={outgoingCall.room_id}
@@ -119,8 +124,6 @@ function CallListener() {
         payload={outgoingCall.payload}
       />
     );
-  } else {
-    return null;
   }
 }
 

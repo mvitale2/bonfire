@@ -347,6 +347,7 @@ function Friends() {
     };
 
     const handleCall = async (targetId) => {
+      setInCall(true)
       const randId = crypto.randomUUID();
       peerRef.current = new SimplePeer({
         initiator: true,

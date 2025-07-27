@@ -11,14 +11,13 @@ function CallToast({
   callee_id,
   initiator = false,
   receiver = false,
-  payload,
   room_id,
 }) {
   const { id, setInCall } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
 
-  
+
 
   useEffect(() => {
     const fetchNickname = async () => {
