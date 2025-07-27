@@ -6,8 +6,15 @@ import CallToast from "./components/UI Components/CallToast/CallToast";
 import SimplePeer from "simple-peer";
 
 function CallListener() {
-  const { id, inCall, setInCall, peerRef, remoteUserId, setRemoteUserId, remotePeerRef } =
-    useContext(UserContext);
+  const {
+    id,
+    inCall,
+    setInCall,
+    peerRef,
+    remoteUserId,
+    setRemoteUserId,
+    remotePeerRef,
+  } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
 
@@ -26,13 +33,15 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
-            
           console.log("detected incoming signal!");
-          setInCall(true)
+          setInCall(true);
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
           const signal = offerPayload;
-          remotePeerRef.current = new SimplePeer({ initiator: false, trickle: false });
-          remotePeerRef.current.signal(signal)
+          remotePeerRef.current = new SimplePeer({
+            initiator: false,
+            trickle: false,
+          });
+          remotePeerRef.current.signal(signal);
           setIncomingCall({
             room_id,
             caller_id: from_user_id,
@@ -52,6 +61,7 @@ function CallListener() {
   // create peer on mount
   useEffect(() => {
     if (inCall === false) return;
+    console.log("in call, creating local peer");
 
     const randId = crypto.randomUUID();
     peerRef.current = new SimplePeer({
@@ -90,6 +100,14 @@ function CallListener() {
         console.log(`Error calling user: ${error.message}`);
         return;
       }
+
+      setOutgoingCall({
+        room_id,
+        callee_id: remoteUserId,
+        initiator: true,
+      });
+
+      console.log(outgoingCall)
     });
   }, [inCall, remoteUserId]);
 

@@ -13,7 +13,7 @@ function CallToast({
   receiver = false,
   room_id,
 }) {
-  const { id, setInCall } = useContext(UserContext);
+  const { setInCall } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
 
