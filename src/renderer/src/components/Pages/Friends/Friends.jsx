@@ -10,7 +10,7 @@ import { MdCall } from "react-icons/md";
 import SimplePeer from "simple-peer";
 
 function Friends() {
-  const { nickname, id, peerRef, setInCall } = useContext(UserContext);
+  const { nickname, id, setInCall, setRemoteUserId } = useContext(UserContext);
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -348,44 +348,7 @@ function Friends() {
 
     const handleCall = async (targetId) => {
       setInCall(true)
-      const randId = crypto.randomUUID();
-      peerRef.current = new SimplePeer({
-        initiator: true,
-        trickle: true,
-        config: {
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            {
-              urls: "turn:162.248.100.4:3479",
-              username: "test",
-              credential: "tset123",
-            },
-            {
-              urls: "turns:162.248.100.4:5349",
-              username: "test",
-              credential: "tset123",
-            },
-          ],
-        },
-      });
-
-      peerRef.current.on("signal", async (data) => {
-        const { error } = await supabase
-          .from("signals")
-          .insert({
-            room_id: randId,
-            from_user_id: id,
-            to_user_id: targetId,
-            payload: JSON.stringify(data),
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.log(`Error calling user: ${error.message}`);
-          return;
-        }
-      });
+      setRemoteUserId(targetId)
     };
 
     useEffect(() => {

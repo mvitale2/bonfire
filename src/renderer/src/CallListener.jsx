@@ -3,9 +3,11 @@ import { UserContext } from "./UserContext";
 import supabase from "../Supabase.jsx";
 // import SimplePeer from "simple-peer";
 import CallToast from "./components/UI Components/CallToast/CallToast";
+import SimplePeer from "simple-peer";
 
 function CallListener() {
-  const { id, inCall, peerRef } = useContext(UserContext);
+  const { id, inCall, setInCall, peerRef, remoteUserId, setRemoteUserId, remotePeerRef } =
+    useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
 
@@ -24,10 +26,13 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
+            
           console.log("detected incoming signal!");
+          setInCall(true)
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
-          const signal = offerPayload
-          peerRef.current.signal(signal)
+          const signal = offerPayload;
+          remotePeerRef.current = new SimplePeer({ receiver, trickle: false });
+          remotePeerRef.current.signal(signal)
           setIncomingCall({
             room_id,
             caller_id: from_user_id,
@@ -38,55 +43,58 @@ function CallListener() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [inCall, id]);
+  }, [id]);
 
   useEffect(() => {
-    console.log(incomingCall)
-  }, [incomingCall])
+    console.log(incomingCall);
+  }, [incomingCall]);
 
-  // Outgoing call listener (user initiates a call)
+  // create peer on mount
   useEffect(() => {
-    const channel = supabase.channel("outgoing-calls").on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "signals",
-        filter: `from-user-id=eq.${id}`,
+    if (inCall === false) return;
+
+    const randId = crypto.randomUUID();
+    peerRef.current = new SimplePeer({
+      initiator: true,
+      trickle: true,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          {
+            urls: "turn:162.248.100.4:3479",
+            username: "test",
+            credential: "tset123",
+          },
+          {
+            urls: "turns:162.248.100.4:5349",
+            username: "test",
+            credential: "tset123",
+          },
+        ],
       },
-      async (payload) => {
-        const {
-          room_id,
-          to_user_id,
-          payload: offerPayload,
-        } = payload.new;
-        setOutgoingCall({
-          room_id,
-          callee_id: to_user_id,
-          payload: offerPayload,
-          initiator: true,
-        });
-      }
-    );
+    });
 
-    return () => supabase.removeChannel(channel);
-  }, [inCall, id]);
+    peerRef.current.on("signal", async (data) => {
+      const { error } = await supabase
+        .from("signals")
+        .insert({
+          room_id: randId,
+          from_user_id: id,
+          to_user_id: remoteUserId,
+          payload: JSON.stringify(data),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.log(`Error calling user: ${error.message}`);
+        return;
+      }
+    });
+  }, [inCall, remoteUserId]);
 
   // end call listener
   useEffect(() => {
-    const outChannel = supabase.channel("outgoing-calls").on(
-      "postgres_changes",
-      {
-        event: "DELETE",
-        schema: "public",
-        table: "signals",
-        filter: `from-user-id=eq.${id}`,
-      },
-      () => {
-        setOutgoingCall(null);
-      }
-    );
-
     const inChannel = supabase.channel("incoming-calls").on(
       "postgres_changes",
       {
@@ -97,11 +105,11 @@ function CallListener() {
       },
       () => {
         setIncomingCall(null);
+        setRemoteUserId(null);
       }
     );
 
     return () => {
-      supabase.removeChannel(outChannel);
       supabase.removeChannel(inChannel);
     };
   }, [inCall]);

@@ -212,6 +212,7 @@ export const UserProvider = ({ children }) => {
   const [hideNickname, setHideNickname] = useState(false);
   const [hideProfilePic, setHideProfilePic] = useState(false);
   const [inCall, setInCall] = useState(false);
+  const [remoteUserId, setRemoteUserId] = useState(null)
   const peerRef = useRef(null);
   const remotePeerRef = useRef(null);
 
@@ -267,6 +268,8 @@ export const UserProvider = ({ children }) => {
         setInCall,
         peerRef,
         remotePeerRef,
+        remoteUserId,
+        setRemoteUserId,
       }}
     >
       {children}

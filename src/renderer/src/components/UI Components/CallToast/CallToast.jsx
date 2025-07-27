@@ -34,7 +34,7 @@ function CallToast({
   }, [callee_id, caller_id, receiver]);
 
   const handleAnswerCall = async () => {
-    setInCall(true);
+    // setInCall(true);
   };
 
   const handleEndCall = async () => {
@@ -86,11 +86,11 @@ function CallToast({
           <div className="username">
             {receiver === true ? (
               <p>
-                {fromUserNickname}#{caller_id.splice(0, 6)}
+                {fromUserNickname}#{caller_id.slice(0, 6)}
               </p>
             ) : (
               <p>
-                {toUserNickname}#{callee_id.splice(0, 6)}
+                {toUserNickname}#{callee_id.slice(0, 6)}
               </p>
             )}
           </div>
