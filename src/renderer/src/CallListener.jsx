@@ -102,7 +102,7 @@ function CallListener() {
       }
 
       setOutgoingCall({
-        room_id,
+        room_id: randId,
         callee_id: remoteUserId,
         initiator: true,
       });
