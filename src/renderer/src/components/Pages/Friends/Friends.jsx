@@ -1,6 +1,5 @@
 import { UserContext } from "../../../UserContext.jsx";
 import { useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "./Friends.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import supabase from "../../../../Supabase.jsx";
@@ -8,10 +7,10 @@ import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
+import SimplePeer from "simple-peer";
 
 function Friends() {
-  const { nickname, id } = useContext(UserContext);
-  const navigate = useNavigate();
+  const { nickname, id, peerRef, setInCall } = useContext(UserContext);
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -141,7 +140,7 @@ function Friends() {
     );
   }
 
-  // ---------- Requests (unchanged code) ----------
+  // Requests
   function Requests() {
     const [friendRequests, setFriendRequests] = useState([]);
     const [nicknames, setNicknames] = useState({});
@@ -349,24 +348,43 @@ function Friends() {
 
     const handleCall = async (targetId) => {
       const randId = crypto.randomUUID();
+      peerRef.current = new SimplePeer({
+        initiator: true,
+        trickle: true,
+        config: {
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            {
+              urls: "turn:162.248.100.4:3479",
+              username: "test",
+              credential: "tset123",
+            },
+            {
+              urls: "turns:162.248.100.4:5349",
+              username: "test",
+              credential: "tset123",
+            },
+          ],
+        },
+      });
 
-      const { data, error } = await supabase
-        .from("signals")
-        .insert({
-          room_id: randId,
-          from_user_id: id,
-          to_user_id: targetId,
-          type: "offer",
-        })
-        .select()
-        .single();
+      peerRef.current.on("signal", async (data) => {
+        const { error } = await supabase
+          .from("signals")
+          .insert({
+            room_id: randId,
+            from_user_id: id,
+            to_user_id: targetId,
+            payload: JSON.stringify(data),
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.log(`Error calling user: ${error.message}`);
-        return;
-      }
-
-      navigate(`/call/${data.room_id}`);
+        if (error) {
+          console.log(`Error calling user: ${error.message}`);
+          return;
+        }
+      });
     };
 
     useEffect(() => {

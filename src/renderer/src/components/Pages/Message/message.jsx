@@ -12,7 +12,6 @@ import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
-import CallPage from "../webrtc/callpage.jsx"; // <-- import
 
 const Message = () => {
   const { roomId } = useParams();
@@ -34,8 +33,8 @@ const Message = () => {
       const members = groupMembers.filter((m) => m.room_id === roomId);
       const nicknameMap = {};
       for (const m of members) {
-        const result = await getNickname(m.user_id);
-        nicknameMap[m.user_id] = result?.nickname || m.user_id;
+        const nick = await getNickname(m.user_id);
+        nicknameMap[m.user_id] = nick;
       }
       setMemberNicknames(nicknameMap);
     }
