@@ -31,7 +31,7 @@ function CallListener() {
           setInCall(true)
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
           const signal = offerPayload;
-          remotePeerRef.current = new SimplePeer({ receiver, trickle: false });
+          remotePeerRef.current = new SimplePeer({ initiator: false, trickle: false });
           remotePeerRef.current.signal(signal)
           setIncomingCall({
             room_id,
