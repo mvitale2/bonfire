@@ -17,8 +17,6 @@ function CallToast({
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
 
-
-
   useEffect(() => {
     const fetchNickname = async () => {
       if (receiver === true) {
@@ -103,8 +101,8 @@ function CallToast({
           </div>
         </div>
         {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
-        {initiator === true && callAccepted === false ? <OutgoingCall /> : null}
-        {receiver === true && callAccepted === false ? <IncomingCall /> : null}
+        {initiator === true ? <OutgoingCall /> : null}
+        {receiver === true ? <IncomingCall /> : null}
       </div>
     </>
   );
