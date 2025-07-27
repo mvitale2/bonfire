@@ -24,20 +24,14 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
-          const {
-            type,
+          console.log("detected incoming signal!");
+          const { room_id, from_user_id, payload: offerPayload } = payload.new;
+          setIncomingCall({
             room_id,
-            from_user_id,
+            caller_id: from_user_id,
+            receiver: true,
             payload: offerPayload,
-          } = payload.new;
-          if (type === "offer" && inCall != true) {
-            setIncomingCall({
-              room_id,
-              caller_id: from_user_id,
-              receiver: true,
-              payload: offerPayload,
-            });
-          }
+          });
         }
       )
       .subscribe();
@@ -57,19 +51,16 @@ function CallListener() {
       },
       async (payload) => {
         const {
-          type,
           room_id,
           to_user_id,
           payload: offerPayload,
         } = payload.new;
-        if (type === "offer") {
-          setOutgoingCall({
-            room_id,
-            callee_id: to_user_id,
-            payload: offerPayload,
-            initiator: true,
-          });
-        }
+        setOutgoingCall({
+          room_id,
+          callee_id: to_user_id,
+          payload: offerPayload,
+          initiator: true,
+        });
       }
     );
 
@@ -110,7 +101,7 @@ function CallListener() {
     };
   }, [inCall]);
 
-  if (incomingCall) {
+  if (inCall && receiver) {
     return (
       <CallToast
         room_id={incomingCall.room_id}
@@ -119,7 +110,7 @@ function CallListener() {
         payload={incomingCall.payload}
       />
     );
-  } else if (outgoingCall) {
+  } else if (inCall && initiator) {
     return (
       <CallToast
         room_id={outgoingCall.room_id}

@@ -18,6 +18,8 @@ function CallToast({
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
 
+  
+
   useEffect(() => {
     const fetchNickname = async () => {
       if (receiver === true) {
