@@ -106,10 +106,12 @@ function CallListener() {
         callee_id: remoteUserId,
         initiator: true,
       });
-
-      console.log(outgoingCall)
     });
   }, [inCall, remoteUserId]);
+
+  useEffect(() => {
+    console.log(outgoingCall)
+  })
 
   // end call listener
   useEffect(() => {

@@ -9,13 +9,15 @@ import getNickname from "../../../getNickname";
 function CallToast({
   caller_id,
   callee_id,
-  initiator = false,
-  receiver = false,
+  initiator,
+  receiver,
   room_id,
 }) {
   const { setInCall } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
+
+  console.log(initiator)
 
   useEffect(() => {
     const fetchNickname = async () => {
@@ -41,7 +43,7 @@ function CallToast({
     const { error } = await supabase
       .from("signals")
       .delete()
-      .eq("room-id", room_id);
+      .eq("room_id", room_id);
 
     if (error) {
       console.log(`Error removing signals: ${error.message}`)
@@ -84,11 +86,11 @@ function CallToast({
           <div className="username">
             {receiver === true ? (
               <p>
-                {fromUserNickname}#{caller_id.slice(0, 6)}
+                {fromUserNickname}
               </p>
             ) : (
               <p>
-                {toUserNickname}#{callee_id.slice(0, 6)}
+                {toUserNickname}
               </p>
             )}
           </div>
