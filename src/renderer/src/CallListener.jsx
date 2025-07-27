@@ -26,7 +26,7 @@ function CallListener() {
         async (payload) => {
           console.log("detected incoming signal!");
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
-          const signal = JSON.parse(offerPayload)
+          const signal = offerPayload
           peerRef.current.signal(signal)
           setIncomingCall({
             room_id,
