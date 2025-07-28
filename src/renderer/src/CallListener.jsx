@@ -112,11 +112,7 @@ function CallListener() {
 
   // end call listener
   useEffect(() => {
-    if (inCall === false) {
-      setIncomingCall(null)
-      setOutgoingCall(null)
-      setRemoteUserId(null)
-    }
+    if (!roomId) return;
 
     const inChannel = supabase.channel("incoming-calls").on(
       "postgres_changes",
@@ -136,7 +132,7 @@ function CallListener() {
     return () => {
       supabase.removeChannel(inChannel);
     };
-  }, [inCall]);
+  }, [roomId]);
 
   if (incomingCall) {
     return (
