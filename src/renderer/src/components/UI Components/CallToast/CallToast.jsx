@@ -34,7 +34,7 @@ function CallToast({
   }, [callee_id, caller_id, receiver]);
 
   const handleAnswerCall = async () => {
-    setCallAccepted(true);
+    setCallAccepted(true)
     const signal = payload;
     remotePeerRef.current = new SimplePeer({
       initiator: false,
@@ -45,7 +45,7 @@ function CallToast({
 
   const handleEndCall = async () => {
     setInCall(false);
-    setCallAccepted(false);
+    setCallAccepted(false)
 
     const { error } = await supabase
       .from("signals")

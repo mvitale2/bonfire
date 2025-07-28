@@ -115,13 +115,13 @@ function CallListener() {
   useEffect(() => {
     if (!roomId) return;
 
-    const inChannel = supabase.channel("incoming-calls").on(
+    const channel = supabase.channel("call-ended-listener").on(
       "postgres_changes",
       {
         event: "DELETE",
         schema: "public",
         table: "signals",
-        // filter: `room_id=eq.${roomId}`,
+        filter: `room_id=eq.${roomId}`,
       }, () => {
         console.log("Call ended!")
         setIncomingCall(null)
@@ -133,7 +133,7 @@ function CallListener() {
     console.log(`Subcribed to room: ${roomId}`)
 
     return () => {
-      supabase.removeChannel(inChannel);
+      supabase.removeChannel(channel);
     };
   }, [roomId]);
 
