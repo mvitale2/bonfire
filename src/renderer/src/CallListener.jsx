@@ -11,10 +11,10 @@ function CallListener() {
     setInCall,
     peerRef,
     remoteUserId,
-    setRemoteUserId,
   } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
+  const [receiver, setReciver] = useState(false)
 
   // Incoming call listener
   useEffect(() => {
@@ -32,6 +32,7 @@ function CallListener() {
         },
         async (payload) => {
           console.log("detected incoming signal!");
+          setReciver(true)
           setInCall(true);
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
           setIncomingCall({
@@ -51,9 +52,9 @@ function CallListener() {
     console.log(incomingCall);
   }, [incomingCall]);
 
-  // create peer on mount
+  // create peer on mount, or when inCall becomes true
   useEffect(() => {
-    if (inCall === false) return;
+    if (inCall === false || receiver) return;
     console.log("in call, creating local peer");
 
     const randId = crypto.randomUUID();
@@ -104,7 +105,7 @@ function CallListener() {
 
   useEffect(() => {
     console.log(outgoingCall)
-  })
+  }, [outgoingCall])
 
   // end call listener
   useEffect(() => {
