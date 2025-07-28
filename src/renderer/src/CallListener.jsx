@@ -15,6 +15,7 @@ function CallListener() {
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
   const [receiver, setReciver] = useState(false)
+  const [roomId, setRoomId] = useState(null)
 
   // Incoming call listener
   useEffect(() => {
@@ -58,6 +59,7 @@ function CallListener() {
     console.log("in call, creating local peer");
 
     const randId = crypto.randomUUID();
+    setRoomId(randId)
     peerRef.current = new SimplePeer({
       initiator: true,
       trickle: true,
@@ -82,7 +84,7 @@ function CallListener() {
       const { error } = await supabase
         .from("signals")
         .insert({
-          room_id: randId,
+          room_id: roomId,
           from_user_id: id,
           to_user_id: remoteUserId,
           payload: JSON.stringify(data),
@@ -96,7 +98,7 @@ function CallListener() {
       }
 
       setOutgoingCall({
-        room_id: randId,
+        room_id: roomId,
         callee_id: remoteUserId,
         initiator: true,
       });
@@ -120,7 +122,7 @@ function CallListener() {
         event: "DELETE",
         schema: "public",
         table: "signals",
-        filter: `to-user-id=eq.${id}`,
+        filter: `room_id=eq.${roomId}`,
       }, () => {
         console.log("Call ended!")
         setIncomingCall(null)
