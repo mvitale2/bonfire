@@ -63,7 +63,7 @@
 }
 
 .call-toast-wrapper .call-btns .decline-call-btn,
-.call-toast-wrapper .outgoing-call .end-call-btn {
+.call-toast-wrapper .end-call-btn {
   border-radius: 50%;
   width: 50px;
   height: 50px;
