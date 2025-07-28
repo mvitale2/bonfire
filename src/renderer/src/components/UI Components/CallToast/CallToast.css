@@ -7,11 +7,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 1em;
-  margin-left: 0.5em;
+  margin-right: 0.5em;
   margin-bottom: 0.5em;
   background-color: var(--background-color-3);
   border-radius: 10px;
-  width: 30vw;
+  /* width: 30vw; */
   min-width: 300px;
   max-width: 400px;
   max-height: 80px;
@@ -22,7 +22,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50%;
+  gap: 1em;
 }
 
 .call-toast-wrapper .call-avatar-div .username {
@@ -54,10 +54,15 @@
   justify-content: center;
   background-color: var(--accent-color-3);
   cursor: pointer;
+  transition: all ease 0.3s;
+}
+
+.call-toast-wrapper .call-btns .answer-call-btn:hover {
+  background-color: var(--font-color-4);
 }
 
 .call-toast-wrapper .call-btns .decline-call-btn,
-.call-toast-wrapper .call-btns .end-call-btn {
+.call-toast-wrapper .outgoing-call .end-call-btn {
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -66,4 +71,13 @@
   justify-content: center;
   background-color: var(--accent-color-1);
   cursor: pointer;
+  transition: all ease 0.3s;
+  color: var(--background-color-5);
+  font-size: 20px;
+}
+
+
+.call-toast-wrapper .call-btns .decline-call-btn:hover,
+.call-toast-wrapper .outgoing-call .end-call-btn:hover {
+  background-color: var(--accent-color-2);
 }

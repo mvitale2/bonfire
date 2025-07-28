@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { UserContext } from "./UserContext";
 import supabase from "../Supabase.jsx";
-// import SimplePeer from "simple-peer";
 import CallToast from "./components/UI Components/CallToast/CallToast";
 import SimplePeer from "simple-peer";
 
@@ -109,6 +108,11 @@ function CallListener() {
 
   // end call listener
   useEffect(() => {
+    if (inCall === false) {
+      setIncomingCall(null)
+      setOutgoingCall(null)
+    }
+
     const inChannel = supabase.channel("incoming-calls").on(
       "postgres_changes",
       {
@@ -117,10 +121,6 @@ function CallListener() {
         table: "signals",
         filter: `to-user-id=eq.${id}`,
       },
-      () => {
-        setIncomingCall(null);
-        setRemoteUserId(null);
-      }
     );
 
     return () => {
