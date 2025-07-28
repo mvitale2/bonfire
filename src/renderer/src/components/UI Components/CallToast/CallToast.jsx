@@ -6,18 +6,10 @@ import { MdCall, MdCallEnd } from "react-icons/md";
 import Avatar from "../Avatar/Avatar";
 import getNickname from "../../../getNickname";
 
-function CallToast({
-  caller_id,
-  callee_id,
-  initiator,
-  receiver,
-  room_id,
-}) {
-  const { setInCall } = useContext(UserContext);
+function CallToast({ caller_id, callee_id, initiator, receiver, room_id, payload }) {
+  const { setInCall, remotePeerRef } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
-
-  console.log(initiator)
 
   useEffect(() => {
     const fetchNickname = async () => {
@@ -34,7 +26,12 @@ function CallToast({
   }, [callee_id, caller_id, receiver]);
 
   const handleAnswerCall = async () => {
-    // setInCall(true);
+    const signal = payload;
+    remotePeerRef.current = new SimplePeer({
+      initiator: false,
+      trickle: false,
+    });
+    remotePeerRef.current.signal(signal);
   };
 
   const handleEndCall = async () => {
@@ -46,7 +43,7 @@ function CallToast({
       .eq("room_id", room_id);
 
     if (error) {
-      console.log(`Error removing signals: ${error.message}`)
+      console.log(`Error removing signals: ${error.message}`);
     }
   };
 
@@ -82,16 +79,15 @@ function CallToast({
   return (
     <>
       <div className="call-toast-wrapper">
+        {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
+        {initiator === true ? <OutgoingCall /> : null}
+        {receiver === true ? <IncomingCall /> : null}
         <div className="call-avatar-div">
           <div className="username">
             {receiver === true ? (
-              <p>
-                {fromUserNickname}
-              </p>
+              <p>{fromUserNickname}</p>
             ) : (
-              <p>
-                {toUserNickname}
-              </p>
+              <p>{toUserNickname}</p>
             )}
           </div>
           <div className="pfp">
@@ -102,9 +98,6 @@ function CallToast({
             )}
           </div>
         </div>
-        {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
-        {initiator === true ? <OutgoingCall /> : null}
-        {receiver === true ? <IncomingCall /> : null}
       </div>
     </>
   );

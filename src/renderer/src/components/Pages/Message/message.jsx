@@ -200,12 +200,6 @@ const Message = () => {
     }
   };
 
-  // Start a call with a selected member
-  const handleStartCall = (userId) => {
-    setCalleeId(userId);
-    setShowCall(true);
-  };
-
   return (
     <>
       <Tray nickname={nickname} />
@@ -239,67 +233,71 @@ const Message = () => {
           </div>
         </div>
 
-        {/* Message List */}
-        <div className="messages-list">
-          <div className="messages">
-            {messages.map((msg) => {
-              const isCurrentUser = msg.user_id === id;
-              const displayName =
-                isCurrentUser && hideNickname ? "Anonymous" : `${msg.nickname}#${msg.user_id.slice(0, 6)}`;
-              const displayAvatar =
-                isCurrentUser && hideProfilePic
-                  ? defaultAvatar
-                  : msg.profile_pic_url || defaultAvatar;
+        <div className="messages-panel">
+          {/* Message List */}
+          <div className="messages-list">
+            <div className="messages">
+              {messages.map((msg) => {
+                const isCurrentUser = msg.user_id === id;
+                const displayName =
+                  isCurrentUser && hideNickname
+                    ? "Anonymous"
+                    : `${msg.nickname}#${msg.user_id.slice(0, 6)}`;
+                const displayAvatar =
+                  isCurrentUser && hideProfilePic
+                    ? defaultAvatar
+                    : msg.profile_pic_url || defaultAvatar;
 
-              return (
-                <div key={msg.message_id || msg.id} className="message">
-                  <div className="message-left">
-                    <img
-                      src={displayAvatar}
-                      alt="avatar"
-                      className="avatar"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = defaultAvatar;
-                      }}
-                    />
-                  </div>
-                  <div className="message-right">
-                    <div className="message-time">
-                      <span className="display-name">{displayName}</span>
-                      <span className="time">
-                        {new Date(msg.created_at).toLocaleDateString()}{" "}
-                        {new Date(msg.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
-                      </span>
+                return (
+                  <div key={msg.message_id || msg.id} className="message">
+                    <div className="message-left">
+                      <img
+                        src={displayAvatar}
+                        alt="avatar"
+                        className="avatar"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = defaultAvatar;
+                        }}
+                      />
                     </div>
-                    <div className="message-content">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkEmoji]}
-                        rehypePlugins={[
-                          rehypeHighlight,
-                          [
-                            rehypeExternalLinks,
-                            {
-                              rel: ["noopener", "noreferrer", "nofollow"],
-                              target: "_blank",
-                            },
-                          ],
-                        ]}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
+                    <div className="message-right">
+                      <div className="message-time">
+                        <span className="display-name">{displayName}</span>
+                        <span className="time">
+                          {new Date(msg.created_at).toLocaleDateString()}{" "}
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </span>
+                      </div>
+                      <div className="message-content">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkEmoji]}
+                          rehypePlugins={[
+                            rehypeHighlight,
+                            [
+                              rehypeExternalLinks,
+                              {
+                                rel: ["noopener", "noreferrer", "nofollow"],
+                                target: "_blank",
+                              },
+                            ],
+                          ]}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            <div ref={messagesEndRef} />
           </div>
-
-          <div ref={messagesEndRef} />
           {/* Input field */}
           <div className="message-input-container">
             <div className="input-with-button">
@@ -322,6 +320,7 @@ const Message = () => {
             </div>
           </div>
         </div>
+        {/* Group members panel */}
         {roomId && (
           <div className="group-members-list">
             <h4>Members</h4>

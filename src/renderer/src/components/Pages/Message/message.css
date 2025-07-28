@@ -6,9 +6,18 @@
   height: 100vh;
 }
 
-.messages-page .messages-list {
+.messages-page .messages-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
   width: 100%;
   height: 60%;
+}
+
+.messages-page .messages-panel .messages-list {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -21,26 +30,37 @@
   margin-right: 2em;
 }
 
-.messages-page .messages-list .messages {
+.messages-page .messages-panel .messages-list .messages {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1em;
 }
 
-.messages-page .messages-list .messages .message {
+.messages-page .messages-panel .messages-list .messages .message {
   display: flex;
   /* justify-content: center; */
   align-items: center;
   gap: 1em;
 }
 
-.messages-page .messages-list .messages .message .message-right {
+.messages-page
+  .messages-panel
+  .messages-list
+  .messages
+  .message
+  .message-right {
   display: flex;
   flex-direction: column;
 }
 
-.messages-page .messages-list .messages .message .message-right .message-time {
+.messages-page
+  .messages-panel
+  .messages-list
+  .messages
+  .message
+  .message-right
+  .message-time {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -48,6 +68,7 @@
 }
 
 .messages-page
+  .messages-panel
   .messages-list
   .messages
   .message
@@ -60,6 +81,7 @@
 }
 
 .messages-page
+  .messages-panel
   .messages-list
   .messages
   .message
@@ -73,6 +95,7 @@
 }
 
 .messages-page
+  .messages-panel
   .messages-list
   .messages
   .message
@@ -81,28 +104,29 @@
   padding-top: 5px;
 }
 
-.messages-page .message-input-container {
+.messages-page .messages-panel .message-input-container {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   padding: 12px;
+  background-color: var(--background-color-5);
 
   @media (width < 1650px) {
     justify-content: flex-end !important;
   }
 }
 
-.messages-page .message-input-container .input-with-button {
+.messages-page .messages-panel .message-input-container .input-with-button {
   position: relative;
   width: 100%;
-
-  @media (width > 1650px) {
-    width: 50%;
-  }
 }
 
-.messages-page .message-input-container .input-with-button .message-input {
+.messages-page
+  .messages-panel
+  .message-input-container
+  .input-with-button
+  .message-input {
   width: 100%;
   padding: 10px;
   padding-right: 48px;
@@ -112,7 +136,11 @@
   box-sizing: border-box;
 }
 
-.messages-page .message-input-container .input-with-button button {
+.messages-page
+  .messages-panel
+  .message-input-container
+  .input-with-button
+  button {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -126,9 +154,14 @@
   color: var(--font-color-2);
   font-size: 1.3rem;
   transition: 0.1s all ease;
+  z-index: 10000;
 }
 
-.messages-page .message-input-container .input-with-button button:hover {
+.messages-page
+  .messages-panel
+  .message-input-container
+  .input-with-button
+  button:hover {
   color: var(--font-color-4);
 }
 
@@ -184,6 +217,7 @@
   padding: 1em;
   overflow-y: auto;
   margin-left: 2em;
+  margin-right: 2em;
   border-radius: 5px;
 }
 

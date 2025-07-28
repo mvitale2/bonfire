@@ -13,7 +13,6 @@ function CallListener() {
     peerRef,
     remoteUserId,
     setRemoteUserId,
-    remotePeerRef,
   } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
@@ -36,16 +35,11 @@ function CallListener() {
           console.log("detected incoming signal!");
           setInCall(true);
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
-          const signal = offerPayload;
-          remotePeerRef.current = new SimplePeer({
-            initiator: false,
-            trickle: false,
-          });
-          remotePeerRef.current.signal(signal);
           setIncomingCall({
             room_id,
             caller_id: from_user_id,
             receiver: true,
+            payload: offerPayload,
           });
         }
       )
@@ -148,8 +142,7 @@ function CallListener() {
       <CallToast
         room_id={outgoingCall.room_id}
         callee_id={outgoingCall.callee_id}
-        receiver={outgoingCall.receiver}
-        payload={outgoingCall.payload}
+        initiator={outgoingCall.initiator}
       />
     );
   }

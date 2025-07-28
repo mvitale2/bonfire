@@ -7,7 +7,6 @@ import Combobox from "react-widgets/Combobox";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
-import SimplePeer from "simple-peer";
 
 function Friends() {
   const { nickname, id, setInCall, setRemoteUserId } = useContext(UserContext);
