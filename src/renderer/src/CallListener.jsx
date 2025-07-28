@@ -37,6 +37,7 @@ function CallListener() {
           setReciver(true)
           setInCall(true);
           const { room_id, from_user_id, payload: offerPayload } = payload.new;
+          setRoomId(room_id)
           setIncomingCall({
             room_id,
             caller_id: from_user_id,
