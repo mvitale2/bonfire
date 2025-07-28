@@ -10,6 +10,7 @@ function CallListener() {
     inCall,
     setInCall,
     peerRef,
+    setRemoteUserId,
     remoteUserId,
   } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
@@ -84,7 +85,7 @@ function CallListener() {
       const { error } = await supabase
         .from("signals")
         .insert({
-          room_id: roomId,
+          room_id: randId,
           from_user_id: id,
           to_user_id: remoteUserId,
           payload: JSON.stringify(data),
@@ -98,7 +99,7 @@ function CallListener() {
       }
 
       setOutgoingCall({
-        room_id: roomId,
+        room_id: randId,
         callee_id: remoteUserId,
         initiator: true,
       });
@@ -114,6 +115,7 @@ function CallListener() {
     if (inCall === false) {
       setIncomingCall(null)
       setOutgoingCall(null)
+      setRemoteUserId(null)
     }
 
     const inChannel = supabase.channel("incoming-calls").on(
