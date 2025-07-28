@@ -6,10 +6,18 @@ import { MdCall, MdCallEnd } from "react-icons/md";
 import Avatar from "../Avatar/Avatar";
 import getNickname from "../../../getNickname";
 
-function CallToast({ caller_id, callee_id, initiator, receiver, room_id, payload }) {
+function CallToast({
+  caller_id,
+  callee_id,
+  initiator,
+  receiver,
+  room_id,
+  payload,
+}) {
   const { setInCall, remotePeerRef } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
+  const [callAccepted, setCallAccepted] = useState(false);
 
   useEffect(() => {
     const fetchNickname = async () => {
@@ -26,6 +34,7 @@ function CallToast({ caller_id, callee_id, initiator, receiver, room_id, payload
   }, [callee_id, caller_id, receiver]);
 
   const handleAnswerCall = async () => {
+    setCallAccepted(true);
     const signal = payload;
     remotePeerRef.current = new SimplePeer({
       initiator: false,
@@ -36,6 +45,7 @@ function CallToast({ caller_id, callee_id, initiator, receiver, room_id, payload
 
   const handleEndCall = async () => {
     setInCall(false);
+    setCallAccepted(false);
 
     const { error } = await supabase
       .from("signals")
@@ -48,19 +58,40 @@ function CallToast({ caller_id, callee_id, initiator, receiver, room_id, payload
   };
 
   function IncomingCall() {
-    return (
-      <div className="call-btns" onClick={async () => await handleAnswerCall()}>
-        <div className="answer-call-btn">
-          <MdCall />
-        </div>
+    function IncomingCallBtns() {
+      return (
+        <>
+          <div className="call-btns">
+            {" "}
+            <div
+              className="answer-call-btn"
+              onClick={async () => await handleAnswerCall()}
+            >
+              <MdCall />
+            </div>
+            <div
+              className="decline-call-btn"
+              onClick={async () => await handleEndCall()}
+            >
+              <MdCallEnd />
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function CallAcceptedBtn() {
+      return (
         <div
-          className="decline-call-btn"
+          className="end-call-btn"
           onClick={async () => await handleEndCall()}
         >
           <MdCallEnd />
         </div>
-      </div>
-    );
+      );
+    }
+
+    return callAccepted ? <CallAcceptedBtn /> : <IncomingCallBtns />;
   }
 
   function OutgoingCall() {

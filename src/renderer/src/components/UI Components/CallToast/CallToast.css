@@ -43,6 +43,7 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
+  gap: 0.5em;
 }
 
 .call-toast-wrapper .call-btns .answer-call-btn {
