@@ -122,7 +122,8 @@ function CallListener() {
         schema: "public",
         table: "signals",
         filter: `room_id=eq.${roomId}`,
-      }, () => {
+      }, (payload) => {
+        console.log(payload)
         console.log("Call ended!")
         setIncomingCall(null)
         setOutgoingCall(null)
