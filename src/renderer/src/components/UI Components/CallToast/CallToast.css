@@ -79,6 +79,6 @@
 
 
 .call-toast-wrapper .call-btns .decline-call-btn:hover,
-.call-toast-wrapper .outgoing-call .end-call-btn:hover {
+.call-toast-wrapper .end-call-btn:hover {
   background-color: var(--accent-color-2);
 }

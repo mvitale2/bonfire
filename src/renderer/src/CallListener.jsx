@@ -120,7 +120,11 @@ function CallListener() {
         schema: "public",
         table: "signals",
         filter: `to-user-id=eq.${id}`,
-      },
+      }, () => {
+        setIncomingCall(null)
+        setOutgoingCall(null)
+        setInCall(false)
+      }
     );
 
     return () => {
