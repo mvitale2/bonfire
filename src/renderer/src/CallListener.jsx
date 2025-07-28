@@ -121,6 +121,7 @@ function CallListener() {
         table: "signals",
         filter: `to-user-id=eq.${id}`,
       }, () => {
+        console.log("Call ended!")
         setIncomingCall(null)
         setOutgoingCall(null)
         setInCall(false)
