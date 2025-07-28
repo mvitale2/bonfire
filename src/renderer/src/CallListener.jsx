@@ -129,6 +129,8 @@ function CallListener() {
       }
     );
 
+    console.log(`Subcribed to room: ${roomId}`)
+
     return () => {
       supabase.removeChannel(inChannel);
     };
