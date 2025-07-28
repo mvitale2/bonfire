@@ -121,7 +121,7 @@ function CallListener() {
         event: "DELETE",
         schema: "public",
         table: "signals",
-        filter: `room_id=eq.${roomId}`,
+        // filter: `room_id=eq.${roomId}`,
       }, () => {
         console.log("Call ended!")
         setIncomingCall(null)
