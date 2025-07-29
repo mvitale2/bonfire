@@ -10,7 +10,6 @@ import SimplePeer from "simple-peer";
 function CallToast({
   remote_id,
   initiator,
-  receiver,
   room_id,
 }) {
   const { setInCall, inCall, peerRef, remotePeerRef, id } =
@@ -26,7 +25,7 @@ function CallToast({
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const localPeer = new SimplePeer({
-        initiator: true,
+        initiator: initiator,
         trickle: true,
         stream,
         config: {
@@ -37,11 +36,11 @@ function CallToast({
               username: "test",
               credential: "tset123",
             },
-            {
-              urls: "turns:162.248.100.4:5349",
-              username: "test",
-              credential: "tset123",
-            },
+            // {
+            //   urls: "turns:162.248.100.4:5349",
+            //   username: "test",
+            //   credential: "tset123",
+            // },
           ],
         },
       });
@@ -183,17 +182,17 @@ function CallToast({
       <div className="call-toast-wrapper">
         {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
         {initiator === true ? <OutgoingCall /> : null}
-        {receiver === true ? <IncomingCall /> : null}
+        {initiator === false ? <IncomingCall /> : null}
         <div className="call-avatar-div">
           <div className="username">
-            {receiver === true ? (
+            {initiator === false ? (
               <p>{fromUserNickname}</p>
             ) : (
               <p>{toUserNickname}</p>
             )}
           </div>
           <div className="pfp">
-            {receiver === true ? (
+            {initiator === false ? (
               <Avatar otherUserId={id} />
             ) : (
               <Avatar otherUserId={remote_id} />

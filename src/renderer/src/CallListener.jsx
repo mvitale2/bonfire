@@ -32,7 +32,7 @@ function CallListener() {
           setIncomingCall({
             room_id: room_id,
             remote_id: from_user_id,
-            receiver: true,
+            initiator: false,
           });
         }
       )
