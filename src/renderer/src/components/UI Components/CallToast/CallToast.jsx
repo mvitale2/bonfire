@@ -54,7 +54,7 @@ function CallToast({
     }
     if (remotePeerRef.current) {
       remotePeerRef.current.destroy();
-      remotePeerRef = null;
+      remotePeerRef.current = null;
     }
 
     const { error } = await supabase
