@@ -87,7 +87,7 @@ function CallToast({
 
   useEffect(() => {
     const fetchNickname = async () => {
-      if (receiver === true && id) {
+      if (initiator === false && id) {
         const nickname = await getNickname(id);
         setFromUserNickname(nickname);
       } else if (remote_id) {
@@ -97,7 +97,7 @@ function CallToast({
     };
 
     fetchNickname();
-  }, [remote_id, receiver]);
+  }, [remote_id, initiator]);
 
   const handleAnswerCall = async () => {
     setCallAccepted(true);
