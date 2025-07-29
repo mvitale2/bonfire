@@ -2,21 +2,14 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { UserContext } from "./UserContext";
 import supabase from "../Supabase.jsx";
 import CallToast from "./components/UI Components/CallToast/CallToast";
-import SimplePeer from "simple-peer";
 
 function CallListener() {
-  const {
-    id,
-    inCall,
-    setInCall,
-    peerRef,
-    setRemoteUserId,
-    remoteUserId,
-  } = useContext(UserContext);
+  const { id, inCall, setInCall, remoteUserId } =
+    useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
-  const [receiver, setReciver] = useState(false)
-  const [roomId, setRoomId] = useState(null)
+  const [receiver, setReciver] = useState(false);
+  const [roomId, setRoomId] = useState(null);
 
   // Incoming call listener
   useEffect(() => {
@@ -33,16 +26,15 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
-          console.log("detected incoming signal!");
-          setReciver(true)
+          console.log("user is receiver");
+          setReciver(true);
           setInCall(true);
-          const { room_id, from_user_id, payload: offerPayload } = payload.new;
-          setRoomId(room_id)
+          const { room_id, from_user_id } = payload.new;
+          setRoomId(room_id);
           setIncomingCall({
             room_id,
-            caller_id: from_user_id,
+            remote_id: from_user_id,
             receiver: true,
-            payload: offerPayload,
           });
         }
       )
@@ -55,70 +47,28 @@ function CallListener() {
     console.log(incomingCall);
   }, [incomingCall]);
 
-  // create peer on mount, or when inCall becomes true
   useEffect(() => {
-    if (inCall === false || receiver) return;
-    console.log("in call, creating local peer");
-
+    if (inCall === false || receiver === true) return;
+    console.log("user is initiator");
     const randId = crypto.randomUUID();
-    setRoomId(randId)
-    peerRef.current = new SimplePeer({
+    setRoomId(randId);
+    setOutgoingCall({
+      room_id: randId,
+      remote_id: remoteUserId,
       initiator: true,
-      trickle: true,
-      config: {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          {
-            urls: "turn:162.248.100.4:3479",
-            username: "test",
-            credential: "tset123",
-          },
-          {
-            urls: "turns:162.248.100.4:5349",
-            username: "test",
-            credential: "tset123",
-          },
-        ],
-      },
     });
-
-    peerRef.current.on("signal", async (data) => {
-      const { error } = await supabase
-        .from("signals")
-        .insert({
-          room_id: randId,
-          from_user_id: id,
-          to_user_id: remoteUserId,
-          payload: JSON.stringify(data),
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.log(`Error calling user: ${error.message}`);
-        return;
-      }
-
-      setOutgoingCall({
-        room_id: randId,
-        callee_id: remoteUserId,
-        initiator: true,
-      });
-    });
-  }, [inCall, remoteUserId]);
+  }, [inCall, receiver]);
 
   useEffect(() => {
-    console.log(outgoingCall)
-  }, [outgoingCall])
+    console.log(outgoingCall);
+  }, [outgoingCall]);
 
   // end call listener
   useEffect(() => {
     if (inCall === true) return;
-
-    console.log("Call ended!")
-
-    setIncomingCall(null)
-    setOutgoingCall(null)
+    console.log("Call ended!");
+    setIncomingCall(null);
+    setOutgoingCall(null);
   }, [inCall]);
 
   if (incomingCall) {

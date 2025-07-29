@@ -5,43 +5,103 @@ import "./CallToast.css";
 import { MdCall, MdCallEnd } from "react-icons/md";
 import Avatar from "../Avatar/Avatar";
 import getNickname from "../../../getNickname";
+import SimplePeer from "simple-peer";
 
 function CallToast({
-  caller_id,
-  callee_id,
+  remote_id,
   initiator,
   receiver,
   room_id,
-  payload,
 }) {
-  const { setInCall, peerRef, remotePeerRef, id } = useContext(UserContext);
+  const { setInCall, inCall, peerRef, remotePeerRef, id } =
+    useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
   const [callAccepted, setCallAccepted] = useState(false);
+  const audioRef = useRef(null);
+
+  // peer creation for receiver & initiator
+  useEffect(() => {
+    if (inCall === false) return;
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const localPeer = new SimplePeer({
+        initiator: true,
+        trickle: true,
+        stream,
+        config: {
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            {
+              urls: "turn:162.248.100.4:3479",
+              username: "test",
+              credential: "tset123",
+            },
+            {
+              urls: "turns:162.248.100.4:5349",
+              username: "test",
+              credential: "tset123",
+            },
+          ],
+        },
+      });
+      peerRef.current = localPeer
+
+      localPeer.on("signal", async (data) => {
+        await supabase.from("signals").insert({
+          room_id: room_id,
+          from_user_id: id,
+          to_user_id: remote_id,
+          payload: JSON.stringify(data),
+        });
+      });
+
+      localPeer.on("stream", (remoteStream) => {
+        audioRef.current.srcObject = remoteStream;
+        audioRef.current.play();
+      });
+
+      const subscription = supabase
+        .channel("voice-comms")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "signals",
+          },
+          (payload) => {
+            const { from_user_id, payload: signal } = payload.new;
+            if (from_user_id !== id) {
+              localPeer.signal(JSON.parse(signal));
+            }
+          }
+        )
+        .subscribe();
+
+        console.log("In call!")
+
+        return () => supabase.removeChannel(subscription);
+    });
+  }, [inCall]);
 
   useEffect(() => {
     const fetchNickname = async () => {
-      if (receiver === true) {
-        const nickname = await getNickname(caller_id);
+      if (receiver === true && id) {
+        const nickname = await getNickname(id);
         setFromUserNickname(nickname);
-      } else {
-        const nickname = await getNickname(callee_id);
+      } else if (remote_id) {
+        const nickname = await getNickname(remote_id);
         setToUserNickname(nickname);
       }
     };
 
     fetchNickname();
-  }, [callee_id, caller_id, receiver]);
+  }, [remote_id, receiver]);
 
   const handleAnswerCall = async () => {
     setCallAccepted(true);
-    const signal = payload;
-    console.log(signal);
-    remotePeerRef.current = new SimplePeer({
-      initiator: false,
-      trickle: false,
-    });
-    remotePeerRef.current.signal(signal);
+    setInCall(true)
   };
 
   const handleEndCall = async () => {
@@ -133,9 +193,9 @@ function CallToast({
           </div>
           <div className="pfp">
             {receiver === true ? (
-              <Avatar otherUserId={caller_id} />
+              <Avatar otherUserId={id} />
             ) : (
-              <Avatar otherUserId={callee_id} />
+              <Avatar otherUserId={remote_id} />
             )}
           </div>
         </div>

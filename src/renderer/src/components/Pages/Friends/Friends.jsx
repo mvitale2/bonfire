@@ -345,9 +345,10 @@ function Friends() {
         .eq("public_id", targetId);
     };
 
-    const handleCall = async (targetId) => {
+    const handleCall = (targetId) => {
+      // console.log(`Target friend: ${targetId}`)
+      setRemoteUserId(targetId);
       setInCall(true)
-      setRemoteUserId(targetId)
     };
 
     useEffect(() => {
