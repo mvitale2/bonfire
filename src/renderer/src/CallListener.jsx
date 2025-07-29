@@ -74,7 +74,7 @@ function CallListener() {
       <CallToast
         room_id={incomingCall.room_id}
         remote_id={incomingCall.remote_id}
-        receiver={incomingCall.receiver}
+        initiator={incomingCall.initiator}
         payload={incomingCall.payload}
       />
     );
