@@ -74,7 +74,7 @@ function CallToast({
           (payload) => {
             const { from_user_id, payload: signal } = payload.new;
             if (from_user_id !== id) {
-              localPeer.signal(JSON.parse(signal));
+              localPeer.signal(signal);
             }
           }
         )
