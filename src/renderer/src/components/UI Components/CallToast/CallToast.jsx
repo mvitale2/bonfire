@@ -193,7 +193,7 @@ function CallToast({
           </div>
           <div className="pfp">
             {initiator === false ? (
-              <Avatar otherUserId={id} />
+              <Avatar />
             ) : (
               <Avatar otherUserId={remote_id} />
             )}
