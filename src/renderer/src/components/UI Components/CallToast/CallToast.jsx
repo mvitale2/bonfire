@@ -14,7 +14,7 @@ function CallToast({
   room_id,
   payload,
 }) {
-  const { setInCall, remotePeerRef } = useContext(UserContext);
+  const { setInCall, peerRef, remotePeerRef, id } = useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
   const [callAccepted, setCallAccepted] = useState(false);
@@ -34,8 +34,9 @@ function CallToast({
   }, [callee_id, caller_id, receiver]);
 
   const handleAnswerCall = async () => {
-    setCallAccepted(true)
+    setCallAccepted(true);
     const signal = payload;
+    console.log(signal);
     remotePeerRef.current = new SimplePeer({
       initiator: false,
       trickle: false,
@@ -45,7 +46,16 @@ function CallToast({
 
   const handleEndCall = async () => {
     setInCall(false);
-    setCallAccepted(false)
+    setCallAccepted(false);
+
+    if (peerRef.current) {
+      peerRef.current.destroy();
+      peerRef.current = null;
+    }
+    if (remotePeerRef.current) {
+      remotePeerRef.current.destroy();
+      remotePeerRef = null;
+    }
 
     const { error } = await supabase
       .from("signals")
