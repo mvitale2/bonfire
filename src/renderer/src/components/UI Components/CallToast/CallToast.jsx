@@ -48,6 +48,7 @@ function CallToast({
       peerRef.current = localPeer
 
       localPeer.on("signal", async (data) => {
+        console.log(`Sending offer to ${remote_id}`)
         await supabase.from("signals").insert({
           room_id: room_id,
           from_user_id: id,

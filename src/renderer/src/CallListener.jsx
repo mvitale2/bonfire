@@ -9,7 +9,6 @@ function CallListener() {
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
   const [receiver, setReciver] = useState(false);
-  const [roomId, setRoomId] = useState(null);
 
   // Incoming call listener
   useEffect(() => {
@@ -30,9 +29,8 @@ function CallListener() {
           setReciver(true);
           setInCall(true);
           const { room_id, from_user_id } = payload.new;
-          setRoomId(room_id);
           setIncomingCall({
-            room_id,
+            room_id: room_id,
             remote_id: from_user_id,
             receiver: true,
           });
@@ -48,10 +46,10 @@ function CallListener() {
   }, [incomingCall]);
 
   useEffect(() => {
-    if (inCall === false || receiver === true) return;
+    if (inCall === false || receiver === true || !remoteUserId) return;
     console.log("user is initiator");
+    console.log("Initiating call toast with", remoteUserId)
     const randId = crypto.randomUUID();
-    setRoomId(randId);
     setOutgoingCall({
       room_id: randId,
       remote_id: remoteUserId,
@@ -69,13 +67,13 @@ function CallListener() {
     console.log("Call ended!");
     setIncomingCall(null);
     setOutgoingCall(null);
-  }, [inCall]);
+  }, [inCall, remoteUserId]);
 
   if (incomingCall) {
     return (
       <CallToast
         room_id={incomingCall.room_id}
-        caller_id={incomingCall.caller_id}
+        remote_id={incomingCall.remote_id}
         receiver={incomingCall.receiver}
         payload={incomingCall.payload}
       />
@@ -84,7 +82,7 @@ function CallListener() {
     return (
       <CallToast
         room_id={outgoingCall.room_id}
-        callee_id={outgoingCall.callee_id}
+        remote_id={outgoingCall.remote_id}
         initiator={outgoingCall.initiator}
       />
     );
