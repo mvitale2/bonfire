@@ -93,6 +93,11 @@ function CallToast({ remote_id, initiator, room_id }) {
 
       localPeer.on("connect", () => {
         console.log("connected!");
+        localPeer.send(`Hello ${remoteUserNickname}, it's me, ${id}`);
+      });
+
+      localPeer.on("data", (data) => {
+        console.log(data.toString());
       });
 
       localPeer.on("error", (err) => {
@@ -117,9 +122,10 @@ function CallToast({ remote_id, initiator, room_id }) {
       const loadPayload = (payload) => {
         const { payload: signal } = payload.new;
         console.log("Loading detected signal");
-        console.log(signal)
-        const parsedSignal = typeof signal === "string" ? JSON.parse(signal) : signal;
-        console.log(parsedSignal)
+        console.log(signal);
+        const parsedSignal =
+          typeof signal === "string" ? JSON.parse(signal) : signal;
+        console.log(parsedSignal);
         localPeer.signal(parsedSignal);
       };
 
