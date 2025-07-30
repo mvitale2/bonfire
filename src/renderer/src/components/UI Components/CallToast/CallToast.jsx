@@ -26,7 +26,7 @@ function CallToast({ remote_id, initiator, room_id }) {
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       console.log("Got user media", stream)
-      
+
       const localPeer = new SimplePeer({
         initiator: initiator,
         trickle: true,
@@ -83,6 +83,7 @@ function CallToast({ remote_id, initiator, room_id }) {
           },
           (payload) => {
             const { from_user_id, payload: signal } = payload.new;
+            console.log("detected signal from", from_user_id)
             if (from_user_id !== id) {
               console.log("Loading detected signal")
               localPeer.signal(signal);
