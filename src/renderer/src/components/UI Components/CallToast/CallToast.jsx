@@ -19,7 +19,7 @@ function CallToast({ remote_id, initiator, room_id }) {
     if (initiator === true && callAccepted === false) {
       setCallAccepted(true);
     } else {
-      return
+      return;
     }
 
     const sendInitialOffer = async () => {
@@ -117,7 +117,10 @@ function CallToast({ remote_id, initiator, room_id }) {
       const loadPayload = (payload) => {
         const { payload: signal } = payload.new;
         console.log("Loading detected signal");
-        localPeer.signal(signal);
+        console.log(signal)
+        const parsedSignal = typeof signal === "string" ? JSON.parse(signal) : signal;
+        console.log(parsedSignal)
+        localPeer.signal(parsedSignal);
       };
 
       const subscription = supabase
@@ -195,6 +198,14 @@ function CallToast({ remote_id, initiator, room_id }) {
     if (error) {
       console.log(`Error removing signals: ${error.message}`);
     }
+
+    const { acceptError } = await supabase
+      .from("call_status")
+      .delete()
+      .eq("room_id", room_id);
+
+    if (acceptError)
+      console.log(`Error deleting call status entry: ${acceptError.message}`);
   };
 
   function IncomingCall() {
