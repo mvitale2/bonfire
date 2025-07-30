@@ -16,11 +16,16 @@ function CallToast({
     useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
+  const [callAccepted, setCallAccepted] = useState(false)
   const audioRef = useRef(null);
+
+  if (initiator) {
+    setCallAccepted(true)
+  }
 
   // peer creation for receiver & initiator
   useEffect(() => {
-    if (inCall === false) return;
+    if (callAccepted === false) return;
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const localPeer = new SimplePeer({
@@ -78,7 +83,7 @@ function CallToast({
         )
         .subscribe();
 
-        console.log("In call!")
+        console.log("Done creating peer")
 
         return () => supabase.removeChannel(subscription);
     });
@@ -99,7 +104,7 @@ function CallToast({
   }, [remote_id, initiator]);
 
   const handleAnswerCall = async () => {
-    setInCall(true)
+    setCallAccepted(true)
   };
 
   const handleEndCall = async () => {
@@ -158,7 +163,7 @@ function CallToast({
       );
     }
 
-    return inCall ? <CallAcceptedBtn /> : <IncomingCallBtns />;
+    return callAccepted ? <CallAcceptedBtn /> : <IncomingCallBtns />;
   }
 
   function OutgoingCall() {
@@ -189,11 +194,7 @@ function CallToast({
             )}
           </div>
           <div className="pfp">
-            {initiator === false ? (
-              <Avatar />
-            ) : (
-              <Avatar otherUserId={remote_id} />
-            )}
+            <Avatar otherUserId={remote_id} />
           </div>
         </div>
       </div>
