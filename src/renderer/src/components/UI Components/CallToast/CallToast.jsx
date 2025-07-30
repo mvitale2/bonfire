@@ -22,6 +22,8 @@ function CallToast({ remote_id, initiator, room_id }) {
   useEffect(() => {
     if (inCall === false || callAccepted === false) return;
 
+    console.log("Creating peer...")
+
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const localPeer = new SimplePeer({
         initiator: initiator,
@@ -72,6 +74,7 @@ function CallToast({ remote_id, initiator, room_id }) {
           (payload) => {
             const { from_user_id, payload: signal } = payload.new;
             if (from_user_id !== id) {
+              console.log("Loading detected signal")
               localPeer.signal(signal);
             }
           }
