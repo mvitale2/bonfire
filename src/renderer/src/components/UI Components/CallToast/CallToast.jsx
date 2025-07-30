@@ -16,12 +16,11 @@ function CallToast({
     useContext(UserContext);
   const [fromUserNickname, setFromUserNickname] = useState(null);
   const [toUserNickname, setToUserNickname] = useState(null);
-  const [callAccepted, setCallAccepted] = useState(false);
   const audioRef = useRef(null);
 
   // peer creation for receiver & initiator
   useEffect(() => {
-    if (inCall === false || callAccepted === false) return;
+    if (inCall === false) return;
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const localPeer = new SimplePeer({
@@ -83,7 +82,7 @@ function CallToast({
 
         return () => supabase.removeChannel(subscription);
     });
-  }, [inCall, callAccepted]);
+  }, [inCall]);
 
   useEffect(() => {
     const fetchNickname = async () => {
@@ -100,13 +99,11 @@ function CallToast({
   }, [remote_id, initiator]);
 
   const handleAnswerCall = async () => {
-    setCallAccepted(true);
     setInCall(true)
   };
 
   const handleEndCall = async () => {
     setInCall(false);
-    setCallAccepted(false);
 
     if (peerRef.current) {
       peerRef.current.destroy();
@@ -161,7 +158,7 @@ function CallToast({
       );
     }
 
-    return callAccepted ? <CallAcceptedBtn /> : <IncomingCallBtns />;
+    return inCall ? <CallAcceptedBtn /> : <IncomingCallBtns />;
   }
 
   function OutgoingCall() {
