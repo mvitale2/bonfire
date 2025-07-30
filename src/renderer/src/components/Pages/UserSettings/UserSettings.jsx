@@ -214,7 +214,6 @@ export const UserProvider = ({ children }) => {
   const [inCall, setInCall] = useState(false);
   const [remoteUserId, setRemoteUserId] = useState(null)
   const peerRef = useRef(null);
-  const remotePeerRef = useRef(null);
 
   // Load user data including privacy prefs here
   useEffect(() => {
@@ -267,7 +266,6 @@ export const UserProvider = ({ children }) => {
         inCall,
         setInCall,
         peerRef,
-        remotePeerRef,
         remoteUserId,
         setRemoteUserId,
       }}

@@ -1,3 +1,8 @@
+* {
+  --connected-color: green;
+  --disconnected-color: red;
+}
+
 .call-toast-wrapper {
   position: fixed;
   bottom: 0;
@@ -77,6 +82,26 @@
   font-size: 20px;
 }
 
+.call-toast-wrapper .status-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.call-toast-wrapper .status-icons .connection-status {
+  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.call-toast-wrapper .status-icons .disconnected {
+  color: var(--disconnected-color)
+}
+
+.call-toast-wrapper .status-icons .connected {
+  color: var(--connected-color)
+}
 
 .call-toast-wrapper .call-btns .decline-call-btn:hover,
 .call-toast-wrapper .end-call-btn:hover {

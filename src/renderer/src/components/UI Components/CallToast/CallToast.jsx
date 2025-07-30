@@ -3,16 +3,18 @@ import { UserContext } from "../../../UserContext";
 import supabase from "../../../../Supabase";
 import "./CallToast.css";
 import { MdCall, MdCallEnd } from "react-icons/md";
+import { MdConnectWithoutContact } from "react-icons/md";
 import Avatar from "../Avatar/Avatar";
 import getNickname from "../../../getNickname";
 import SimplePeer from "simple-peer";
 
 function CallToast({ remote_id, initiator, room_id }) {
-  const { setInCall, inCall, peerRef, remotePeerRef, id } =
+  const { setInCall, inCall, peerRef, id } =
     useContext(UserContext);
   const [remoteUserNickname, setRemoteUserNickname] = useState(null);
   const [callAccepted, setCallAccepted] = useState(false);
   const [remoteAccepted, setRemoteAccepted] = useState(false);
+  const [connected, setConnected] = useState(false)
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -94,6 +96,7 @@ function CallToast({ remote_id, initiator, room_id }) {
       localPeer.on("connect", () => {
         console.log("connected!");
         localPeer.send(`Hello ${remoteUserNickname}, it's me, ${id}`);
+        setConnected(true)
       });
 
       localPeer.on("data", (data) => {
@@ -102,6 +105,7 @@ function CallToast({ remote_id, initiator, room_id }) {
 
         if (message === 'END CALL') {
           setInCall(false)
+          setConnected(false)
         }
       });
 
@@ -200,10 +204,6 @@ function CallToast({ remote_id, initiator, room_id }) {
       peerRef.current.destroy();
       peerRef.current = null;
     }
-    if (remotePeerRef.current) {
-      remotePeerRef.current.destroy();
-      remotePeerRef.current = null;
-    }
 
     const { error } = await supabase
       .from("signals")
@@ -279,6 +279,11 @@ function CallToast({ remote_id, initiator, room_id }) {
         {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
         {initiator === true ? <OutgoingCall /> : null}
         {initiator === false ? <IncomingCall /> : null}
+        <div className="status-icons">
+          <div className={`connection-status ${connected ? "connected" : "disconnected"}`}>
+            <MdConnectWithoutContact />
+          </div>
+        </div>
         <div className="call-avatar-div">
           <div className="username">
             <p>{remoteUserNickname}</p>
