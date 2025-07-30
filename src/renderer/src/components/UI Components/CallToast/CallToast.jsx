@@ -25,6 +25,7 @@ function CallToast({ remote_id, initiator, room_id }) {
         room_id: room_id,
         from_user_id: id,
         to_user_id: remote_id,
+        type: "initial",
       });
     };
 

@@ -4,8 +4,7 @@ import supabase from "../Supabase.jsx";
 import CallToast from "./components/UI Components/CallToast/CallToast";
 
 function CallListener() {
-  const { id, inCall, setInCall, remoteUserId } =
-    useContext(UserContext);
+  const { id, inCall, setInCall, remoteUserId } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
   const [receiver, setReciver] = useState(false);
@@ -25,15 +24,17 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
-          console.log("user is receiver");
-          setReciver(true);
-          setInCall(true);
-          const { room_id, from_user_id } = payload.new;
-          setIncomingCall({
-            room_id: room_id,
-            remote_id: from_user_id,
-            initiator: false,
-          });
+          if (payload.new.type === "initial") {
+            console.log("user is receiver");
+            setReciver(true);
+            setInCall(true);
+            const { room_id, from_user_id } = payload.new;
+            setIncomingCall({
+              room_id: room_id,
+              remote_id: from_user_id,
+              initiator: false,
+            });
+          }
         }
       )
       .subscribe();
@@ -48,7 +49,7 @@ function CallListener() {
   useEffect(() => {
     if (inCall === false || receiver === true || !remoteUserId) return;
     console.log("user is initiator");
-    console.log("Initiating call toast with", remoteUserId)
+    console.log("Initiating call toast with", remoteUserId);
     const randId = crypto.randomUUID();
     setOutgoingCall({
       room_id: randId,
