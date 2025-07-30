@@ -18,6 +18,8 @@ function CallToast({ remote_id, initiator, room_id }) {
   useEffect(() => {
     if (initiator === true && callAccepted === false) {
       setCallAccepted(true);
+    } else {
+      return
     }
 
     const sendInitialOffer = async () => {
