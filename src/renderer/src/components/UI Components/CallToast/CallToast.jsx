@@ -12,14 +12,53 @@ function CallToast({ remote_id, initiator, room_id }) {
     useContext(UserContext);
   const [remoteUserNickname, setRemoteUserNickname] = useState(null);
   const [callAccepted, setCallAccepted] = useState(false);
+  const [remoteAccepted, setRemoteAccepted] = useState(false);
   const audioRef = useRef(null);
 
-  if (initiator && !callAccepted) {
-    setCallAccepted(true);
-  }
+  useEffect(() => {
+    if (initiator === true && callAccepted === false) {
+      setCallAccepted(true);
+    }
+
+    const sendInitialOffer = async () => {
+      await supabase.from("signals").insert({
+        room_id: room_id,
+        from_user_id: id,
+        to_user_id: remote_id,
+      });
+    };
+
+    sendInitialOffer();
+  }, []);
+
+  // answered call listener
+  useEffect(() => {
+    if (initiator === false) return;
+
+    const channel = supabase
+      .channel("call-status")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "call_status",
+          filter: `room_id=eq.${room_id}`,
+        },
+        (payload) => {
+          if (payload.new.accepted) {
+            setRemoteAccepted(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [initiator, room_id]);
 
   // peer creation for receiver & initiator
   useEffect(() => {
+    if (initiator === true && remoteAccepted === false) return;
     if (inCall === false || callAccepted === false) return;
 
     console.log("Creating peer...");
@@ -59,7 +98,7 @@ function CallToast({ remote_id, initiator, room_id }) {
 
       localPeer.on("signal", async (data) => {
         console.log(`Sending offer to ${remote_id}`);
-        await supabase.from("signals").insert({
+        await supabase.from("signals").upsert({
           room_id: room_id,
           from_user_id: id,
           to_user_id: remote_id,
@@ -72,6 +111,12 @@ function CallToast({ remote_id, initiator, room_id }) {
         audioRef.current.play();
       });
 
+      const loadPayload = (payload) => {
+        const { payload: signal } = payload.new;
+        console.log("Loading detected signal");
+        localPeer.signal(signal);
+      };
+
       const subscription = supabase
         .channel("voice-comms")
         .on(
@@ -83,9 +128,19 @@ function CallToast({ remote_id, initiator, room_id }) {
             filter: `to_user_id=eq.${id}`,
           },
           (payload) => {
-            const { payload: signal } = payload.new;
-            console.log("Loading detected signal");
-            localPeer.signal(signal);
+            loadPayload(payload);
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPADTE",
+            schema: "public",
+            table: "signals",
+            filter: `to_user_id=eq.${id}`,
+          },
+          (payload) => {
+            loadPayload(payload);
           }
         )
         .subscribe();
@@ -94,7 +149,7 @@ function CallToast({ remote_id, initiator, room_id }) {
 
       return () => supabase.removeChannel(subscription);
     });
-  }, [inCall, callAccepted]);
+  }, [inCall, callAccepted, initiator, remoteAccepted]);
 
   // get the remote user's nickname
   useEffect(() => {
@@ -109,6 +164,12 @@ function CallToast({ remote_id, initiator, room_id }) {
   const handleAnswerCall = async () => {
     setCallAccepted(true);
     setInCall(true);
+
+    // notifies initiator
+    await supabase.from("call_status").upsert({
+      room_id,
+      accepted: true,
+    });
   };
 
   const handleEndCall = async () => {
