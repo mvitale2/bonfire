@@ -19,7 +19,7 @@ function CallToast({
   const [callAccepted, setCallAccepted] = useState(false)
   const audioRef = useRef(null);
 
-  if (initiator) {
+  if (initiator && !callAccepted) {
     setCallAccepted(true)
   }
 
