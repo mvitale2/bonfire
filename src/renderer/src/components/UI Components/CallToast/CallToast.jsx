@@ -192,7 +192,7 @@ function CallToast({ remote_id, initiator, room_id }) {
   };
 
   const handleEndCall = async () => {
-    if (peerRef.current) peerRef.current.signal("END CALL")
+    if (peerRef.current) peerRef.current.send("END CALL")
     
     setInCall(false);
 
