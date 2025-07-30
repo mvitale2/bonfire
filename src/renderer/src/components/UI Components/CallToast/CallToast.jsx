@@ -25,7 +25,7 @@ function CallToast({
 
   // peer creation for receiver & initiator
   useEffect(() => {
-    if (callAccepted === false) return;
+    if (inCall === false || callAccepted === false) return;
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const localPeer = new SimplePeer({
@@ -87,7 +87,7 @@ function CallToast({
 
         return () => supabase.removeChannel(subscription);
     });
-  }, [inCall]);
+  }, [inCall, callAccepted]);
 
   useEffect(() => {
     const fetchNickname = async () => {
