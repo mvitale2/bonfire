@@ -43,7 +43,7 @@ function CallToast({ remote_id, initiator, room_id }) {
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "INSERT",
           schema: "public",
           table: "call_status",
           filter: `room_id=eq.${room_id}`,
@@ -169,7 +169,7 @@ function CallToast({ remote_id, initiator, room_id }) {
     setInCall(true);
 
     // notifies initiator
-    await supabase.from("call_status").upsert({
+    await supabase.from("call_status").insert({
       room_id,
       accepted: true,
     });
