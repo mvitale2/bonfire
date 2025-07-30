@@ -134,7 +134,7 @@ function CallToast({ remote_id, initiator, room_id }) {
         .on(
           "postgres_changes",
           {
-            event: "UPADTE",
+            event: "UPDATE",
             schema: "public",
             table: "signals",
             filter: `to_user_id=eq.${id}`,
@@ -146,9 +146,9 @@ function CallToast({ remote_id, initiator, room_id }) {
         .subscribe();
 
       console.log("Done creating peer");
-
-      return () => supabase.removeChannel(subscription);
     });
+
+    return () => supabase.removeChannel(subscription);
   }, [inCall, callAccepted, initiator, remoteAccepted]);
 
   // get the remote user's nickname
