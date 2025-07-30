@@ -25,10 +25,7 @@ function CallListener() {
         },
         async (payload) => {
           const { room_id, from_user_id, type } = payload.new;
-          if (
-            type === "initial" &&
-            from_user_id !== id
-          ) {
+          if (type === "initial" && from_user_id !== id) {
             console.log("user is receiver");
             setReciver(true);
             setInCall(true);
@@ -71,6 +68,7 @@ function CallListener() {
     console.log("Call ended!");
     setIncomingCall(null);
     setOutgoingCall(null);
+    setReciver(false);
   }, [inCall, remoteUserId]);
 
   if (incomingCall) {
