@@ -36,7 +36,7 @@ function CallToast({ remote_id, initiator, room_id }) {
     if (initiator === false) return;
 
     const channel = supabase
-      .channel("call-status")
+      .channel("call_status")
       .on(
         "postgres_changes",
         {
