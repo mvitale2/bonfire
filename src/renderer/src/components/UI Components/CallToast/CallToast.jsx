@@ -98,7 +98,7 @@ function CallToast({ remote_id, initiator, room_id }) {
 
       localPeer.on("signal", async (data) => {
         console.log(`Sending offer to ${remote_id}`);
-        await supabase.from("signals").upsert({
+        await supabase.from("signals").insert({
           room_id: room_id,
           from_user_id: id,
           to_user_id: remote_id,
@@ -148,7 +148,7 @@ function CallToast({ remote_id, initiator, room_id }) {
       console.log("Done creating peer");
     });
 
-    return () => supabase.removeChannel(subscription);
+    // return () => supabase.removeChannel(subscription);
   }, [inCall, callAccepted, initiator, remoteAccepted]);
 
   // get the remote user's nickname
