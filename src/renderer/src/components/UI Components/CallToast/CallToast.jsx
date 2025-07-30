@@ -25,6 +25,8 @@ function CallToast({ remote_id, initiator, room_id }) {
     console.log("Creating peer...")
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      console.log("Got user media", stream)
+      
       const localPeer = new SimplePeer({
         initiator: initiator,
         trickle: true,
@@ -46,6 +48,14 @@ function CallToast({ remote_id, initiator, room_id }) {
         },
       });
       peerRef.current = localPeer;
+
+      localPeer.on("connect", () => {
+        console.log("connected!")
+      })
+
+      localPeer.on("error", (err) => {
+        console.log("Peer error:", err)
+      })
 
       localPeer.on("signal", async (data) => {
         console.log(`Sending offer to ${remote_id}`);
