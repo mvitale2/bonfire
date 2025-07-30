@@ -22,10 +22,10 @@ function CallToast({ remote_id, initiator, room_id }) {
   useEffect(() => {
     if (inCall === false || callAccepted === false) return;
 
-    console.log("Creating peer...")
+    console.log("Creating peer...");
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      console.log("Got user media", stream)
+      console.log("Got user media", stream);
 
       const localPeer = new SimplePeer({
         initiator: initiator,
@@ -50,12 +50,12 @@ function CallToast({ remote_id, initiator, room_id }) {
       peerRef.current = localPeer;
 
       localPeer.on("connect", () => {
-        console.log("connected!")
-      })
+        console.log("connected!");
+      });
 
       localPeer.on("error", (err) => {
-        console.log("Peer error:", err)
-      })
+        console.log("Peer error:", err);
+      });
 
       localPeer.on("signal", async (data) => {
         console.log(`Sending offer to ${remote_id}`);
@@ -80,14 +80,12 @@ function CallToast({ remote_id, initiator, room_id }) {
             event: "INSERT",
             schema: "public",
             table: "signals",
+            filter: `to_user_id=eq.${id}`,
           },
           (payload) => {
-            const { from_user_id, payload: signal } = payload.new;
-            console.log("detected signal from", from_user_id)
-            if (from_user_id !== id) {
-              console.log("Loading detected signal")
-              localPeer.signal(signal);
-            }
+            const { payload: signal } = payload.new;
+            console.log("Loading detected signal");
+            localPeer.signal(signal);
           }
         )
         .subscribe();
