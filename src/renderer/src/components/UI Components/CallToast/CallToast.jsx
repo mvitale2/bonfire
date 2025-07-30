@@ -97,7 +97,12 @@ function CallToast({ remote_id, initiator, room_id }) {
       });
 
       localPeer.on("data", (data) => {
-        console.log(data.toString());
+        const message = data.toString()
+        console.log(message);
+
+        if (message === 'END CALL') {
+          setInCall(false)
+        }
       });
 
       localPeer.on("error", (err) => {
@@ -187,6 +192,8 @@ function CallToast({ remote_id, initiator, room_id }) {
   };
 
   const handleEndCall = async () => {
+    if (peerRef.current) peerRef.current.signal("END CALL")
+    
     setInCall(false);
 
     if (peerRef.current) {
