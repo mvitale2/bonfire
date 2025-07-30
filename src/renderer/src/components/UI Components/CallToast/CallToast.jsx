@@ -7,20 +7,15 @@ import Avatar from "../Avatar/Avatar";
 import getNickname from "../../../getNickname";
 import SimplePeer from "simple-peer";
 
-function CallToast({
-  remote_id,
-  initiator,
-  room_id,
-}) {
+function CallToast({ remote_id, initiator, room_id }) {
   const { setInCall, inCall, peerRef, remotePeerRef, id } =
     useContext(UserContext);
-  const [fromUserNickname, setFromUserNickname] = useState(null);
-  const [toUserNickname, setToUserNickname] = useState(null);
-  const [callAccepted, setCallAccepted] = useState(false)
+  const [remoteUserNickname, setRemoteUserNickname] = useState(null);
+  const [callAccepted, setCallAccepted] = useState(false);
   const audioRef = useRef(null);
 
   if (initiator && !callAccepted) {
-    setCallAccepted(true)
+    setCallAccepted(true);
   }
 
   // peer creation for receiver & initiator
@@ -48,10 +43,10 @@ function CallToast({
           ],
         },
       });
-      peerRef.current = localPeer
+      peerRef.current = localPeer;
 
       localPeer.on("signal", async (data) => {
-        console.log(`Sending offer to ${remote_id}`)
+        console.log(`Sending offer to ${remote_id}`);
         await supabase.from("signals").insert({
           room_id: room_id,
           from_user_id: id,
@@ -83,28 +78,25 @@ function CallToast({
         )
         .subscribe();
 
-        console.log("Done creating peer")
+      console.log("Done creating peer");
 
-        return () => supabase.removeChannel(subscription);
+      return () => supabase.removeChannel(subscription);
     });
   }, [inCall, callAccepted]);
 
+  // get the remote user's nickname
   useEffect(() => {
     const fetchNickname = async () => {
-      if (initiator === false && id) {
-        const nickname = await getNickname(id);
-        setFromUserNickname(nickname);
-      } else if (remote_id) {
-        const nickname = await getNickname(remote_id);
-        setToUserNickname(nickname);
-      }
+      const nickname = await getNickname(remote_id);
+      setRemoteUserNickname(nickname);
     };
 
     fetchNickname();
   }, [remote_id, initiator]);
 
   const handleAnswerCall = async () => {
-    setCallAccepted(true)
+    setCallAccepted(true);
+    setInCall(true);
   };
 
   const handleEndCall = async () => {
@@ -187,11 +179,7 @@ function CallToast({
         {initiator === false ? <IncomingCall /> : null}
         <div className="call-avatar-div">
           <div className="username">
-            {initiator === false ? (
-              <p>{fromUserNickname}</p>
-            ) : (
-              <p>{toUserNickname}</p>
-            )}
+            <p>{remoteUserNickname}</p>
           </div>
           <div className="pfp">
             <Avatar otherUserId={remote_id} />
