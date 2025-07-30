@@ -24,11 +24,14 @@ function CallListener() {
           filter: `to_user_id=eq.${id}`,
         },
         async (payload) => {
-          if (payload.new.type === "initial") {
+          const { room_id, from_user_id, type } = payload.new;
+          if (
+            type === "initial" &&
+            from_user_id !== id
+          ) {
             console.log("user is receiver");
             setReciver(true);
             setInCall(true);
-            const { room_id, from_user_id } = payload.new;
             setIncomingCall({
               room_id: room_id,
               remote_id: from_user_id,
