@@ -1,3 +1,4 @@
+/* Main layout */
 .messages-page {
   display: flex;
   justify-content: center;
@@ -6,9 +7,97 @@
   height: 100vh;
 }
 
+/* Groups panel */
+.messages-page .groups-panel {
+  background-color: var(--background-color-5);
+  max-height: 100vh;
+  padding: 1em;
+  overflow-y: auto;
+  margin-left: 2em;
+  border-radius: 5px;
+}
+
+.messages-page .groups-panel .groups {
+  display: flex;
+  gap: 1em;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.messages-page .groups-panel .groups .group {
+  background-color: var(--background-color-3);
+  padding: 10px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 2em; /* Make icon/text large */
+}
+
+.messages-page .groups-panel .groups .selected {
+  background-color: var(--accent-color-3);
+  cursor: not-allowed;
+}
+
+.messages-page .groups-panel .groups .group:hover {
+  background-color: var(--accent-color-3);
+}
+
+/* Group members panel */
+.messages-page .group-members-list {
+  margin: 2em;
+  padding: 1em;
+  background-color: var(--background-color-5);
+  border-radius: 5px;
+  min-width: 10vw;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow-y: auto;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.messages-page .group-members-list h4 {
+  margin-bottom: 1em;
+  width: 100%;
+  text-align: center;
+}
+
+.messages-page .group-members-list ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+.messages-page .group-members-list ul li {
+  width: 100%;
+}
+
+.messages-page .group-members-list ul li .user {
+  padding: 0.5em;
+  background-color: var(--background-color-3);
+  border-radius: 5px;
+}
+
+.messages-page .group-members-list ul li .user p {
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+/* Messages list */
 .messages-page .messages-list {
   width: 100%;
-  height: 60%;
+  height: 70%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -30,7 +119,6 @@
 
 .messages-page .messages-list .messages .message {
   display: flex;
-  /* justify-content: center; */
   align-items: center;
   gap: 1em;
 }
@@ -44,7 +132,6 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  /* gap: 0.5em; */
 }
 
 .messages-page
@@ -80,8 +167,8 @@
   .message-content {
   padding-top: 5px;
 }
-/* ...existing CSS... */
 
+/* Message input area */
 .messages-page .message-input-container {
   display: flex;
   flex-direction: column;
@@ -164,4 +251,18 @@
 
 .messages-page .message-input-container .selected-file button:hover {
   background: #a00;
+}
+
+
+
+/* Make .messages take available space and scroll */
+.messages-list .messages {
+flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  min-height: 0;
+  padding-right: 8px;
+  width: 100%;
 }

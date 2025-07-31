@@ -14,6 +14,8 @@ import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
 import CallPage from "../webrtc/callpage.jsx";
 
+
+
 const Message = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -28,9 +30,19 @@ const Message = () => {
   const [memberNicknames, setMemberNicknames] = useState({});
   const [selectedGroup, setSelectedGroup] = useState("🌐");
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+
 
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
+
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
 
   // Call state
   const [callCtx, setCallCtx] = useState(null);
@@ -224,8 +236,10 @@ const Message = () => {
     if (error) {
       console.error("Error sending message:", error.message);
     } else {
+     
       setNewMessage("");
       setImageFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -352,6 +366,7 @@ const Message = () => {
                               borderRadius: "8px",
                               marginTop: "8px",
                             }}
+                            onLoad={scrollToBottom} // <-- ADD THIS LINE
                           />
                         </>
                       )}
@@ -360,13 +375,14 @@ const Message = () => {
                 </div>
               );
             })}
+            <div ref={messagesEndRef} />
           </div>
 
-          <div ref={messagesEndRef} />
 
           {/* Input */}
           <div className="message-input-container">
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => setImageFile(e.target.files[0])}
