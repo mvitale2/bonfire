@@ -377,17 +377,18 @@ const Message = () => {
             })}
             <div ref={messagesEndRef} />
           </div>
-
-
-          {/* Input */}
           <div className="message-input-container">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-            />
             <div className="input-with-button">
+              <label className="file-label">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files[0])}
+                  style={{ display: "none" }}
+                />
+                📎
+              </label>
               <input
                 type="text"
                 placeholder="Type your message..."
