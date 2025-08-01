@@ -1,3 +1,4 @@
+/* Main layout */
 .messages-page {
   display: flex;
   justify-content: center;
@@ -6,167 +7,49 @@
   height: 100vh;
 }
 
-.messages-page .messages-panel {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  width: 100%;
-  height: 60%;
-}
-
-.messages-page .messages-panel .messages-list {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 0.8em;
+/* Groups panel */
+.messages-page .groups-panel {
+  background-color: var(--background-color-5);
+  max-height: 100vh;
+  padding: 1em;
   overflow-y: auto;
-  background-color: var(--background-color-5);
-  padding: 10px;
   margin-left: 2em;
-  margin-right: 2em;
-}
-
-.messages-page .messages-panel .messages-list .messages {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
-
-.messages-page .messages-panel .messages-list .messages .message {
-  display: flex;
-  /* justify-content: center; */
-  align-items: center;
-  gap: 1em;
-}
-
-.messages-page
-  .messages-panel
-  .messages-list
-  .messages
-  .message
-  .message-right {
-  display: flex;
-  flex-direction: column;
-}
-
-.messages-page
-  .messages-panel
-  .messages-list
-  .messages
-  .message
-  .message-right
-  .message-time {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  /* gap: 0.5em; */
-}
-
-.messages-page
-  .messages-panel
-  .messages-list
-  .messages
-  .message
-  .message-right
-  .message-time
-  .display-name {
-  color: var(--font-color-4);
-  font-weight: bold;
-  margin-right: 0.3em;
-}
-
-.messages-page
-  .messages-panel
-  .messages-list
-  .messages
-  .message
-  .message-right
-  .message-time
-  .time {
-  color: var(--font-color-4);
-  font-size: 14px;
-  font-style: italic;
-  opacity: 0.8;
-}
-
-.messages-page
-  .messages-panel
-  .messages-list
-  .messages
-  .message
-  .message-right
-  .message-content {
-  padding-top: 5px;
-}
-
-.messages-page .messages-panel .message-input-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 12px;
-  background-color: var(--background-color-5);
-
-  @media (width < 1650px) {
-    justify-content: flex-end !important;
-  }
-}
-
-.messages-page .messages-panel .message-input-container .input-with-button {
-  position: relative;
-  width: 100%;
-}
-
-.messages-page
-  .messages-panel
-  .message-input-container
-  .input-with-button
-  .message-input {
-  width: 100%;
-  padding: 10px;
-  padding-right: 48px;
   border-radius: 5px;
-  border: 1px solid var(--background-color-2);
-  font-size: 1rem;
-  box-sizing: border-box;
 }
 
-.messages-page
-  .messages-panel
-  .message-input-container
-  .input-with-button
-  button {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: none;
+.messages-page .groups-panel .groups {
+  display: flex;
+  gap: 1em;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.messages-page .groups-panel .groups .group {
+  background-color: var(--background-color-3);
+  padding: 10px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  transition: all 0.3s ease;
   cursor: pointer;
-  color: var(--font-color-2);
-  font-size: 1.3rem;
-  transition: 0.1s all ease;
-  z-index: 10000;
 }
 
-.messages-page
-  .messages-panel
-  .message-input-container
-  .input-with-button
-  button:hover {
-  color: var(--font-color-4);
+.messages-page .groups-panel .groups .selected {
+  background-color: var(--accent-color-3);
+  cursor: not-allowed;
 }
 
-/* group members panel */
+.messages-page .groups-panel .groups .group:hover {
+  background-color: var(--accent-color-3);
+}
 
+/* Group members panel */
 .messages-page .group-members-list {
   margin: 2em;
   padding: 1em;
@@ -175,7 +58,6 @@
   width: 250px;
   max-height: 100vh;
   overflow-y: auto;
-  /* prevent display name from breaking out of parent container */
   word-break: break-all;
   overflow-wrap: anywhere;
 }
@@ -210,45 +92,200 @@
   text-align: center;
 }
 
-/* groups panel */
-.messages-page .groups-panel {
-  background-color: var(--background-color-5);
-  max-height: 100vh;
-  padding: 1em;
+/* Messages list */
+.messages-page .messages-list {
+  width: 100%;
+  height: 70%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 0.8em;
   overflow-y: auto;
+  background-color: var(--background-color-5);
+  padding: 10px;
   margin-left: 2em;
   margin-right: 2em;
-  border-radius: 5px;
 }
 
-.messages-page .groups-panel .groups {
+.messages-page .messages-list .messages {
+  width: 100%;
   display: flex;
-  gap: 1em;
-  height: 100%;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  gap: 1em;
 }
 
-.messages-page .groups-panel .groups .group {
-  background-color: var(--background-color-3);
+.messages-page .messages-list .messages .message {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.messages-page .messages-list .messages .message .message-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  height: 100%;
+}
+
+.messages-page .messages-list .messages .message .message-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-page .messages-list .messages .message .message-right .message-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.messages-page
+  .messages-list
+  .messages
+  .message
+  .message-right
+  .message-time
+  .display-name {
+  color: var(--font-color-4);
+  font-weight: bold;
+  margin-right: 0.3em;
+}
+
+.messages-page
+  .messages-list
+  .messages
+  .message
+  .message-right
+  .message-time
+  .time {
+  color: var(--font-color-4);
+  font-size: 14px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.messages-page
+  .messages-list
+  .messages
+  .message
+  .message-right
+  .message-content {
+  padding-top: 5px;
+}
+
+/* Message input area */
+.messages-page .message-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 12px;
+  background: var(--background-color-5);
+  gap: 0.5em;
+}
+
+.messages-page .message-input-container .input-with-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 0.5em;
+}
+
+.messages-page .message-input-container .input-with-button .message-input {
+  flex: 1 1 auto;
   padding: 10px;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
+  border-radius: 5px;
+  border: 1px solid var(--background-color-2);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.messages-page .message-input-container .input-with-button button {
+  flex: 0 0 auto;
+  border: none;
+  background-color: unset;
+  color: var(--accent-color-3);
+  border-radius: 5px;
+  padding: 0 16px;
+  height: 40px;
+  font-size: 1.3rem;
+  margin-left: 0.5em;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
 }
 
-.messages-page .groups-panel .groups .selected {
-  background-color: var(--accent-color-3);
+.messages-page .message-input-container .input-with-button button:disabled {
+  color: var(--font-color-3);
+  background-color: unset !important;
   cursor: not-allowed;
 }
 
-.messages-page .groups-panel .groups .group:hover {
-  background-color: var(--accent-color-3);
+.messages-page
+  .message-input-container
+  .input-with-button
+  button:hover:not(:disabled) {
+  background-color: var(--background-color-3);
+}
+
+.messages-page .message-input-container input[type="file"] {
+  margin-bottom: 0.5em;
+  background: var(--background-color-3);
+  color: var(--font-color-2);
+  border-radius: 5px;
+  padding: 4px;
+  border: 1px solid var(--background-color-2);
+  width: fit-content;
+}
+
+.messages-page .message-input-container .selected-file {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.messages-page .message-input-container .selected-file button {
+  background: #c00;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.messages-page .message-input-container .selected-file button:hover {
+  background: #a00;
+}
+
+.messages-list .messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  min-height: 0;
+  padding-right: 8px;
+  width: 100%;
+}
+
+.file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color-3);
+  border-radius: 5px;
+  padding: 0 10px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 1.8em;
+  margin-right: 0.5em;
+  transition: background 0.2s;
+}
+
+.file-label:hover {
+  background: var(--background-color-3);
 }
