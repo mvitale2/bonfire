@@ -6,6 +6,7 @@ import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
+import { MdCall } from "react-icons/md";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
@@ -16,6 +17,7 @@ import rehypeHighlight from "rehype-highlight";
 
 const Message = () => {
   const { roomId } = useParams();
+  const { inCall, setInCall, setRemoteUserId } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
@@ -30,17 +32,16 @@ const Message = () => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
 
-    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    useEffect(() => {
-      scrollToBottom();
-    }, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Call state
   const [callCtx, setCallCtx] = useState(null);
@@ -196,6 +197,12 @@ const Message = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleCall = (targetId) => {
+    // console.log(`Target friend: ${targetId}`)
+    setRemoteUserId(targetId);
+    setInCall(true);
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !imageFile) return;
     if (!id) return alert("User ID is missing.");
@@ -234,7 +241,6 @@ const Message = () => {
     if (error) {
       console.error("Error sending message:", error.message);
     } else {
-     
       setNewMessage("");
       setImageFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -329,7 +335,7 @@ const Message = () => {
                       </ReactMarkdown>
                       {msg.image_url && (
                         <>
-                          {console.log("Image URL:", msg.image_url)}
+                          {/* {console.log("Image URL:", msg.image_url)} */}
                           <img
                             src={msg.image_url}
                             alt="attachment"
@@ -339,7 +345,7 @@ const Message = () => {
                               borderRadius: "8px",
                               marginTop: "8px",
                             }}
-                            onLoad={scrollToBottom} // <-- ADD THIS LINE
+                            onLoad={scrollToBottom}
                           />
                         </>
                       )}
@@ -401,8 +407,19 @@ const Message = () => {
                   <li key={m.user_id}>
                     <div className="user">
                       <Avatar otherUserId={m.user_id} />
-                      <p>{`${memberNicknames[m.user_id]}`}</p>
-                      <p>{`#${m.user_id.slice(0, 6)}`}</p>
+                      <p>{`${memberNicknames[m.user_id]}#${m.user_id.slice(0, 6)}`}</p>
+                      {/* <p>{`#${m.user_id.slice(0, 6)}`}</p> */}
+                      {m.user_id === id ? null : (
+                        <div className="call-btn-div">
+                          <button
+                            className="call-btn"
+                            onClick={() => handleCall(m.user_id)}
+                            disabled={inCall}
+                          >
+                            <MdCall />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -412,5 +429,5 @@ const Message = () => {
       </div>
     </>
   );
-}
+};
 export default Message;

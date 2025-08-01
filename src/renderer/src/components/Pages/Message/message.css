@@ -92,6 +92,23 @@
   text-align: center;
 }
 
+.messages-page .group-members-list ul li .user .call-btn-div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.5em;
+}
+
+.messages-page .group-members-list ul li .user .call-btn-div .call-btn {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Messages list */
 .messages-page .messages-list {
   width: 100%;

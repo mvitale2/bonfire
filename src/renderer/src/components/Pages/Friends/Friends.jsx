@@ -9,7 +9,7 @@ import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
 
 function Friends() {
-  const { nickname, id, setInCall, setRemoteUserId } = useContext(UserContext);
+  const { nickname, id, inCall, setInCall, setRemoteUserId } = useContext(UserContext);
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -411,6 +411,7 @@ function Friends() {
                 <button
                   className="call-btn"
                   onClick={() => handleCall(friend.public_id)}
+                  disabled={inCall}
                 >
                   <MdCall />
                 </button>
