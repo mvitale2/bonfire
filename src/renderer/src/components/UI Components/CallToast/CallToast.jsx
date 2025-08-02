@@ -227,7 +227,8 @@ function CallToast({ remote_id, initiator, room_id }) {
     setInCall(false);
 
     if (peerRef.current) {
-      peerRef.current.send("END CALL")
+      if (peerRef.current.readyState === "open")
+        peerRef.current.send("END CALL");
       peerRef.current.destroy();
       peerRef.current = null;
     }
