@@ -9,12 +9,11 @@ import getNickname from "../../../getNickname";
 import SimplePeer from "simple-peer";
 
 function CallToast({ remote_id, initiator, room_id }) {
-  const { setInCall, inCall, peerRef, id } =
-    useContext(UserContext);
+  const { setInCall, inCall, peerRef, id } = useContext(UserContext);
   const [remoteUserNickname, setRemoteUserNickname] = useState(null);
   const [callAccepted, setCallAccepted] = useState(false);
   const [remoteAccepted, setRemoteAccepted] = useState(false);
-  const [connected, setConnected] = useState(false)
+  const [connected, setConnected] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -66,6 +65,8 @@ function CallToast({ remote_id, initiator, room_id }) {
     if (initiator === true && remoteAccepted === false) return;
     if (inCall === false || callAccepted === false) return;
 
+    let subscription;
+
     console.log("Creating peer...");
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -96,16 +97,16 @@ function CallToast({ remote_id, initiator, room_id }) {
       localPeer.on("connect", () => {
         console.log("connected!");
         localPeer.send(`Hello ${remoteUserNickname}, it's me, ${id}`);
-        setConnected(true)
+        setConnected(true);
       });
 
       localPeer.on("data", (data) => {
-        const message = data.toString()
+        const message = data.toString();
         console.log(message);
 
-        if (message === 'END CALL') {
-          setInCall(false)
-          setConnected(false)
+        if (message === "END CALL") {
+          setInCall(false);
+          setConnected(false);
         }
       });
 
@@ -124,8 +125,8 @@ function CallToast({ remote_id, initiator, room_id }) {
       });
 
       localPeer.on("stream", (remoteStream) => {
-        console.log("I hear audio!")
-        console.log(remoteStream)
+        console.log("I hear audio!");
+        console.log(remoteStream);
         audioRef.current.srcObject = remoteStream;
         audioRef.current.play();
       });
@@ -140,7 +141,7 @@ function CallToast({ remote_id, initiator, room_id }) {
         localPeer.signal(parsedSignal);
       };
 
-      const subscription = supabase
+      subscription = supabase
         .channel("voice-comms")
         .on(
           "postgres_changes",
@@ -171,7 +172,13 @@ function CallToast({ remote_id, initiator, room_id }) {
       console.log("Done creating peer");
     });
 
-    // return () => supabase.removeChannel(subscription);
+    return () => {
+      supabase.removeChannel(subscription);
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        peerRef.current = null;
+      }
+    };
   }, [inCall, callAccepted, initiator, remoteAccepted]);
 
   // get the remote user's nickname
@@ -196,8 +203,8 @@ function CallToast({ remote_id, initiator, room_id }) {
   };
 
   const handleEndCall = async () => {
-    if (peerRef.current) peerRef.current.send("END CALL")
-    
+    if (peerRef.current) peerRef.current.send("END CALL");
+
     setInCall(false);
 
     if (peerRef.current) {
@@ -275,12 +282,15 @@ function CallToast({ remote_id, initiator, room_id }) {
 
   return (
     <>
+      <audio ref={audioRef} autoPlay style={{ display: "none" }} />
       <div className="call-toast-wrapper">
         {/* show incoming or outgoing call based on whether or not the user is the initiator or receiver */}
         {initiator === true ? <OutgoingCall /> : null}
         {initiator === false ? <IncomingCall /> : null}
         <div className="status-icons">
-          <div className={`connection-status ${connected ? "connected" : "disconnected"}`}>
+          <div
+            className={`connection-status ${connected ? "connected" : "disconnected"}`}
+          >
             <MdConnectWithoutContact />
           </div>
         </div>
