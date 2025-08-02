@@ -14,8 +14,6 @@ import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
 import CallPage from "../webrtc/callpage.jsx";
 
-
-
 const Message = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -31,18 +29,18 @@ const Message = () => {
   const [selectedGroup, setSelectedGroup] = useState("🌐");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   const { nickname, id, hideNickname, hideProfilePic } =
     useContext(UserContext);
 
-    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    useEffect(() => {
-      scrollToBottom();
-    }, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Call state
   const [callCtx, setCallCtx] = useState(null);
@@ -167,7 +165,7 @@ const Message = () => {
     if (groupIds.length > 0) fetchGroupMembers();
   }, [groupIds]);
 
-  // Realtime updates
+  // Realtime updates: track unread counts
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
@@ -181,8 +179,15 @@ const Message = () => {
             .eq("message_id", payload.new.id)
             .single();
 
-          if (!error && (!roomId || data.room_id === roomId)) {
+          if (!error && data) {
             setMessages((prev) => [...prev, data]);
+            // Only increment if the message is NOT from the current user and NOT in the currently viewed group
+            if (data.user_id !== id && data.room_id !== roomId) {
+              setUnreadCounts((prev) => ({
+                ...prev,
+                [data.room_id]: (prev[data.room_id] || 0) + 1,
+              }));
+            }
           }
         }
       )
@@ -191,12 +196,17 @@ const Message = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId]);
+  }, [roomId, id]);
 
-  // Scroll to bottom
+  // Reset unread count when user views a group
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (roomId) {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [roomId]: 0,
+      }));
+    }
+  }, [roomId]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !imageFile) return;
@@ -236,7 +246,6 @@ const Message = () => {
     if (error) {
       console.error("Error sending message:", error.message);
     } else {
-     
       setNewMessage("");
       setImageFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -267,9 +276,12 @@ const Message = () => {
     setCallCtx({ roomId: dmRoomId, peerId, audioOnly: true });
   };
 
+  // Calculate total unread messages for all groups
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+
   return (
     <>
-      <Tray nickname={nickname} />
+      <Tray nickname={nickname} unreadCount={totalUnread} />
       <div className="messages-page">
         {/* Chat group selector */}
         <div className="groups-panel">
@@ -313,7 +325,6 @@ const Message = () => {
                   : msg.profile_pic_url || defaultAvatar;
 
               return (
-                // ...inside your .map((msg) => ...) loop...
                 <div key={msg.message_id || msg.id} className="message">
                   <div className="message-left">
                     <img
@@ -356,7 +367,6 @@ const Message = () => {
                       </ReactMarkdown>
                       {msg.image_url && (
                         <>
-                          {console.log("Image URL:", msg.image_url)}
                           <img
                             src={msg.image_url}
                             alt="attachment"
@@ -366,7 +376,7 @@ const Message = () => {
                               borderRadius: "8px",
                               marginTop: "8px",
                             }}
-                            onLoad={scrollToBottom} // <-- ADD THIS LINE
+                            onLoad={scrollToBottom}
                           />
                         </>
                       )}
@@ -399,6 +409,14 @@ const Message = () => {
                   if (e.key === "Enter" && (newMessage.trim() || imageFile)) {
                     e.preventDefault();
                     handleSendMessage();
+                  }
+                }}
+                onFocus={() => {
+                  if (roomId) {
+                    setUnreadCounts((prev) => ({
+                      ...prev,
+                      [roomId]: 0,
+                    }));
                   }
                 }}
               />
@@ -457,5 +475,6 @@ const Message = () => {
       </div>
     </>
   );
-}
+};
+
 export default Message;

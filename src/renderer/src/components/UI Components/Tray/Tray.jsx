@@ -1,14 +1,15 @@
-import { IoMdSettings } from "react-icons/io";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { IoMdSettings } from "react-icons/io";
 import { FaUserFriends } from "react-icons/fa";
 import { FaMessage } from "react-icons/fa6";
-import { useContext } from "react";
-import { UserContext } from "../../../UserContext.jsx"; // adjust path if needed
+import { UserContext } from "../../../UserContext.jsx";
 import Avatar from "../Avatar/Avatar.jsx";
 import "./Tray.css";
 
-function Tray() {
-  const { nickname, hideNickname } = useContext(UserContext);
+function Tray({ nickname, unreadCount }) {
+  const { hideNickname } = useContext(UserContext);
+
   return (
     <div className="tray-wrapper">
       <div className="profile">
@@ -16,7 +17,6 @@ function Tray() {
           <Avatar />
         </div>
         <div className="nickname">{hideNickname ? "Anonymous" : nickname}</div>
-        {/* <div className="status"></div> */}
       </div>
       <div className="actions">
         <div className="icon">
@@ -29,9 +29,12 @@ function Tray() {
             <FaUserFriends />
           </Link>
         </div>
-        <div className="icon">
+        <div className="icon" style={{ position: "relative" }}>
           <Link to="/messages">
             <FaMessage />
+            {unreadCount > 0 && (
+              <span className="unread-badge">{unreadCount}</span>
+            )}
           </Link>
         </div>
       </div>
