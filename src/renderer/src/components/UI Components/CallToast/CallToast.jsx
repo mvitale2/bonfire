@@ -203,15 +203,7 @@ function CallToast({ remote_id, initiator, room_id }) {
   };
 
   const handleEndCall = async () => {
-    if (peerRef.current) peerRef.current.send("END CALL");
-
     setInCall(false);
-
-    if (peerRef.current) {
-      peerRef.current.destroy();
-      peerRef.current = null;
-    }
-
     const { error } = await supabase
       .from("signals")
       .delete()
@@ -228,6 +220,12 @@ function CallToast({ remote_id, initiator, room_id }) {
 
     if (acceptError)
       console.log(`Error deleting call status entry: ${acceptError.message}`);
+
+    if (!peerRef.current || peerRef.current.readyState !== "open") return;
+
+    peerRef.current.send("END CALL");
+    peerRef.current.destroy();
+    peerRef.current = null;
   };
 
   function IncomingCall() {
