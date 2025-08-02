@@ -107,6 +107,10 @@ function CallToast({ remote_id, initiator, room_id }) {
         if (message === "END CALL") {
           setInCall(false);
           setConnected(false);
+          if (peerRef.current) {
+            peerRef.current.destroy();
+            peerRef.current = null;
+          }
         }
       });
 
@@ -222,10 +226,10 @@ function CallToast({ remote_id, initiator, room_id }) {
 
     setInCall(false);
 
-    if (!peerRef.current || peerRef.current.readyState !== "open") return;
-
-    peerRef.current.send("END CALL");
-    peerRef.current.destroy();
+    if (peerRef.current) {
+      peerRef.current.destroy();
+      peerRef.current = null;
+    }
     peerRef.current = null;
   };
 
