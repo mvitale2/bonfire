@@ -224,8 +224,6 @@ function CallToast({ remote_id, initiator, room_id }) {
     if (acceptError)
       console.log(`Error deleting call status entry: ${acceptError.message}`);
 
-    setInCall(false);
-
     if (peerRef.current) {
       try {
         peerRef.current.send("END CALL");
@@ -235,6 +233,8 @@ function CallToast({ remote_id, initiator, room_id }) {
       peerRef.current.destroy();
       peerRef.current = null;
     }
+
+    setInCall(false);
   };
 
   function IncomingCall() {
