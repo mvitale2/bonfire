@@ -5,6 +5,8 @@ import supabase from "../../../../Supabase.jsx";
 import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
+import { IoMdAdd } from "react-icons/io";
+import { MdCall } from "react-icons/md";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
@@ -12,10 +14,10 @@ import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
-import CallPage from "../webrtc/callpage.jsx";
 
 const Message = () => {
   const { roomId } = useParams();
+  const { inCall, setInCall, setRemoteUserId } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -54,8 +56,8 @@ const Message = () => {
       const members = groupMembers.filter((m) => m.room_id === roomId);
       const nicknameMap = {};
       for (const m of members) {
-        const result = await getNickname(m.user_id);
-        nicknameMap[m.user_id] = result?.nickname || m.user_id;
+        const nick = await getNickname(m.user_id);
+        nicknameMap[m.user_id] = nick;
       }
       setMemberNicknames(nicknameMap);
     }
@@ -210,6 +212,12 @@ const Message = () => {
       }));
     }
   }, [roomId]);
+
+  const handleCall = (targetId) => {
+    // console.log(`Target friend: ${targetId}`)
+    setRemoteUserId(targetId);
+    setInCall(true);
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !imageFile) return;
@@ -407,7 +415,7 @@ const Message = () => {
                   onChange={(e) => setImageFile(e.target.files[0])}
                   style={{ display: "none" }}
                 />
-                📎
+                <IoMdAdd />
               </label>
               <input
                 type="text"
@@ -444,47 +452,39 @@ const Message = () => {
               </div>
             )}
           </div>
-
-          {/* Members */}
-          {roomId && (
-            <div className="group-members-list">
-              <h4>Members</h4>
-              <ul>
-                {groupMembers
-                  .filter((m) => m.room_id === roomId)
-                  .map((m) => (
-                    <li key={m.user_id}>
-                      <div className="user">
-                        <Avatar otherUserId={m.user_id} />
-                        <span>{memberNicknames[m.user_id] || m.user_id}</span>
-                        <span>#{m.user_id.slice(0, 6)}</span>
-                        {m.user_id !== id && (
-                          <button onClick={() => handleStartCall(m.user_id)}>
-                            📞
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Call Modal */}
-          {callCtx && (
-            <div className="call-modal">
-              <CallPage
-                callee={callCtx.peerId}
-                roomId={callCtx.roomId}
-                audioOnly={true}
-                onClose={() => setCallCtx(null)}
-              />
-            </div>
-          )}
         </div>
+        {/* Group members panel */}
+        {roomId && (
+          <div className="group-members-list">
+            <h4>Members</h4>
+            <ul>
+              {groupMembers
+                .filter((m) => m.room_id === roomId)
+                .map((m) => (
+                  <li key={m.user_id}>
+                    <div className="user">
+                      <Avatar otherUserId={m.user_id} />
+                      <p>{`${memberNicknames[m.user_id]}#${m.user_id.slice(0, 6)}`}</p>
+                      {/* <p>{`#${m.user_id.slice(0, 6)}`}</p> */}
+                      {m.user_id === id ? null : (
+                        <div className="call-btn-div">
+                          <button
+                            className="call-btn"
+                            onClick={() => handleCall(m.user_id)}
+                            disabled={inCall}
+                          >
+                            <MdCall />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
       </div>
     </>
   );
 };
-
 export default Message;

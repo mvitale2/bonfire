@@ -1,6 +1,5 @@
 import { UserContext } from "../../../UserContext.jsx";
 import { useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "./Friends.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import supabase from "../../../../Supabase.jsx";
@@ -10,8 +9,7 @@ import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
 
 function Friends() {
-  const { nickname, id } = useContext(UserContext);
-  const navigate = useNavigate();
+  const { nickname, id, inCall, setInCall, setRemoteUserId } = useContext(UserContext);
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -141,7 +139,7 @@ function Friends() {
     );
   }
 
-  // ---------- Requests (unchanged code) ----------
+  // Requests
   function Requests() {
     const [friendRequests, setFriendRequests] = useState([]);
     const [nicknames, setNicknames] = useState({});
@@ -347,26 +345,10 @@ function Friends() {
         .eq("public_id", targetId);
     };
 
-    const handleCall = async (targetId) => {
-      const randId = crypto.randomUUID();
-
-      const { data, error } = await supabase
-        .from("signals")
-        .insert({
-          room_id: randId,
-          from_user_id: id,
-          to_user_id: targetId,
-          type: "offer",
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.log(`Error calling user: ${error.message}`);
-        return;
-      }
-
-      navigate(`/call/${data.room_id}`);
+    const handleCall = (targetId) => {
+      // console.log(`Target friend: ${targetId}`)
+      setRemoteUserId(targetId);
+      setInCall(true)
     };
 
     useEffect(() => {
@@ -429,6 +411,7 @@ function Friends() {
                 <button
                   className="call-btn"
                   onClick={() => handleCall(friend.public_id)}
+                  disabled={inCall}
                 >
                   <MdCall />
                 </button>

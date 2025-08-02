@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import { app, shell, BrowserWindow, ipcMain, session } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
@@ -60,6 +60,14 @@ ipcMain.on("open-group-window", (event, groupId) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  // trust turn server cert
+  session.defaultSession.setCertificateVerifyProc((request, callback) => {
+    if (request.hostname === "162.248.100.4") {
+      return callback(0);
+    }
+    callback(-3);
+  });
+
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 

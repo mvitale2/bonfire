@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserSettings.css";
 import { UserContext } from "../../../UserContext.jsx";
@@ -211,6 +211,9 @@ export const UserProvider = ({ children }) => {
   const [id, setId] = useState("");
   const [hideNickname, setHideNickname] = useState(false);
   const [hideProfilePic, setHideProfilePic] = useState(false);
+  const [inCall, setInCall] = useState(false);
+  const [remoteUserId, setRemoteUserId] = useState(null)
+  const peerRef = useRef(null);
 
   // Load user data including privacy prefs here
   useEffect(() => {
@@ -260,6 +263,11 @@ export const UserProvider = ({ children }) => {
         setHideNickname,
         hideProfilePic,
         setHideProfilePic,
+        inCall,
+        setInCall,
+        peerRef,
+        remoteUserId,
+        setRemoteUserId,
       }}
     >
       {children}
@@ -270,7 +278,8 @@ export const UserProvider = ({ children }) => {
 function UserSettings() {
   console.log("UserSettings render");
   const [selectedSection, setSelectedSection] = useState("profile"); // Default section
-  const { nickname, setNickname, id, setId, setAvatar } = useContext(UserContext);
+  const { nickname, setNickname, id, setId, setAvatar } =
+    useContext(UserContext);
   const [userInfo, setUserInfo] = useState(null); //Displays user info in account section
   const navigate = useNavigate();
   // console.log(nickname);

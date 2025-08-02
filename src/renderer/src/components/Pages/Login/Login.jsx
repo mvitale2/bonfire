@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect , useRef } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { UserContext } from "../../../UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../../Supabase";
@@ -9,10 +9,9 @@ function Login() {
   const [secretKey, setSecretKey] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState(null);
-  const [disableLogin, setDisableLogin] = useState(false)
+  const [disableLogin, setDisableLogin] = useState(false);
   const navigate = useNavigate();
   const { id, setNickname, setId, setAvatar } = useContext(UserContext);
-  const now = new Date().toISOString();
   const inputRef = useRef();
 
   useEffect(() => {
@@ -30,7 +29,7 @@ function Login() {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    setDisableLogin(true)
+    setDisableLogin(true);
 
     try {
       // get all users
@@ -79,7 +78,12 @@ function Login() {
 
         const { error } = await supabase
           .from("users")
-          .update({ last_logon: now })
+          .update({
+            last_logon: () => {
+              const now = new Date().toISOString();
+              return now;
+            },
+          })
           .eq("public_id", authenticatedUser.public_id);
 
         if (error) {
@@ -93,7 +97,7 @@ function Login() {
       setMessage("An unexpected error occurred. Please try again.");
     }
 
-    setDisableLogin(false)
+    setDisableLogin(false);
   };
 
   return (

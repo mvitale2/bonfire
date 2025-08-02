@@ -1,0 +1,111 @@
+* {
+  --connected-color: green;
+  --disconnected-color: red;
+}
+
+.call-toast-wrapper {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  margin-right: 0.5em;
+  margin-bottom: 0.5em;
+  background-color: var(--background-color-3);
+  border-radius: 10px;
+  /* width: 30vw; */
+  min-width: 300px;
+  max-width: 450px;
+  max-height: 80px;
+  border: 1px solid var(--background-color-2);
+}
+
+.call-toast-wrapper .call-avatar-div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+}
+
+.call-toast-wrapper .call-avatar-div .username {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.call-toast-wrapper .call-avatar-div .pfp {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 48px;
+}
+
+.call-toast-wrapper .call-btns {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.call-toast-wrapper .call-btns .answer-call-btn {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-color-3);
+  cursor: pointer;
+  transition: all ease 0.3s;
+}
+
+.call-toast-wrapper .call-btns .answer-call-btn:hover {
+  background-color: var(--font-color-4);
+}
+
+.call-toast-wrapper .call-btns .decline-call-btn,
+.call-toast-wrapper .end-call-btn {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-color-1);
+  cursor: pointer;
+  transition: all ease 0.3s;
+  color: var(--background-color-5);
+  font-size: 20px;
+}
+
+.call-toast-wrapper .status-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.call-toast-wrapper .status-icons .connection-status {
+  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+
+.call-toast-wrapper .status-icons .disconnected {
+  color: var(--disconnected-color)
+}
+
+.call-toast-wrapper .status-icons .connected {
+  color: var(--connected-color)
+}
+
+.call-toast-wrapper .call-btns .decline-call-btn:hover,
+.call-toast-wrapper .end-call-btn:hover {
+  background-color: var(--accent-color-2);
+}
