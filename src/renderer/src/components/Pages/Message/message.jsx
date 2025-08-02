@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../../../UserContext.jsx";
 import supabase from "../../../../Supabase.jsx";
 import "./message.css";
@@ -17,6 +17,9 @@ import CallPage from "../webrtc/callpage.jsx";
 const Message = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const isPopup = params.get("popup") === "1";
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -281,35 +284,42 @@ const Message = () => {
 
   return (
     <>
-      <Tray nickname={nickname} unreadCount={totalUnread} />
+      {!isPopup && <Tray nickname={nickname} unreadCount={totalUnread} />}
       <div className="messages-page">
-        {/* Chat group selector */}
-        <div className="groups-panel">
-          <div className="groups">
-            <div
-              className={`group ${selectedGroup === "🌐" ? "selected" : ""}`}
-              onClick={() => {
-                setSelectedGroup("🌐");
-                navigate(`/messages`);
-              }}
-            >
-              <p className="group-name">🌐</p>
-            </div>
-            {groups.map((group) => (
+        {!isPopup && (
+          <div className="groups-panel">
+            <div className="groups">
               <div
-                key={group.id}
-                className={`group ${selectedGroup === group.id ? "selected" : ""}`}
+                className={`group ${selectedGroup === "🌐" ? "selected" : ""}`}
                 onClick={() => {
-                  setSelectedGroup(`${group.id}`);
-                  navigate(`/messages/${group.id}`);
+                  setSelectedGroup("🌐");
+                  navigate(`/messages`);
                 }}
               >
-                <p className="group-name">{group.name}</p>
+                <p className="group-name">🌐</p>
               </div>
-            ))}
+              {groups.map((group) => (
+                <div
+                  key={group.id}
+                  className={`group ${selectedGroup === group.id ? "selected" : ""}`}
+                  onClick={() => {
+                    setSelectedGroup(`${group.id}`);
+                    navigate(`/messages/${group.id}`);
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    window.electron?.ipcRenderer?.send(
+                      "open-group-window",
+                      group.id
+                    );
+                  }}
+                >
+                  <p className="group-name">{group.name}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-
+        )}
         {/* Message List */}
         <div className="messages-list">
           <div className="messages">
