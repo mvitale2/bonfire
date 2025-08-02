@@ -227,12 +227,14 @@ function CallToast({ remote_id, initiator, room_id }) {
     setInCall(false);
 
     if (peerRef.current) {
-      if (peerRef.current.readyState === "open")
+      try {
         peerRef.current.send("END CALL");
+      } catch {
+        console.log("peer signal is closed")
+      }
       peerRef.current.destroy();
       peerRef.current = null;
     }
-    peerRef.current = null;
   };
 
   function IncomingCall() {
