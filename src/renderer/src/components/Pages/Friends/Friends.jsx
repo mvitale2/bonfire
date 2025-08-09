@@ -392,6 +392,7 @@ function Friends() {
             filter: `public_id=eq.${id}`,
           },
           () => {
+            console.log("friends changed!")
             fetchFriends();
           }
         )
