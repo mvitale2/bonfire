@@ -6,7 +6,8 @@ import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
-import { MdCall } from "react-icons/md";
+import { MdCall, MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
@@ -46,9 +47,6 @@ const Message = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Call state
-  const [callCtx, setCallCtx] = useState(null);
 
   // Fetch member nicknames for display
   useEffect(() => {
@@ -141,7 +139,21 @@ const Message = () => {
       }
     };
 
+    const deleteChannel = supabase
+      .channel("delete-messages")
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages" },
+        () => {
+          // console.log("a message was deleted!");
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
     fetchMessages();
+
+    return () => supabase.removeChannel(deleteChannel);
   }, [roomId]);
 
   // fetch group members
@@ -170,7 +182,7 @@ const Message = () => {
     if (groupIds.length > 0) fetchGroupMembers();
   }, [groupIds]);
 
-  // Realtime updates: track unread counts
+  // Realtime updates: track new messages & unread counts
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
@@ -263,28 +275,10 @@ const Message = () => {
     }
   };
 
-  // Start a call with a selected member
-  const handleStartCall = async (peerId) => {
-    // Create or find a DM room for this pair
-    const roomName = [`dm`, id.slice(0, 4), peerId.slice(0, 4)]
-      .sort()
-      .join("-");
-    const { data: existing } = await supabase
-      .from("chat_rooms")
-      .select("id")
-      .eq("name", roomName)
-      .maybeSingle();
+  const handleDeleteMessage = async (msgId) => {
+    const { error } = await supabase.from("messages").delete().eq("id", msgId);
 
-    let dmRoomId = existing?.id;
-    if (!dmRoomId) {
-      const { data } = await supabase
-        .from("chat_rooms")
-        .insert({ name: roomName, creator_user_id: id })
-        .select()
-        .single();
-      dmRoomId = data.id;
-    }
-    setCallCtx({ roomId: dmRoomId, peerId, audioOnly: true });
+    if (error) console.log(`Error deleting message: ${error.message}`);
   };
 
   // Calculate total unread messages for all groups
@@ -356,7 +350,7 @@ const Message = () => {
                     />
                   </div>
                   <div className="message-right">
-                    <div className="message-time">
+                    <div className="message-header">
                       <span className="display-name">{displayName}</span>
                       <span className="time">
                         {new Date(msg.created_at).toLocaleDateString()}{" "}
@@ -366,6 +360,21 @@ const Message = () => {
                           hour12: true,
                         })}
                       </span>
+                      {msg.user_id === id ? (
+                        <div className="message-actions">
+                          <div className="edit-btn">
+                            <FaEdit />
+                          </div>
+                          <div
+                            className="delete-btn"
+                            onClick={async () =>
+                              await handleDeleteMessage(msg.message_id)
+                            }
+                          >
+                            <MdDelete />
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="message-content">
                       <ReactMarkdown
