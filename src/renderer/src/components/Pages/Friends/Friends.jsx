@@ -9,7 +9,8 @@ import CreateRoom from "./CreateRoom.jsx";
 import { MdCall } from "react-icons/md";
 
 function Friends() {
-  const { nickname, id, inCall, setInCall, setRemoteUserId } = useContext(UserContext);
+  const { nickname, id, inCall, setInCall, setRemoteUserId } =
+    useContext(UserContext);
 
   const [selectedSection, setSelectedSection] = useState("friends");
 
@@ -348,7 +349,7 @@ function Friends() {
     const handleCall = (targetId) => {
       // console.log(`Target friend: ${targetId}`)
       setRemoteUserId(targetId);
-      setInCall(true)
+      setInCall(true);
     };
 
     useEffect(() => {
@@ -378,13 +379,21 @@ function Friends() {
         setFriends(merged);
         setLoading(false);
       };
+
       fetchFriends();
       const ch = supabase
         .channel("friends-changes")
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "users" },
-          fetchFriends
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "users",
+            filter: `public_id=eq.${id}`,
+          },
+          () => {
+            fetchFriends();
+          }
         )
         .subscribe();
       return () => supabase.removeChannel(ch);
