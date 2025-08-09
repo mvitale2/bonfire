@@ -362,7 +362,10 @@ function Friends() {
         if (error) return setLoading(false);
 
         const ids = data?.friends?.map((f) => f.public_id) || [];
-        if (!ids.length) return setLoading(false);
+        if (!ids.length) {
+          setFriends([]);
+          return setLoading(false);
+        }
 
         const { data: rows } = await supabase
           .from("users")
@@ -381,6 +384,7 @@ function Friends() {
       };
 
       fetchFriends();
+
       const ch = supabase
         .channel("friends-changes")
         .on(
@@ -392,7 +396,7 @@ function Friends() {
             filter: `public_id=eq.${id}`,
           },
           () => {
-            console.log("friends changed!")
+            console.log("friends changed!");
             fetchFriends();
           }
         )
