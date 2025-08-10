@@ -298,6 +298,28 @@
   gap: 0.5em;
 }
 
+.messages-page .message-input-container .edit-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color-3);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all ease 0.1s;
+  /* margin-right: 0.5em; */
+  padding: 8px 8px;
+  border-radius: 5px;
+}
+
+.messages-page .message-input-container .edit-cancel-btn:hover {
+  color: var(--accent-color-1);
+  background-color: var(--background-color-3);
+}
+
+.messages-page .message-input-container .input-with-button .editing {
+  border: 2px solid var(--accent-color-2) !important;
+}
+
 .messages-page .message-input-container .input-with-button .message-input {
   flex: 1 1 auto;
   padding: 10px;
@@ -353,17 +375,16 @@
 }
 
 .messages-page .message-input-container .selected-file button {
-  background: #c00;
-  color: #fff;
+  background: var(--accent-color-1);
   border: none;
   border-radius: 3px;
-  padding: 2px 8px;
+  padding: 0 8px;
   cursor: pointer;
   font-size: 0.9em;
 }
 
 .messages-page .message-input-container .selected-file button:hover {
-  background: #a00;
+  background: var(--accent-color-1);
 }
 
 .messages-list .messages {

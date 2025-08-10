@@ -6,7 +6,7 @@ import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
-import { MdCall, MdDelete } from "react-icons/md";
+import { MdCall, MdDelete, MdCancel } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
@@ -27,6 +27,11 @@ const Message = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [isEditing, setIsEditing] = useState({
+    editing: false,
+    messageId: null,
+    imageUrl: null,
+  });
 
   const [groupIds, setGroupIds] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
@@ -151,9 +156,24 @@ const Message = () => {
       )
       .subscribe();
 
+    const editChannel = supabase
+      .channel("edit-messages")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        () => {
+          console.log("a messages was edited");
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
     fetchMessages();
 
-    return () => supabase.removeChannel(deleteChannel);
+    return () => {
+      supabase.removeChannel(deleteChannel);
+      supabase.removeChannel(editChannel);
+    };
   }, [roomId]);
 
   // fetch group members
@@ -257,21 +277,58 @@ const Message = () => {
       imageUrl = urlData?.publicUrl || null;
     }
 
-    const { error } = await supabase.from("messages").insert([
-      {
-        content: newMessage,
-        user_id: id,
-        room_id: roomId || null,
-        image_url: imageUrl,
-      },
-    ]);
+    if (isEditing.editing === true) {
+      let imageUrl = isEditing.imageUrl;
 
-    if (error) {
-      console.error("Error sending message:", error.message);
+      if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const filePath = `public/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("message-images")
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          console.log(`Error uploading image: ${uploadError.message}`);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("message-images")
+          .getPublicUrl(filePath);
+
+        imageUrl = urlData?.publicUrl || null;
+      }
+
+      const { error } = await supabase
+        .from("messages")
+        .update({ content: newMessage, image_url: imageUrl })
+        .eq("id", isEditing.messageId);
+
+      if (error) {
+        console.log(`Error updating message: ${error.message}`);
+      } else {
+        setNewMessage("");
+        setImageFile(null);
+        setIsEditing({ editing: false, messageId: null, imageUrl: null });
+      }
     } else {
-      setNewMessage("");
-      setImageFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      const { error } = await supabase.from("messages").insert([
+        {
+          content: newMessage,
+          user_id: id,
+          room_id: roomId || null,
+          image_url: imageUrl,
+        },
+      ]);
+
+      if (error) {
+        console.error("Error sending message:", error.message);
+      } else {
+        setNewMessage("");
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -279,6 +336,32 @@ const Message = () => {
     const { error } = await supabase.from("messages").delete().eq("id", msgId);
 
     if (error) console.log(`Error deleting message: ${error.message}`);
+  };
+
+  const handleEditMessage = async (msgId) => {
+    setIsEditing({
+      editing: true,
+      messageId: msgId,
+      imageUrl: null,
+    });
+
+    const { data, error } = await supabase
+      .from("message_view")
+      .select("content, image_url")
+      .eq("message_id", msgId)
+      .single();
+
+    if (error)
+      console.log(`Error retrieving message content: ${error.message}`);
+
+    if (data) {
+      setNewMessage(data.content);
+      setImageFile(null);
+      setIsEditing((prev) => ({
+        ...prev,
+        imageUrl: data.image_url || null,
+      }));
+    }
   };
 
   // Calculate total unread messages for all groups
@@ -362,7 +445,12 @@ const Message = () => {
                       </span>
                       {msg.user_id === id ? (
                         <div className="message-actions">
-                          <div className="edit-btn">
+                          <div
+                            className="edit-btn"
+                            onClick={async () => {
+                              await handleEditMessage(msg.message_id);
+                            }}
+                          >
                             <FaEdit />
                           </div>
                           <div
@@ -426,12 +514,23 @@ const Message = () => {
                 />
                 <IoMdAdd />
               </label>
+              {isEditing.editing ? (
+                <div
+                  className="edit-cancel-btn"
+                  onClick={() => {
+                    setIsEditing({ editing: false, messageId: null });
+                    setNewMessage("");
+                  }}
+                >
+                  <MdCancel />
+                </div>
+              ) : null}
               <input
                 type="text"
                 placeholder="Type your message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="message-input"
+                className={`message-input ${isEditing.editing ? "editing" : null}`}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (newMessage.trim() || imageFile)) {
                     e.preventDefault();
@@ -454,10 +553,28 @@ const Message = () => {
                 <IoSend />
               </button>
             </div>
-            {imageFile && (
+            {(imageFile || isEditing.imageUrl) && (
               <div className="selected-file">
-                <span>{imageFile.name}</span>
-                <button onClick={() => setImageFile(null)}>Remove</button>
+                {imageFile ? (
+                  <span>{imageFile.name}</span>
+                ) : (
+                  <>
+                    <img
+                      src={isEditing.imageUrl}
+                      alt="current"
+                      style={{ maxWidth: 100, maxHeight: 100 }}
+                    />
+                    <span>Current image</span>
+                  </>
+                )}
+                <button
+                  onClick={() => {
+                    setImageFile(null);
+                    setIsEditing((prev) => ({ ...prev, imageUrl: null }));
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             )}
           </div>
