@@ -1,7 +1,7 @@
-Skell101 - Michael Vitale 
-Mvitale2 - Michael Vitale 
-Cyberdataint - Grant Williams
-Mattnifico - Matthew Sickles
+- Skell101 - Michael Vitale 
+- Mvitale2 - Michael Vitale 
+- Cyberdataint - Grant Williams
+- Mattnifico - Matthew Sickles
 
 # Bonfire
 Bonfire is going to be an instant messaging desktop application intended for use by small (20-30 people) groups of friends. It will have features such as text messaging, voice chat, groups, text/voice channels, posting embedded images, and assigning tags to users in groups. The main intent of Bonfire is to be as secure and privacy-focused as possible, while maintaining a seamless user experience. Users should experience zero friction from the point where they log in to, for example, where they want to send a message to someone. This means that there will be no ads, pop-ups, or other attention-grabbing mechanisms to divert the user from what they actually want to do. 
