@@ -162,7 +162,7 @@ const Message = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages" },
         () => {
-          console.log("a messages was edited");
+          // console.log("a messages was edited");
           fetchMessages();
         }
       )
