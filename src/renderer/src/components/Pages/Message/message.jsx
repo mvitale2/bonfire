@@ -6,7 +6,8 @@ import "./message.css";
 import Tray from "../../UI Components/Tray/Tray.jsx";
 import { IoSend } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
-import { MdCall } from "react-icons/md";
+import { MdCall, MdDelete, MdCancel } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import defaultAvatar from "../../../assets/default_avatar.png";
@@ -26,6 +27,11 @@ const Message = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [isEditing, setIsEditing] = useState({
+    editing: false,
+    messageId: null,
+    imageUrl: null,
+  });
 
   const [groupIds, setGroupIds] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
@@ -46,9 +52,6 @@ const Message = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Call state
-  const [callCtx, setCallCtx] = useState(null);
 
   // Fetch member nicknames for display
   useEffect(() => {
@@ -141,7 +144,36 @@ const Message = () => {
       }
     };
 
+    const deleteChannel = supabase
+      .channel("delete-messages")
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages" },
+        () => {
+          // console.log("a message was deleted!");
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
+    const editChannel = supabase
+      .channel("edit-messages")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        () => {
+          console.log("a messages was edited");
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
     fetchMessages();
+
+    return () => {
+      supabase.removeChannel(deleteChannel);
+      supabase.removeChannel(editChannel);
+    };
   }, [roomId]);
 
   // fetch group members
@@ -170,7 +202,7 @@ const Message = () => {
     if (groupIds.length > 0) fetchGroupMembers();
   }, [groupIds]);
 
-  // Realtime updates: track unread counts
+  // Realtime updates: track new messages & unread counts
   useEffect(() => {
     const channel = supabase
       .channel("realtime-messages")
@@ -245,46 +277,91 @@ const Message = () => {
       imageUrl = urlData?.publicUrl || null;
     }
 
-    const { error } = await supabase.from("messages").insert([
-      {
-        content: newMessage,
-        user_id: id,
-        room_id: roomId || null,
-        image_url: imageUrl,
-      },
-    ]);
+    if (isEditing.editing === true) {
+      let imageUrl = isEditing.imageUrl;
 
-    if (error) {
-      console.error("Error sending message:", error.message);
+      if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const filePath = `public/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("message-images")
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          console.log(`Error uploading image: ${uploadError.message}`);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("message-images")
+          .getPublicUrl(filePath);
+
+        imageUrl = urlData?.publicUrl || null;
+      }
+
+      const { error } = await supabase
+        .from("messages")
+        .update({ content: newMessage, image_url: imageUrl })
+        .eq("id", isEditing.messageId);
+
+      if (error) {
+        console.log(`Error updating message: ${error.message}`);
+      } else {
+        setNewMessage("");
+        setImageFile(null);
+        setIsEditing({ editing: false, messageId: null, imageUrl: null });
+      }
     } else {
-      setNewMessage("");
-      setImageFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      const { error } = await supabase.from("messages").insert([
+        {
+          content: newMessage,
+          user_id: id,
+          room_id: roomId || null,
+          image_url: imageUrl,
+        },
+      ]);
+
+      if (error) {
+        console.error("Error sending message:", error.message);
+      } else {
+        setNewMessage("");
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     }
   };
 
-  // Start a call with a selected member
-  const handleStartCall = async (peerId) => {
-    // Create or find a DM room for this pair
-    const roomName = [`dm`, id.slice(0, 4), peerId.slice(0, 4)]
-      .sort()
-      .join("-");
-    const { data: existing } = await supabase
-      .from("chat_rooms")
-      .select("id")
-      .eq("name", roomName)
-      .maybeSingle();
+  const handleDeleteMessage = async (msgId) => {
+    const { error } = await supabase.from("messages").delete().eq("id", msgId);
 
-    let dmRoomId = existing?.id;
-    if (!dmRoomId) {
-      const { data } = await supabase
-        .from("chat_rooms")
-        .insert({ name: roomName, creator_user_id: id })
-        .select()
-        .single();
-      dmRoomId = data.id;
+    if (error) console.log(`Error deleting message: ${error.message}`);
+  };
+
+  const handleEditMessage = async (msgId) => {
+    setIsEditing({
+      editing: true,
+      messageId: msgId,
+      imageUrl: null,
+    });
+
+    const { data, error } = await supabase
+      .from("message_view")
+      .select("content, image_url")
+      .eq("message_id", msgId)
+      .single();
+
+    if (error)
+      console.log(`Error retrieving message content: ${error.message}`);
+
+    if (data) {
+      setNewMessage(data.content);
+      setImageFile(null);
+      setIsEditing((prev) => ({
+        ...prev,
+        imageUrl: data.image_url || null,
+      }));
     }
-    setCallCtx({ roomId: dmRoomId, peerId, audioOnly: true });
   };
 
   // Calculate total unread messages for all groups
@@ -356,7 +433,7 @@ const Message = () => {
                     />
                   </div>
                   <div className="message-right">
-                    <div className="message-time">
+                    <div className="message-header">
                       <span className="display-name">{displayName}</span>
                       <span className="time">
                         {new Date(msg.created_at).toLocaleDateString()}{" "}
@@ -366,6 +443,26 @@ const Message = () => {
                           hour12: true,
                         })}
                       </span>
+                      {msg.user_id === id ? (
+                        <div className="message-actions">
+                          <div
+                            className="edit-btn"
+                            onClick={async () => {
+                              await handleEditMessage(msg.message_id);
+                            }}
+                          >
+                            <FaEdit />
+                          </div>
+                          <div
+                            className="delete-btn"
+                            onClick={async () =>
+                              await handleDeleteMessage(msg.message_id)
+                            }
+                          >
+                            <MdDelete />
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="message-content">
                       <ReactMarkdown
@@ -417,12 +514,23 @@ const Message = () => {
                 />
                 <IoMdAdd />
               </label>
+              {isEditing.editing ? (
+                <div
+                  className="edit-cancel-btn"
+                  onClick={() => {
+                    setIsEditing({ editing: false, messageId: null });
+                    setNewMessage("");
+                  }}
+                >
+                  <MdCancel />
+                </div>
+              ) : null}
               <input
                 type="text"
                 placeholder="Type your message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="message-input"
+                className={`message-input ${isEditing.editing ? "editing" : null}`}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (newMessage.trim() || imageFile)) {
                     e.preventDefault();
@@ -445,10 +553,28 @@ const Message = () => {
                 <IoSend />
               </button>
             </div>
-            {imageFile && (
+            {(imageFile || isEditing.imageUrl) && (
               <div className="selected-file">
-                <span>{imageFile.name}</span>
-                <button onClick={() => setImageFile(null)}>Remove</button>
+                {imageFile ? (
+                  <span>{imageFile.name}</span>
+                ) : (
+                  <>
+                    <img
+                      src={isEditing.imageUrl}
+                      alt="current"
+                      style={{ maxWidth: 100, maxHeight: 100 }}
+                    />
+                    <span>Current image</span>
+                  </>
+                )}
+                <button
+                  onClick={() => {
+                    setImageFile(null);
+                    setIsEditing((prev) => ({ ...prev, imageUrl: null }));
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             )}
           </div>
