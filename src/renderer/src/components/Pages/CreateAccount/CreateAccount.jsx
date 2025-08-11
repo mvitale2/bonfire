@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import supabase from "../../../../Supabase";
 import UserInfo from "../UserInfo/UserInfo.jsx";
 import "./CreateAccount.css";
+import { generateUserKeypair, savePrivateKey } from "../../../Crypto.jsx";
 
 function CreateAccount() {
   const [nickname, setNickname] = useState("");
@@ -30,12 +31,21 @@ function CreateAccount() {
     const rawSecretKey = generateRandomString();
     const hashedSecretKey = await bcrypt.hash(rawSecretKey, 10);
     const newPublicId = uuidv4();
+    const { publicKey, privateKey } = await generateUserKeypair();
+    const exportedPublicKey = await window.crypto.subtle.exportKey(
+      "spki",
+      publicKey
+    );
+    const publicKeyB64 = btoa(
+      String.fromCharCode(...new Uint8Array(exportedPublicKey))
+    );
 
     const { error } = await supabase.from("users").insert([
       {
         key: hashedSecretKey,
         nickname: nickname,
         public_id: newPublicId,
+        group_public_key: publicKeyB64,
       },
     ]);
 
@@ -44,11 +54,12 @@ function CreateAccount() {
       return;
     } else {
       console.log("Successfully created user!");
+      savePrivateKey(privateKey, newPublicId);
     }
 
     setSecretKey(rawSecretKey);
     setPublicId(newPublicId);
-    localStorage.setItem("user_id", newPublicId); //  UUID
+    localStorage.setItem("user_id", newPublicId);
 
     const newId = newPublicId.slice(0, 6);
     setId(newId);
@@ -82,6 +93,7 @@ function CreateAccount() {
         <UserInfo
           nickname={nickname}
           secretKey={secretKey}
+          setSecretKey={setSecretKey}
           id={id}
           publicId={publicId}
         />

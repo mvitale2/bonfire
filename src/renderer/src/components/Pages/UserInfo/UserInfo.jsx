@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import "./UserInfo.css";
 
-function UserInfo({ secretKey, nickname, id, publicId }) {
+function UserInfo({ setSecretKey, secretKey, nickname, id, publicId }) {
   // supabase logic to get user id based on secret key here
   const user = `${nickname}#${id}`;
 
@@ -29,7 +29,7 @@ function UserInfo({ secretKey, nickname, id, publicId }) {
           <span className="label">User ID: </span>
           <span>{publicId}</span>
         </section>
-        <section className="link">
+        <section className="link" onClick={() => setSecretKey("")}>
           <Link to="/">Back to Login</Link>
         </section>
       </div>

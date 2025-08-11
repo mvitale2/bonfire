@@ -4,11 +4,7 @@ import supabase from "../../../../Supabase.jsx";
 import { UserContext } from "../../../UserContext.jsx";
 import getFriends from "../../../getFriends.jsx";
 import getNickname from "../../../getNickname.jsx";
-import {
-  generateUserKeypair,
-  savePrivateKey,
-  createGroupKey,
-} from "../../../Crypto.jsx";
+import { createGroupKey } from "../../../Crypto.jsx";
 
 const CreateRoom = () => {
   const { id: userId } = useContext(UserContext);
@@ -116,17 +112,51 @@ const CreateRoom = () => {
       return;
     }
 
-    // crypto stuff
-    const { publicKey, privateKey } = await generateUserKeypair();
-    await savePrivateKey(privateKey, room.id);
-    const groupKey = createGroupKey(publicKey);
+    // group key generation
+    const allMemberIds = [...selectedFriends, userId];
+    const publicKeysObj = {};
 
-    const { error: keyError } = await supabase
+    const { data: users, error: usersErr } = await supabase
+      .from("users")
+      .select("public_id, group_public_key")
+      .in("public_id", allMemberIds);
+
+    if (usersErr) {
+      console.log(`Error getting member group keys: ${usersErr.message}`);
+      return;
+    }
+
+    const groupKey = await createGroupKey();
+
+    // Encrypt the group key for each member using their public key
+    for (const user of users) {
+      if (!user.group_public_key) continue;
+      const publicKeyBuffer = Uint8Array.from(
+        atob(user.group_public_key),
+        (c) => c.charCodeAt(0)
+      );
+      const memberPublicKey = await window.crypto.subtle.importKey(
+        "spki",
+        publicKeyBuffer,
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        false,
+        ["encrypt"]
+      );
+      const encryptedGroupKey = await window.crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        memberPublicKey,
+        groupKey
+      );
+      const encryptedGroupKeyB64 = btoa(
+        String.fromCharCode(...new Uint8Array(encryptedGroupKey))
+      );
+      publicKeysObj[user.public_id] = encryptedGroupKeyB64;
+    }
+
+    await supabase
       .from("chat_rooms")
-      .update({ public_keys: { `${userId}: ${publicKey}` } })
-      .eq("room_id", room.id);
-
-    if (keyError) console.log(`Error uploading group key: ${keyError.message}`);
+      .update({ keys: publicKeysObj })
+      .eq("id", room.id);
 
     // Add selected friends + self as members
     const members = [...selectedFriends, userId].map((id) => ({

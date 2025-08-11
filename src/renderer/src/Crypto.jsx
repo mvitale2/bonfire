@@ -1,6 +1,6 @@
 // Group key generation
 export async function generateUserKeypair() {
-  const keyPair = await window.crypto.subtle.generatekey(
+  const keyPair = await window.crypto.subtle.generateKey(
     {
       name: "RSA-OAEP",
       modulusLength: 2048,
@@ -14,7 +14,7 @@ export async function generateUserKeypair() {
   return keyPair; // { publicKey, privateKey }
 }
 
-export async function savePrivateKey(privateKey, groupId) {
+export async function savePrivateKey(privateKey, userId) {
   const exported = await window.crypto.subtle.exportKey("pkcs8", privateKey);
   const request = indexedDB.open("group-private-keys", 1);
 
@@ -33,14 +33,14 @@ export async function savePrivateKey(privateKey, groupId) {
     const db = e.target.result;
     const transaction = db.transaction(["keys"], "readwrite");
     const store = transaction.objectStore("keys");
-    store.put(exported, groupId);
+    store.put(exported, userId);
     transaction.oncomplete = () => {
       db.close();
     };
   };
 }
 
-export async function retrievePrivateKey(groupId) {
+export async function retrievePrivateKey(userId) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("group-private-keys", 1);
 
@@ -52,7 +52,7 @@ export async function retrievePrivateKey(groupId) {
       const db = e.target.result;
       const transaction = db.transaction(["keys"], "readonly");
       const store = transaction.objectStore("keys");
-      const getRequest = store.get(groupId);
+      const getRequest = store.get(userId);
 
       getRequest.onsuccess = async () => {
         const exported = getRequest.result;
@@ -87,7 +87,7 @@ export async function retrievePrivateKey(groupId) {
   });
 }
 
-export async function createGroupKey(memberPublicKey) {
+export async function createGroupKey() {
   const groupKey = await window.crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
     true,
@@ -96,13 +96,7 @@ export async function createGroupKey(memberPublicKey) {
 
   const rawGroupKey = await window.crypto.subtle.exportKey("raw", groupKey);
 
-  const encryptedGroupKey = await window.crypto.subtle.encrypt(
-    { name: "RSA-OAEP" },
-    memberPublicKey,
-    rawGroupKey
-  );
-
-  return encryptedGroupKey;
+  return rawGroupKey;
 }
 
 export async function decryptGroupKey(encryptedGroupKey, memberPrivateKey) {
