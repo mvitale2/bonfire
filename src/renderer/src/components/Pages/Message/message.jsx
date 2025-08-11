@@ -293,7 +293,7 @@ const Message = () => {
       supabase.removeChannel(deleteChannel);
       supabase.removeChannel(editChannel);
     };
-  }, [roomId, refreshMessages, selectedGroup]);
+  }, [roomId, refreshMessages]);
 
   // fetch group members
   useEffect(() => {
