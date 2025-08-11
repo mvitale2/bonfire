@@ -112,7 +112,7 @@ const Message = () => {
 
       if (groupsArr.length > 0) {
         setSelectedGroup(groupsArr[0].room_id);
-        navigate(`/messages/${groupsArr[0].room_id}`);
+        // navigate(`/messages/${groupsArr[0].room_id}`);
       }
 
       return groupsArr;
