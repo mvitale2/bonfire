@@ -15,6 +15,13 @@ import remarkEmoji from "remark-emoji";
 import getNickname from "../../../getNickname.jsx";
 import Avatar from "../../UI Components/Avatar/Avatar.jsx";
 import rehypeHighlight from "rehype-highlight";
+import {
+  decryptMessage,
+  retrievePrivateKey,
+  decryptGroupKey,
+  encryptMessage,
+} from "../../../Crypto.jsx";
+import fetchProfilePicture from "../../../fetchProfilePicture.jsx";
 
 const Message = () => {
   const { roomId } = useParams();
@@ -27,6 +34,7 @@ const Message = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [refreshMessages, setRefreshMessages] = useState(0);
   const [isEditing, setIsEditing] = useState({
     editing: false,
     messageId: null,
@@ -37,7 +45,7 @@ const Message = () => {
   const [groupMembers, setGroupMembers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [memberNicknames, setMemberNicknames] = useState({});
-  const [selectedGroup, setSelectedGroup] = useState("🌐");
+  const [selectedGroup, setSelectedGroup] = useState("");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -131,7 +139,7 @@ const Message = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       const query = supabase
-        .from("message_view")
+        .from("messages")
         .select("*")
         .order("created_at", { ascending: true });
 
@@ -139,9 +147,92 @@ const Message = () => {
         ? await query.eq("room_id", roomId)
         : await query.is("room_id", null);
 
-      if (!error) {
-        setMessages(data);
+      if (error) {
+        console.log(`Error fetching messages: ${error.message}`);
+        return;
       }
+
+      const { data: roomData, error: roomError } = await supabase
+        .from("chat_rooms")
+        .select("keys")
+        .eq("id", roomId)
+        .single();
+
+      // console.log(roomId)
+
+      if (roomError) {
+        console.log(`Error retrieving group keys: ${roomError.message}`);
+        setMessages([]);
+        return;
+      }
+
+      const encryptedGroupKeys =
+        typeof roomData.keys === "string"
+          ? JSON.parse(roomData.keys)
+          : roomData.keys;
+      const encryptedUserKey = encryptedGroupKeys[id];
+      const encryptedGroupKeyBuffer = Uint8Array.from(
+        atob(encryptedUserKey),
+        (c) => c.charCodeAt(0)
+      );
+      const privateKey = await retrievePrivateKey(id);
+      const groupKey = await decryptGroupKey(
+        encryptedGroupKeyBuffer,
+        privateKey
+      );
+
+      const decryptedMessages = await Promise.all(
+        data.map(async (msg) => {
+          let decryptedContent = "";
+          // console.log(msg.content);
+          try {
+            decryptedContent = await decryptMessage(
+              msg.content,
+              msg.iv,
+              groupKey
+            );
+          } catch (e) {
+            console.log(e);
+            decryptedContent = "Unable to decrypt";
+          }
+
+          let decryptedImageUrl = null;
+          if (msg.image_url && msg.image_iv) {
+            try {
+              const response = await fetch(msg.image_url);
+              const encryptedImageBuffer = await response.arrayBuffer();
+
+              const imageIv = Uint8Array.from(atob(msg.image_iv), (c) =>
+                c.charCodeAt(0)
+              );
+
+              const decryptedImageBuffer = await window.crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: imageIv },
+                groupKey,
+                encryptedImageBuffer
+              );
+
+              const blob = new Blob([decryptedImageBuffer]);
+              decryptedImageUrl = URL.createObjectURL(blob);
+            } catch (e) {
+              decryptedImageUrl = null;
+            }
+          }
+
+          const nickname = await getNickname(msg.user_id);
+          const pfp = await fetchProfilePicture(msg.user_id);
+
+          return {
+            ...msg,
+            content: decryptedContent,
+            decryptedImageUrl,
+            nickname,
+            pfp,
+          };
+        })
+      );
+
+      setMessages(decryptedMessages);
     };
 
     const deleteChannel = supabase
@@ -174,7 +265,7 @@ const Message = () => {
       supabase.removeChannel(deleteChannel);
       supabase.removeChannel(editChannel);
     };
-  }, [roomId]);
+  }, [roomId, refreshMessages]);
 
   // fetch group members
   useEffect(() => {
@@ -217,7 +308,8 @@ const Message = () => {
             .single();
 
           if (!error && data) {
-            setMessages((prev) => [...prev, data]);
+            // setMessages((prev) => [...prev, data]);
+            setRefreshMessages(refreshMessages + 1);
             // Only increment if the message is NOT from the current user and NOT in the currently viewed group
             if (data.user_id !== id && data.room_id !== roomId) {
               setUnreadCounts((prev) => ({
@@ -255,15 +347,56 @@ const Message = () => {
     if (!newMessage.trim() && !imageFile) return;
     if (!id) return alert("User ID is missing.");
 
+    // retrieve the user's group key for encryption
+    const { data, error } = await supabase
+      .from("chat_rooms")
+      .select("keys")
+      .eq("id", roomId)
+      .single();
+
+    if (error) {
+      console.log(`Error retrieving group keys: ${error.message}`);
+      return;
+    }
+
+    const encryptedGroupKeys =
+      typeof data.keys === "string" ? JSON.parse(data.keys) : data.keys;
+    const encryptedUserKey = encryptedGroupKeys[id];
+    const encryptedGroupKeyBuffer = Uint8Array.from(
+      atob(encryptedUserKey),
+      (c) => c.charCodeAt(0)
+    );
+    const privateKey = await retrievePrivateKey(id);
+    const decryptedGroupKey = await decryptGroupKey(
+      encryptedGroupKeyBuffer,
+      privateKey
+    );
+
     let imageUrl = null;
+    let imageIv = null;
 
     if (imageFile) {
+      const fileBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(imageFile);
+      });
+
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const encryptedBuffer = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        decryptedGroupKey,
+        fileBuffer
+      );
+
       const fileExt = imageFile.name.split(".").pop();
       const filePath = `public/${Date.now()}.${fileExt}`;
+      const encryptedBlob = new Blob([encryptedBuffer]);
 
       const { error: uploadError } = await supabase.storage
         .from("message-images")
-        .upload(filePath, imageFile);
+        .upload(filePath, encryptedBlob);
 
       if (uploadError) {
         console.error("Error uploading image:", uploadError.message);
@@ -275,21 +408,40 @@ const Message = () => {
         .getPublicUrl(filePath);
 
       imageUrl = urlData?.publicUrl || null;
+      imageIv = btoa(String.fromCharCode(...iv));
     }
 
     if (isEditing.editing === true) {
-      let imageUrl = isEditing.imageUrl;
+      // Behavior for editing a message
+      const ciphertext = await encryptMessage(newMessage, decryptedGroupKey);
+      let imageUrl = isEditing.originalImageUrl;
+      let imageIv = isEditing.originalImageIv;
 
       if (imageFile) {
+        const fileBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(imageFile);
+        });
+
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedBuffer = await window.crypto.subtle.encrypt(
+          { name: "AES-GCM", iv },
+          decryptedGroupKey,
+          fileBuffer
+        );
+
         const fileExt = imageFile.name.split(".").pop();
         const filePath = `public/${Date.now()}.${fileExt}`;
+        const encryptedBlob = new Blob([encryptedBuffer]);
 
         const { error: uploadError } = await supabase.storage
           .from("message-images")
-          .upload(filePath, imageFile);
+          .upload(filePath, encryptedBlob);
 
         if (uploadError) {
-          console.log(`Error uploading image: ${uploadError.message}`);
+          console.error("Error uploading image:", uploadError.message);
           return;
         }
 
@@ -298,11 +450,17 @@ const Message = () => {
           .getPublicUrl(filePath);
 
         imageUrl = urlData?.publicUrl || null;
+        imageIv = btoa(String.fromCharCode(...iv));
       }
 
       const { error } = await supabase
         .from("messages")
-        .update({ content: newMessage, image_url: imageUrl })
+        .update({
+          content: ciphertext.ciphertext,
+          image_url: imageUrl,
+          iv: ciphertext.iv,
+          image_iv: imageIv,
+        })
         .eq("id", isEditing.messageId);
 
       if (error) {
@@ -313,12 +471,17 @@ const Message = () => {
         setIsEditing({ editing: false, messageId: null, imageUrl: null });
       }
     } else {
+      // Normal behavior for sending a message
+      const ciphertext = await encryptMessage(newMessage, decryptedGroupKey);
+      // console.log(`Encrypted message: ${ciphertext.ciphertext}`);
       const { error } = await supabase.from("messages").insert([
         {
-          content: newMessage,
+          content: ciphertext.ciphertext,
           user_id: id,
           room_id: roomId || null,
           image_url: imageUrl,
+          iv: ciphertext.iv,
+          image_iv: imageIv,
         },
       ]);
 
@@ -346,22 +509,72 @@ const Message = () => {
     });
 
     const { data, error } = await supabase
-      .from("message_view")
-      .select("content, image_url")
-      .eq("message_id", msgId)
+      .from("messages")
+      .select("content, iv, image_url, image_iv")
+      .eq("id", msgId)
       .single();
 
-    if (error)
-      console.log(`Error retrieving message content: ${error.message}`);
-
-    if (data) {
-      setNewMessage(data.content);
-      setImageFile(null);
-      setIsEditing((prev) => ({
-        ...prev,
-        imageUrl: data.image_url || null,
-      }));
+    if (error) {
+      console.log(`Error retriving encrypted message: ${error.message}`);
+      return;
     }
+
+    const { data: roomData, error: roomError } = await supabase
+      .from("chat_rooms")
+      .select("keys")
+      .eq("id", roomId)
+      .single();
+
+    if (roomError) {
+      console.log(`Error retrieving group keys: ${roomError.message}`);
+      return;
+    }
+
+    const encryptedGroupKeys =
+      typeof roomData.keys === "string"
+        ? JSON.parse(roomData.keys)
+        : roomData.keys;
+    const encryptedUserKey = encryptedGroupKeys[id];
+    const encryptedGroupKeyBuffer = Uint8Array.from(
+      atob(encryptedUserKey),
+      (c) => c.charCodeAt(0)
+    );
+    const privateKey = await retrievePrivateKey(id);
+    const groupKey = await decryptGroupKey(encryptedGroupKeyBuffer, privateKey);
+    const plaintext = await decryptMessage(data.content, data.iv, groupKey);
+
+    let decryptedImageUrl = null;
+    if (data.image_url && data.image_iv) {
+      try {
+        const response = await fetch(data.image_url);
+        const encryptedImageBuffer = await response.arrayBuffer();
+
+        const imageIv = Uint8Array.from(atob(data.image_iv), (c) =>
+          c.charCodeAt(0)
+        );
+
+        const decryptedImageBuffer = await window.crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: imageIv },
+          groupKey,
+          encryptedImageBuffer
+        );
+
+        const blob = new Blob([decryptedImageBuffer]);
+        decryptedImageUrl = URL.createObjectURL(blob);
+      } catch (e) {
+        console.log(e);
+        decryptedImageUrl = null;
+      }
+    }
+
+    setNewMessage(plaintext);
+    setImageFile(null);
+    setIsEditing((prev) => ({
+      ...prev,
+      imageUrl: decryptedImageUrl || null,
+      originalImageUrl: data.image_url || null,
+      originalImageIv: data.image_iv || null,
+    }));
   };
 
   // Calculate total unread messages for all groups
@@ -374,7 +587,7 @@ const Message = () => {
         {!isPopup && (
           <div className="groups-panel">
             <div className="groups">
-              <div
+              {/* <div
                 className={`group ${selectedGroup === "🌐" ? "selected" : ""}`}
                 onClick={() => {
                   setSelectedGroup("🌐");
@@ -382,7 +595,7 @@ const Message = () => {
                 }}
               >
                 <p className="group-name">🌐</p>
-              </div>
+              </div> */}
               {groups.map((group) => (
                 <div
                   key={group.id}
@@ -409,6 +622,7 @@ const Message = () => {
         <div className="messages-list">
           <div className="messages">
             {messages.map((msg) => {
+              const messageId = msg.message_id || msg.id;
               const isCurrentUser = msg.user_id === id;
               const displayName =
                 isCurrentUser && hideNickname
@@ -417,10 +631,10 @@ const Message = () => {
               const displayAvatar =
                 isCurrentUser && hideProfilePic
                   ? defaultAvatar
-                  : msg.profile_pic_url || defaultAvatar;
+                  : msg.pfp || defaultAvatar;
 
               return (
-                <div key={msg.message_id || msg.id} className="message">
+                <div key={messageId} className="message">
                   <div className="message-left">
                     <img
                       src={displayAvatar}
@@ -448,7 +662,7 @@ const Message = () => {
                           <div
                             className="edit-btn"
                             onClick={async () => {
-                              await handleEditMessage(msg.message_id);
+                              await handleEditMessage(messageId);
                             }}
                           >
                             <FaEdit />
@@ -456,7 +670,7 @@ const Message = () => {
                           <div
                             className="delete-btn"
                             onClick={async () =>
-                              await handleDeleteMessage(msg.message_id)
+                              await handleDeleteMessage(messageId)
                             }
                           >
                             <MdDelete />
@@ -483,7 +697,7 @@ const Message = () => {
                       {msg.image_url && (
                         <>
                           <img
-                            src={msg.image_url}
+                            src={msg.decryptedImageUrl || msg.image_url}
                             alt="attachment"
                             className="sent-image"
                             style={{

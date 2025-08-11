@@ -111,7 +111,7 @@ export async function decryptGroupKey(encryptedGroupKey, memberPrivateKey) {
     rawGroupKey,
     { name: "AES-GCM" },
     false,
-    ["encrypt", "derypt"]
+    ["encrypt", "decrypt"]
   );
 
   return groupKey;
@@ -136,9 +136,9 @@ export async function encryptMessage(plaintext, groupKey) {
   };
 }
 
-export async function decrpytMessage(ciphertextB64, ivB64, groupKey) {
-  const dec = new TextDecorder();
-  const ciphertext = UintArray8.from(atob(ciphertextB64), (c) =>
+export async function decryptMessage(ciphertextB64, ivB64, groupKey) {
+  const dec = new TextDecoder();
+  const ciphertext = Uint8Array.from(atob(ciphertextB64), (c) =>
     c.charCodeAt(0)
   );
   const iv = Uint8Array.from(atob(ivB64), (c) => c.charCodeAt(0));
