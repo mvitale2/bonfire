@@ -4,6 +4,11 @@ import supabase from "../../../../Supabase.jsx";
 import { UserContext } from "../../../UserContext.jsx";
 import getFriends from "../../../getFriends.jsx";
 import getNickname from "../../../getNickname.jsx";
+import {
+  generateUserKeypair,
+  savePrivateKey,
+  createGroupKey,
+} from "../../../Crypto.jsx";
 
 const CreateRoom = () => {
   const { id: userId } = useContext(UserContext);
@@ -110,6 +115,18 @@ const CreateRoom = () => {
       console.error("Failed to create room:", roomErr);
       return;
     }
+
+    // crypto stuff
+    const { publicKey, privateKey } = await generateUserKeypair();
+    await savePrivateKey(privateKey, room.id);
+    const groupKey = createGroupKey(publicKey);
+
+    const { error: keyError } = await supabase
+      .from("chat_rooms")
+      .update({ public_keys: { `${userId}: ${publicKey}` } })
+      .eq("room_id", room.id);
+
+    if (keyError) console.log(`Error uploading group key: ${keyError.message}`);
 
     // Add selected friends + self as members
     const members = [...selectedFriends, userId].map((id) => ({
