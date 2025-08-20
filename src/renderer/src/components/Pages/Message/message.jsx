@@ -823,6 +823,9 @@ const Message = () => {
             )}
           </div>
         </div>
+
+        {selectedGroup === "🔥" ? <Bonfires /> : null}
+
         {/* Group members panel */}
         {roomId && (
           <div
