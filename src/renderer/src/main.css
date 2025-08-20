@@ -42,6 +42,10 @@ body {
   align-items: center;
 }
 
+.hide {
+  display: none !important;
+}
+
 button {
   border: none;
   background-color: var(--accent-color-3);

@@ -1,9 +1,7 @@
-import { useContext } from "react";
 import Login from "./components/Pages/Login/Login.jsx";
 import CreateAccount from "./components/Pages/CreateAccount/CreateAccount.jsx";
 import UserInfo from "./components/Pages/UserInfo/UserInfo.jsx";
 import UserSettings from "./components/Pages/UserSettings/UserSettings.jsx";
-import { UserContext } from "./UserContext.jsx";
 import { Route, Routes } from "react-router-dom";
 import Message from "./components/Pages/Message/message.jsx";
 import Friends from "./components/Pages/Friends/Friends.jsx";

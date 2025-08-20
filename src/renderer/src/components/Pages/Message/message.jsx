@@ -22,6 +22,7 @@ import {
   encryptMessage,
 } from "../../../Crypto.jsx";
 import fetchProfilePicture from "../../../fetchProfilePicture.jsx";
+import Bonfires from "../Bonfires/Bonfires.jsx";
 
 const Message = () => {
   const { roomId } = useParams();
@@ -45,7 +46,7 @@ const Message = () => {
   const [groupMembers, setGroupMembers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [memberNicknames, setMemberNicknames] = useState({});
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("🔥");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -615,15 +616,14 @@ const Message = () => {
         {!isPopup && (
           <div className="groups-panel">
             <div className="groups">
-              {/* <div
-                className={`group ${selectedGroup === "🌐" ? "selected" : ""}`}
+              <div
+                className={`group ${selectedGroup === "🔥" ? "selected" : ""}`}
                 onClick={() => {
-                  setSelectedGroup("🌐");
-                  navigate(`/messages`);
+                  setSelectedGroup("🔥");
                 }}
               >
-                <p className="group-name">🌐</p>
-              </div> */}
+                <p className="group-name">🔥</p>
+              </div>
               {groups.map((group) => (
                 <div
                   key={group.id}
@@ -647,7 +647,9 @@ const Message = () => {
           </div>
         )}
         {/* Message List */}
-        <div className="messages-list">
+        <div
+          className={`messages-list ${selectedGroup === "🔥" ? "hide" : null}`}
+        >
           <div className="messages">
             {messages.map((msg) => {
               const messageId = msg.message_id || msg.id;
@@ -823,7 +825,9 @@ const Message = () => {
         </div>
         {/* Group members panel */}
         {roomId && (
-          <div className="group-members-list">
+          <div
+            className={`group-members-list ${selectedGroup === "🔥" ? "hide" : null}`}
+          >
             <h4>Members</h4>
             <ul>
               {groupMembers
