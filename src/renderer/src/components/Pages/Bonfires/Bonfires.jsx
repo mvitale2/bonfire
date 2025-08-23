@@ -9,14 +9,20 @@ function Bonfires() {
   const [voiceChannels, setVoiceChannels] = useState();
   const [creatingChannel, setCreatingChannel] = useState(false);
 
-  useEffect(async () => {
-    const { data, error } = await supabase.from("bonfires").select("*");
+  useEffect(() => {
+    const fetchBonfires = async () => {
+      const { data, error } = await supabase.from("bonfires").select("*");
 
-    if (error) {
-      console.log(`Error retrieving bonfires: ${error.message}`);
-    }
+      if (error) {
+        console.log(`Error retrieving bonfires: ${error.message}`);
+      }
 
-    setVoiceChannels(JSON.parse(data));
+      if (Array.isArray(data) && data.length > 0) {
+        setVoiceChannels(data)
+      }
+    };
+
+    fetchBonfires();
   }, []);
 
   function VoiceChannel() {}
@@ -24,16 +30,15 @@ function Bonfires() {
   function ActiveVoiceChannels() {}
 
   function CreateNewChannel() {
-
     return (
       <div className="new-channel-wrapper">
         <p>Create New Bonfire</p>
         <div className="add-btn" onClick={() => setCreatingChannel(true)}>
           <IoMdAdd />
         </div>
-        <div className={`create-channel-wrapper ${creatingChannel ? null : "hide"}`}>
-      
-        </div>
+        <div
+          className={`create-channel-wrapper ${creatingChannel ? null : "hide"}`}
+        ></div>
       </div>
     );
   }
