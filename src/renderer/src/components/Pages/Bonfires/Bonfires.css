@@ -1,9 +1,32 @@
-.bonfire {
+.bonfires {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100vw;
-  height: 100vh;
+  height: 70%;
+  background-color: var(--background-color-5);
+  margin-left: 2em;
+  margin-right: 2em;
 }
 
+.bonfires .new-bonfire-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
+.bonfires .new-bonfire-wrapper .add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5em;
+  font-size: 32px;
+  color: var(--accent-color-3);
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.bonfires .new-bonfire-wrapper .add-btn:hover {
+  background-color: var(--background-color-3);
+}

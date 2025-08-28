@@ -288,7 +288,7 @@ const Message = () => {
       )
       .subscribe();
 
-    fetchMessages();
+    if (selectedGroup != "🔥") fetchMessages();
 
     return () => {
       supabase.removeChannel(deleteChannel);
