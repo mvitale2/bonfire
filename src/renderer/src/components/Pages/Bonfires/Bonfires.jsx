@@ -11,7 +11,7 @@ function Bonfires() {
   const [input, setInput] = useState("");
   const [bonfireName, setBonfireName] = useState("")
   const [bonfires, setBonfires] = useState();
-  const [selectedUser, setSelectedUser] = useState();
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [users, setUsers] = useState()
   const [creatingBonfire, setCreatingBonfire] = useState(false);
 
