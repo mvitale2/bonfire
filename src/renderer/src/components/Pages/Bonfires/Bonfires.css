@@ -2,6 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   width: 100vw;
   height: 70%;
   background-color: var(--background-color-5);
@@ -13,10 +14,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   width: 100%;
 }
 
-.bonfires .new-bonfire-wrapper .add-btn {
+.bonfires .new-bonfire-wrapper .new-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bonfires .new-bonfire-wrapper .new-section .add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,6 +35,22 @@
   border-radius: 5px;
 }
 
-.bonfires .new-bonfire-wrapper .add-btn:hover {
+.bonfires .new-bonfire-wrapper .new-section .add-btn:hover {
   background-color: var(--background-color-3);
+}
+
+.bonfires .new-bonfire-wrapper .create-bonfire-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-color: var(--background-color-2);
+  border-radius: 5px;
+  margin-top: 1em;
+  padding: 1em;
+  gap: 0.5em;
+}
+
+.bonfires .new-bonfire-wrapper .create-bonfire-panel .bonfire-name-input {
+  margin-left: 0.5em;
 }

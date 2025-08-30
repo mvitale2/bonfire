@@ -219,6 +219,7 @@ function Friends() {
       await deleteRequest(targetId);
     };
 
+    // real time requests listener
     useEffect(() => {
       const fetchRequests = async () => {
         const { data, error } = await supabase

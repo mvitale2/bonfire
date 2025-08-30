@@ -337,8 +337,7 @@ const Message = () => {
             .single();
 
           if (!error && data) {
-            // setMessages((prev) => [...prev, data]);
-            setRefreshMessages(refreshMessages + 1);
+            setRefreshMessages((prev) => prev + 1);
             // Only increment if the message is NOT from the current user and NOT in the currently viewed group
             if (data.user_id !== id && data.room_id !== roomId) {
               setUnreadCounts((prev) => ({
