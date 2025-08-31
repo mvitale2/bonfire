@@ -60,13 +60,25 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
+  flex-direction: column;
+  gap: 2em;
 }
 
 .bonfires .bonfires-wrapper .bonfire {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   gap: 1em;
   width: 100%;
+  background-color: var(--background-color-3);
+  padding: 1em;
+  border-radius: 5px;
+}
+
+.bonfires .bonfires-wrapper .bonfire .joined-users {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
 }

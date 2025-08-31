@@ -37,7 +37,7 @@ function Bonfires() {
             schema: "public",
             table: "bonfires",
           },
-          (payload) => {
+          () => {
             fetchBonfires();
           }
         )
@@ -124,7 +124,7 @@ function Bonfires() {
     const handleAddBonfire = async () => {
       const { error } = await supabase
         .from("bonfires")
-        .insert({ name: bonfireName });
+        .insert({ name: bonfireName, creator_id: id });
 
       if (error) {
         console.log(`Error uploading bonfire: ${error.message}`);
