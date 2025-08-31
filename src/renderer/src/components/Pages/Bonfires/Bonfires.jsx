@@ -71,10 +71,15 @@ function Bonfires() {
         updatedUsers.push(id);
       }
 
+      const { rror: updateError } = await supabase
+        .from("bonfires")
+        .update({ joined_users: updatedUsers })
+        .eq("room_id", bonfireId);
+
       if (updateError) {
         console.log(`Error updating joined users: ${updateError.message}`);
       } else {
-        fetchBonfires()
+        fetchBonfires();
       }
     };
 
