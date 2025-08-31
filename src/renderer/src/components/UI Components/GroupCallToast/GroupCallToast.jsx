@@ -10,7 +10,7 @@ import "./GroupCallToast.css";
 function GroupCallToast({ room_id }) {
   const { id, inGroupCall, setInGroupCall } = useContext(UserContext);
   const [connected, setConnected] = useState(false);
-  console.log(room_id);
+  // console.log(room_id);
 
   const handleEndCall = async () => {
     setInGroupCall([false, null]);
@@ -32,7 +32,7 @@ function GroupCallToast({ room_id }) {
 
     updatedUsers = updatedUsers.filter((userId) => userId !== id);
 
-    console.log(updatedUsers);
+    // console.log(updatedUsers);
 
     const { error: updateError } = await supabase
       .from("bonfires")

@@ -3,6 +3,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  gap: 1em;
   width: 100vw;
   height: 70%;
   background-color: var(--background-color-5);
@@ -53,4 +54,19 @@
 
 .bonfires .new-bonfire-wrapper .create-bonfire-panel .bonfire-name-input {
   margin-left: 0.5em;
+}
+
+.bonfires .bonfires-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.bonfires .bonfires-wrapper .bonfire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  width: 100%;
 }

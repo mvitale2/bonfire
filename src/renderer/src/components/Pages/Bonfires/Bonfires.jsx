@@ -3,7 +3,6 @@ import supabase from "../../../../Supabase";
 import { UserContext } from "../../../UserContext";
 import { IoMdAdd } from "react-icons/io";
 import Avatar from "../../UI Components/Avatar/Avatar";
-import GroupCallToast from "../../UI Components/GroupCallToast/GroupCallToast";
 import "./Bonfires.css";
 
 function Bonfires() {
@@ -11,24 +10,22 @@ function Bonfires() {
   const [roomId, setRoomId] = useState("");
 
   function ActiveBonfires() {
-    const [bonfires, setBonfires] = useState({});
+    const [bonfires, setBonfires] = useState([]);
+
+    const fetchBonfires = async () => {
+      const { data, error } = await supabase.from("bonfires").select("*");
+
+      if (error) {
+        console.log(`Error fetching bonfires: ${error.message}`);
+        // add ui error message logic
+        return;
+      }
+
+      setBonfires(data);
+    };
 
     // fetch bonfires in real time
     useEffect(() => {
-      const fetchBonfires = async () => {
-        const { data, error } = await supabase.from("bonfires").select("*");
-
-        if (error) {
-          console.log(`Error fetching bonfires: ${error.message}`);
-          // add ui error message logic
-          return;
-        }
-
-        // console.log(data.length);
-
-        setBonfires(data);
-      };
-
       fetchBonfires();
 
       const channel = supabase
@@ -74,13 +71,10 @@ function Bonfires() {
         updatedUsers.push(id);
       }
 
-      const { error: updateError } = await supabase
-        .from("bonfires")
-        .update({ joined_users: updatedUsers })
-        .eq("room_id", bonfireId);
-
       if (updateError) {
         console.log(`Error updating joined users: ${updateError.message}`);
+      } else {
+        fetchBonfires()
       }
     };
 
@@ -88,7 +82,7 @@ function Bonfires() {
       <div className="bonfires-wrapper">
         {bonfires.length > 0
           ? bonfires.map((bonfire) => (
-              <div className="bonfire" id={bonfire.room_id}>
+              <div className="bonfire" key={bonfire.room_id}>
                 <p className="bonfire-title">{bonfire.name}</p>
                 <button
                   className="bonfire-join-btn"
@@ -100,8 +94,9 @@ function Bonfires() {
                 <div className="joined-users">
                   {Array.isArray(bonfire.joined_users) &&
                   bonfire.joined_users.length > 0
-                    ? bonfire.joined_users.forEach((user) => {
-                        return <Avatar otherUserId={user} />;
+                    ? bonfire.joined_users.map((user) => {
+                        console.log(bonfire.joined_users);
+                        return <Avatar otherUserId={user} key={user} />;
                       })
                     : null}
                 </div>
