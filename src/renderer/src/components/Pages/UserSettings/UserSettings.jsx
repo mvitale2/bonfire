@@ -205,6 +205,7 @@ const Profile = ({ id, nickname, setNickname, setAvatar }) => {
   );
 };
 
+// this should be moved to its own file
 export const UserProvider = ({ children }) => {
   const [nickname, setNickname] = useState("");
   const [avatar, setAvatar] = useState(null);
@@ -212,6 +213,7 @@ export const UserProvider = ({ children }) => {
   const [hideNickname, setHideNickname] = useState(false);
   const [hideProfilePic, setHideProfilePic] = useState(false);
   const [inCall, setInCall] = useState(false);
+  const [inGroupCall, setInGroupCall] = useState(false)
   const [remoteUserId, setRemoteUserId] = useState(null)
   const peerRef = useRef(null);
 
@@ -268,6 +270,8 @@ export const UserProvider = ({ children }) => {
         peerRef,
         remoteUserId,
         setRemoteUserId,
+        inGroupCall,
+        setInGroupCall,
       }}
     >
       {children}

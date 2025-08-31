@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { UserContext } from "./UserContext";
 import supabase from "../Supabase.jsx";
 import CallToast from "./components/UI Components/CallToast/CallToast";
+import GroupCallToast from "./components/UI Components/GroupCallToast/GroupCallToast.jsx";
 
 function CallListener() {
-  const { id, inCall, setInCall, remoteUserId } = useContext(UserContext);
+  const { id, inCall, setInCall, remoteUserId, inGroupCall } = useContext(UserContext);
   const [incomingCall, setIncomingCall] = useState(null);
   const [outgoingCall, setOutgoingCall] = useState(null);
   const [receiver, setReciver] = useState(false);
@@ -88,6 +89,12 @@ function CallListener() {
         initiator={outgoingCall.initiator}
       />
     );
+  } else if (inGroupCall[0]) {
+    return (
+      <GroupCallToast
+        room_id={inGroupCall[1]}
+      />
+    )
   }
 }
 

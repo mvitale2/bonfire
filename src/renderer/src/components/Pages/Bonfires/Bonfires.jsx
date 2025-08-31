@@ -3,11 +3,11 @@ import supabase from "../../../../Supabase";
 import { UserContext } from "../../../UserContext";
 import { IoMdAdd } from "react-icons/io";
 import Avatar from "../../UI Components/Avatar/Avatar";
-import Combobox from "react-widgets/Combobox";
+import GroupCallToast from "../../UI Components/GroupCallToast/GroupCallToast";
 import "./Bonfires.css";
 
 function Bonfires() {
-  const { id } = useContext(UserContext);
+  const { id, inCall, inGroupCall, setInGroupCall } = useContext(UserContext);
   const [roomId, setRoomId] = useState("");
 
   function ActiveBonfires() {
@@ -24,7 +24,7 @@ function Bonfires() {
           return;
         }
 
-        console.log(data.length);
+        // console.log(data.length);
 
         setBonfires(data);
       };
@@ -41,7 +41,6 @@ function Bonfires() {
             table: "bonfires",
           },
           () => {
-            // gonna need logic for extracting joined members maybe?
             fetchBonfires();
           }
         )
@@ -52,13 +51,60 @@ function Bonfires() {
       };
     }, []);
 
+    const handleJoin = async (bonfireId) => {
+      setInGroupCall([true, bonfireId]);
+      setRoomId(bonfireId);
+
+      const { data, error } = await supabase
+        .from("bonfires")
+        .select("joined_users")
+        .eq("room_id", bonfireId)
+        .single();
+
+      if (error) {
+        console.log(`Error retrieving joined users: ${error.message}`);
+        return;
+      }
+
+      let updatedUsers = Array.isArray(data.joined_users)
+        ? [...data.joined_users]
+        : [];
+
+      if (!updatedUsers.includes(id)) {
+        updatedUsers.push(id);
+      }
+
+      const { error: updateError } = await supabase
+        .from("bonfires")
+        .update({ joined_users: updatedUsers })
+        .eq("room_id", bonfireId);
+
+      if (updateError) {
+        console.log(`Error updating joined users: ${updateError.message}`);
+      }
+    };
+
     return (
       <div className="bonfires-wrapper">
         {bonfires.length > 0
           ? bonfires.map((bonfire) => (
               <div className="bonfire" id={bonfire.room_id}>
                 <p className="bonfire-title">{bonfire.name}</p>
-                <button className="bonfire-join-btn">Join</button>
+                <button
+                  className="bonfire-join-btn"
+                  onClick={async () => await handleJoin(bonfire.room_id)}
+                  disabled={inCall || inGroupCall[0]}
+                >
+                  Join
+                </button>
+                <div className="joined-users">
+                  {Array.isArray(bonfire.joined_users) &&
+                  bonfire.joined_users.length > 0
+                    ? bonfire.joined_users.forEach((user) => {
+                        return <Avatar otherUserId={user} />;
+                      })
+                    : null}
+                </div>
               </div>
             ))
           : null}
@@ -77,11 +123,9 @@ function Bonfires() {
     }, [bonfireName]);
 
     const handleAddBonfire = async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("bonfires")
-        .insert({ name: bonfireName })
-        .select("room_id")
-        .single();
+        .insert({ name: bonfireName });
 
       if (error) {
         console.log(`Error uploading bonfire: ${error.message}`);
@@ -89,7 +133,6 @@ function Bonfires() {
         return;
       }
 
-      setRoomId(data.room_id);
       setCreatingBonfire(false);
       setBonfireName("");
     };

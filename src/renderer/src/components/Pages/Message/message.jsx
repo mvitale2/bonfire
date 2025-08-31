@@ -26,7 +26,7 @@ import Bonfires from "../Bonfires/Bonfires.jsx";
 
 const Message = () => {
   const { roomId } = useParams();
-  const { inCall, setInCall, setRemoteUserId } = useContext(UserContext);
+  const { inCall, setInCall, inGroupCall, setRemoteUserId } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -845,7 +845,7 @@ const Message = () => {
                           <button
                             className="call-btn"
                             onClick={() => handleCall(m.user_id)}
-                            disabled={inCall}
+                            disabled={inCall || inGroupCall[0]}
                           >
                             <MdCall />
                           </button>

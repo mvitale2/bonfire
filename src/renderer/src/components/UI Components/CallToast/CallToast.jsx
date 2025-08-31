@@ -17,6 +17,7 @@ function CallToast({ remote_id, initiator, room_id }) {
   const audioRef = useRef(null);
 
   useEffect(() => {
+    // only performed if the user is initiator
     if (initiator === true && callAccepted === false) {
       setCallAccepted(true);
     } else {
