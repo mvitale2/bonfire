@@ -37,7 +37,7 @@ function Bonfires() {
             schema: "public",
             table: "bonfires",
           },
-          () => {
+          (payload) => {
             fetchBonfires();
           }
         )
@@ -46,7 +46,7 @@ function Bonfires() {
       return () => {
         supabase.removeChannel(channel);
       };
-    }, []);
+    }, [inGroupCall[0]]);
 
     const handleJoin = async (bonfireId) => {
       setInGroupCall([true, bonfireId]);
@@ -71,7 +71,7 @@ function Bonfires() {
         updatedUsers.push(id);
       }
 
-      const { rror: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from("bonfires")
         .update({ joined_users: updatedUsers })
         .eq("room_id", bonfireId);
@@ -100,7 +100,6 @@ function Bonfires() {
                   {Array.isArray(bonfire.joined_users) &&
                   bonfire.joined_users.length > 0
                     ? bonfire.joined_users.map((user) => {
-                        console.log(bonfire.joined_users);
                         return <Avatar otherUserId={user} key={user} />;
                       })
                     : null}

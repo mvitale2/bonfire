@@ -94,34 +94,6 @@ const Message = () => {
     if (id) fetchUserGroups();
   }, [id]);
 
-  // useEffect(() => {
-  //   async function getUserGroupNamesAndSetFirst(userId) {
-  //     const { data, error } = await supabase
-  //       .from("chat_room_members")
-  //       .select("room_id, chat_rooms(name)")
-  //       .eq("user_id", userId);
-
-  //     if (error) {
-  //       console.error("Error fetching group names:", error.message);
-  //       return [];
-  //     }
-
-  //     const groupsArr = data.map((item) => ({
-  //       room_id: item.room_id,
-  //       name: item.chat_rooms?.name || "",
-  //     }));
-
-  //     if (groupsArr.length > 0) {
-  //       setSelectedGroup(groupsArr[0].room_id);
-  //       // navigate(`/messages/${groupsArr[0].room_id}`);
-  //     }
-
-  //     return groupsArr;
-  //   }
-
-  //   getUserGroupNamesAndSetFirst(id);
-  // }, [id]);
-
   // fetch group info
   useEffect(() => {
     const fetchGroups = async () => {
