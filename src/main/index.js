@@ -16,27 +16,29 @@ function createWindow() {
       sandbox: false,
     },
   });
-ipcMain.on("open-group-window", (event, groupId) => {
-  const win = new BrowserWindow({
-    width: 900,
-    height: 670,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
-      sandbox: false,
-    },
-  });
-  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-    win.loadURL(
-      `${process.env["ELECTRON_RENDERER_URL"]}/messages/${groupId}?popup=1`
-    );
-  } else {
-    win.loadFile(join(__dirname, "../renderer/index.html"), {
-      hash: `/messages/${groupId}?popup=1`,
+
+  mainWindow.webContents.openDevTools()
+
+  ipcMain.on("open-group-window", (event, groupId) => {
+    const win = new BrowserWindow({
+      width: 900,
+      height: 670,
+      autoHideMenuBar: true,
+      webPreferences: {
+        preload: join(__dirname, "../preload/index.js"),
+        sandbox: false,
+      },
     });
-  }
-});
-  // --- END ADDITION ---
+    if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+      win.loadURL(
+        `${process.env["ELECTRON_RENDERER_URL"]}/messages/${groupId}?popup=1`
+      );
+    } else {
+      win.loadFile(join(__dirname, "../renderer/index.html"), {
+        hash: `/messages/${groupId}?popup=1`,
+      });
+    }
+  });
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();

@@ -22,6 +22,8 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.49.4",
     "bcryptjs": "^3.0.2",
+    "electron-debug": "^4.1.0",
+    "hash-router": "^0.4.0",
     "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.0",
