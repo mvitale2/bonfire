@@ -15,7 +15,7 @@ function GroupCallToast({ room_id }) {
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
 
-  // join room on mount
+  // join room on mount only if there are
   useEffect(() => {
     getLocalAudio().then(joinRoom());
   }, []);
@@ -55,6 +55,17 @@ function GroupCallToast({ room_id }) {
         },
         (payload) => {
           loadPayload(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table:"bonfires",
+          filter: `room_id=eq.${room_id}`
+        }, (payload) => {
+          createPeers(payload.joined_users)
         }
       )
       .subscribe();
@@ -148,6 +159,15 @@ function GroupCallToast({ room_id }) {
     }
   }
 
+  async function createPeers(users) {
+    users.forEach(async (user) => {
+      if (user != id) {
+        const initiator = isInitiatorFor(user);
+        createPeer(user, initiator);
+      }
+    });
+  }
+
   async function joinRoom() {
     await getLocalAudio();
 
@@ -166,12 +186,7 @@ function GroupCallToast({ room_id }) {
     }
 
     // if there are other users joined
-    data.joined_users.forEach(async (user) => {
-      if (user != id) {
-        const initiator = isInitiatorFor(user);
-        createPeer(user, initiator);
-      }
-    });
+    await createPeers(data.joined_users);
   }
 
   async function leaveRoom() {
