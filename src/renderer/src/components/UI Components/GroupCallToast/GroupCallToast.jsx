@@ -15,19 +15,26 @@ function GroupCallToast({ room_id }) {
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
 
+  // join room on mount after getting local audio
   useEffect(() => {
     getLocalAudio().then(joinRoom());
   }, []);
 
   useEffect(() => {
     const loadPayload = (payload) => {
-      const { payload: signal } = payload.new;
-      console.log("Loading detected signal");
+      const { from_user_id, payload: signal } = payload.new;
+      console.log(`Loading detected signal from: ${from_user_id}`);
       console.log(signal);
       const parsedSignal =
         typeof signal === "string" ? JSON.parse(signal) : signal;
       console.log(parsedSignal);
-      localPeer.signal(parsedSignal);
+
+      const peer = peersRef.current.get(from_user_id);
+      if (peer) {
+        peer.signal(parsedSignal);
+      } else {
+        console.log(`No peer found for user: ${from_user_id}`);
+      }
     };
 
     const channel = supabase
@@ -67,11 +74,8 @@ function GroupCallToast({ room_id }) {
         (payload) => {
           const { joined_users } = payload.new;
           console.log("Joined users changed");
-          if (
-            joined_users.length === 1 &&
-            joined_users[0] === id
-          ) {
-            console.log("Logged in user is the only joined user")
+          if (joined_users.length === 1 && joined_users[0] === id) {
+            console.log("Logged in user is the only joined user");
             return;
           } else {
             createPeers(joined_users);
