@@ -150,6 +150,11 @@ function GroupCallToast({ room_id }) {
       el.srcObject = stream;
     });
 
+    peer.on("connect", () => {
+      console.log("Connected!")
+      setConnected(true)
+    })
+
     peer.on("close", () => {
       peersRef.current.delete(otherId);
       const element = document.querySelector(`audio[data-peer="${otherid}]`);
@@ -221,6 +226,7 @@ function GroupCallToast({ room_id }) {
 
   const handleEndCall = async () => {
     setInGroupCall([false, null]);
+    setConnected(false)
     await leaveRoom();
 
     const { data, error } = await supabase
