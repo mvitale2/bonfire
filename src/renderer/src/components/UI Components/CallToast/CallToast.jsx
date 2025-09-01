@@ -130,7 +130,7 @@ function CallToast({ remote_id, initiator, room_id }) {
       });
 
       localPeer.on("stream", (remoteStream) => {
-        console.log("I hear audio!");
+        // console.log("I hear audio!");
         console.log(remoteStream);
         audioRef.current.srcObject = remoteStream;
         audioRef.current.play();

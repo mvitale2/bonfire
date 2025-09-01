@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { UserContext } from "../../../UserContext";
 import supabase from "../../../../Supabase";
-import { MdCall, MdCallEnd, MdConnectWithoutContact } from "react-icons/md";
+import { MdCallEnd, MdConnectWithoutContact } from "react-icons/md";
 import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import Avatar from "../Avatar/Avatar";
 import SimplePeer from "simple-peer";
@@ -151,13 +151,13 @@ function GroupCallToast({ room_id }) {
     });
 
     peer.on("connect", () => {
-      console.log("Connected!")
-      setConnected(true)
-    })
+      console.log("Connected!");
+      setConnected(true);
+    });
 
     peer.on("close", () => {
       peersRef.current.delete(otherId);
-      const element = document.querySelector(`audio[data-peer="${otherid}]`);
+      const element = document.querySelector(`audio[data-peer="${otherId}]`);
       if (element?.parentNode) element.parentNode.removeChild(element);
     });
 
@@ -226,8 +226,14 @@ function GroupCallToast({ room_id }) {
 
   const handleEndCall = async () => {
     setInGroupCall([false, null]);
-    setConnected(false)
+    setConnected(false);
     await leaveRoom();
+
+    const { error: deleteError } = supabase
+      .from("signals")
+      .delete()
+      .eq("from_user_id", id)
+      .eq("room_id", room_id);
 
     const { data, error } = await supabase
       .from("bonfires")
