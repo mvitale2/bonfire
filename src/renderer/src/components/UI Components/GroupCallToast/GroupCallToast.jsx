@@ -229,7 +229,7 @@ function GroupCallToast({ room_id }) {
     setConnected(false);
     await leaveRoom();
 
-    const { error: deleteError } = supabase
+    const { error: deleteError } = await supabase
       .from("signals")
       .delete()
       .eq("from_user_id", id);
