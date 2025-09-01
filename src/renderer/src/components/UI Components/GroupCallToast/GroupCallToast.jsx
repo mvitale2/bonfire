@@ -232,8 +232,11 @@ function GroupCallToast({ room_id }) {
     const { error: deleteError } = supabase
       .from("signals")
       .delete()
-      .eq("from_user_id", id)
-      .eq("room_id", room_id);
+      .eq("from_user_id", id);
+
+    if (deleteError) {
+      console.log(`Error deleting signals: ${deleteError.message}`);
+    }
 
     const { data, error } = await supabase
       .from("bonfires")
