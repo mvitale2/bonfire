@@ -15,7 +15,6 @@ function GroupCallToast({ room_id }) {
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
 
-  // join room on mount only if there are
   useEffect(() => {
     getLocalAudio().then(joinRoom());
   }, []);
@@ -62,10 +61,21 @@ function GroupCallToast({ room_id }) {
         {
           event: "UPDATE",
           schema: "public",
-          table:"bonfires",
-          filter: `room_id=eq.${room_id}`
-        }, (payload) => {
-          createPeers(payload.joined_users)
+          table: "bonfires",
+          filter: `room_id=eq.${room_id}`,
+        },
+        (payload) => {
+          const { joined_users } = payload.new;
+          console.log("New user joined the room");
+          if (
+            joined_users.length === 1 &&
+            joined_users[0] === id
+          ) {
+            console.log("Logged in user is the only joined user")
+            return;
+          } else {
+            createPeers(joined_users);
+          }
         }
       )
       .subscribe();
@@ -160,6 +170,7 @@ function GroupCallToast({ room_id }) {
   }
 
   async function createPeers(users) {
+    console.log(users);
     users.forEach(async (user) => {
       if (user != id) {
         const initiator = isInitiatorFor(user);
@@ -169,8 +180,6 @@ function GroupCallToast({ room_id }) {
   }
 
   async function joinRoom() {
-    await getLocalAudio();
-
     const { error, data } = await supabase
       .from("bonfires")
       .select("joined_users")
@@ -180,10 +189,12 @@ function GroupCallToast({ room_id }) {
     if (error) {
       console.log(`Error getting joined users: ${error.message}`);
       return;
-    } else if (Array.isArray(data.joined_users).length < 0) {
+    } else if (data.joined_users.length === 0) {
       console.log("No other joined users...");
       return;
     }
+
+    console.log(data.joined_users);
 
     // if there are other users joined
     await createPeers(data.joined_users);
