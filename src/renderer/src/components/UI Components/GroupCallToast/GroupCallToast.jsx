@@ -180,7 +180,7 @@ function GroupCallToast({ room_id }) {
     if (error) {
       console.log(`Error getting joined users: ${error.message}`);
       return;
-    } else if (Array.isArray(data.joined_users)) {
+    } else if (Array.isArray(data.joined_users).length < 0) {
       console.log("No other joined users...");
       return;
     }
