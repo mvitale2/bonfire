@@ -17,8 +17,52 @@ function GroupCallToast({ room_id }) {
 
   // join room on mount
   useEffect(() => {
-    joinRoom()
-  }, [])
+    getLocalAudio().then(joinRoom());
+  }, []);
+
+  useEffect(() => {
+    const loadPayload = (payload) => {
+      const { payload: signal } = payload.new;
+      console.log("Loading detected signal");
+      console.log(signal);
+      const parsedSignal =
+        typeof signal === "string" ? JSON.parse(signal) : signal;
+      console.log(parsedSignal);
+      localPeer.signal(parsedSignal);
+    };
+
+    const channel = supabase
+      .channel(`bonfire-${room_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "signals",
+          filter: `to_user_id=eq.${id}`,
+        },
+        (payload) => {
+          loadPayload(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "signals",
+          filter: `to_user_id=eq.${id}`,
+        },
+        (payload) => {
+          loadPayload(payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   function isInitiatorFor(otherId) {
     return id > otherId;
@@ -58,26 +102,28 @@ function GroupCallToast({ room_id }) {
       },
     });
 
-    peer.on("signal", (data) => {
-      channelRef.current.send({
-        type: "broadcast",
-        event: "signal",
-        payload: { type: "signal", to: otherId, from: id, data },
+    peer.on("signal", async (data) => {
+      console.log(`Sending offer to ${otherId}`);
+      await supabase.from("signals").insert({
+        room_id: room_id,
+        from_user_id: id,
+        to_user_id: otherId,
+        payload: JSON.stringify(data),
       });
     });
 
-    peer.on("track", (track, stream) => {
-      let element = document.querySelector(`audio[data-peer="${otherid}]`)
-      if (!element) {
-        element = document.createElement("audio")
-        element.dataset.peer = otherId
-        element.autoplay = true
-        element.playsInLine = true
-        document.body.appendChid(element)
+    peer.on("stream", (stream) => {
+      console.log(stream);
+      let el = document.querySelector(`audio[data-peer="${otherId}"]`);
+      if (!el) {
+        el = document.createElement("audio");
+        el.dataset.peer = otherId;
+        el.autoplay = true;
+        el.playsInline = true;
+        document.body.appendChild(el);
       }
-      element.srcObject = stream
-    }
-  );
+      el.srcObject = stream;
+    });
 
     peer.on("close", () => {
       peersRef.current.delete(otherId);
@@ -87,7 +133,9 @@ function GroupCallToast({ room_id }) {
 
     peer.on("error", (error) => console.log(`[peer ${otherId}]`, error));
 
+    // add the peer to the ref
     peersRef.current.set(otherId, peer);
+
     return peer;
   }
 
@@ -103,58 +151,26 @@ function GroupCallToast({ room_id }) {
   async function joinRoom() {
     await getLocalAudio();
 
-    const channel = supabase.channel(`voice:room-${room_id}`, {
-      config: { presence: { key: id } },
-    });
+    const { error, data } = await supabase
+      .from("bonfires")
+      .select("joined_users")
+      .eq("room_id", room_id)
+      .single();
 
-    channel.on("broadcast", { event: "signal" }, (payload) => {
-      const msg = payload.payload;
-      if (msg.to !== id) return;
-      let peer = peersRef.current.get(msg.from);
-      if (!peer) {
-        peer = createPeer(msg.from, false);
+    if (error) {
+      console.log(`Error getting joined users: ${error.message}`);
+      return;
+    } else if (Array.isArray(data.joined_users)) {
+      console.log("No other joined users...");
+      return;
+    }
+
+    // if there are other users joined
+    data.joined_users.forEach(async (user) => {
+      if (user != id) {
+        const initiator = isInitiatorFor(user);
+        createPeer(user, initiator);
       }
-      peer.signal(msg.data);
-    });
-
-    channel.on("presence", { event: "sycn" }, async () => {
-      const state = channel.presenceState();
-      const others = Object.keys(state).filter((id) => id !== id);
-
-      // room size limit of 10
-      if (others.length + 1 > 10) {
-        // add logic for uploading full status to supabase
-        console.log("room is full!");
-        return;
-      }
-
-      for (const otherId of others) {
-        if (!peersRef.current.has(otherId) && isInitiatorFor(otherId)) {
-          createPeer(otherId, true);
-        }
-      }
-
-      for (const existingId of Array.from(peersRef.current.keys())) {
-        if (!others.includes(existingId)) {
-          destroyPeer(existingId);
-        }
-      }
-
-      await channel.subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({
-            peerId: id,
-            displayName: "Me",
-          });
-          setConnected(true);
-        }
-      });
-    });
-
-    channelRef.current = channel;
-
-    window.addEventListener("beforeunload", () => {
-      channel.untrack();
     });
   }
 
