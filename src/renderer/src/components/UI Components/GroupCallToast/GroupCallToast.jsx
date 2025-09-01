@@ -66,7 +66,7 @@ function GroupCallToast({ room_id }) {
         },
         (payload) => {
           const { joined_users } = payload.new;
-          console.log("New user joined the room");
+          console.log("Joined users changed");
           if (
             joined_users.length === 1 &&
             joined_users[0] === id
@@ -105,7 +105,7 @@ function GroupCallToast({ room_id }) {
     const peer = new SimplePeer({
       initiator: initiator,
       trickle: true,
-      stream,
+      stream: localStreamRef.current,
       config: {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
