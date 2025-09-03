@@ -8,8 +8,9 @@ import SimplePeer from "simple-peer";
 import "./GroupCallToast.css";
 
 function GroupCallToast({ room_id }) {
-  const { id, inGroupCall, setInGroupCall } = useContext(UserContext);
+  const { id, setInGroupCall } = useContext(UserContext);
   const [connected, setConnected] = useState(false);
+  const [roomName, setRoomName] = useState("");
   const [muted, setMuted] = useState(false);
   const peersRef = useRef(new Map());
   const channelRef = useRef(null);
@@ -18,6 +19,7 @@ function GroupCallToast({ room_id }) {
   // join room on mount after getting local audio
   useEffect(() => {
     getLocalAudio().then(joinRoom());
+    getRoomName();
   }, []);
 
   useEffect(() => {
@@ -91,6 +93,21 @@ function GroupCallToast({ room_id }) {
 
   function isInitiatorFor(otherId) {
     return id > otherId;
+  }
+
+  async function getRoomName() {
+    const { data, error } = await supabase
+      .from("bonfires")
+      .select("name")
+      .eq("room_id", room_id)
+      .single();
+
+    if (error) {
+      console.log(`Error retrieving group name: ${error.message}`);
+      return;
+    }
+
+    setRoomName(data.name);
   }
 
   async function getLocalAudio() {
@@ -274,7 +291,11 @@ function GroupCallToast({ room_id }) {
           >
             <MdConnectWithoutContact />
           </div>
+          <div className={`mute-btn ${muted ? "muted" : "unmuted"}`} onClick={toggleMute}>
+            {muted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+          </div>
         </div>
+        <p className="room-name">{roomName}</p>
         <div className="call-avatar-div">
           <button
             className="end-call-btn"
@@ -282,9 +303,6 @@ function GroupCallToast({ room_id }) {
           >
             <MdCallEnd />
           </button>
-          <div className="mute-btn" onClick={toggleMute}>
-            {muted ? <FaMicrophoneSlash /> : <FaMicrophone />}
-          </div>
         </div>
       </div>
     </>

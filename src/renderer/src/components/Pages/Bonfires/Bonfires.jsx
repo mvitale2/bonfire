@@ -83,29 +83,41 @@ function Bonfires() {
       }
     };
 
+    const checkJoinedUsers = (num) => {
+      if (num === 10) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
     return (
       <div className="bonfires-wrapper">
         {bonfires.length > 0
-          ? bonfires.map((bonfire) => (
-              <div className="bonfire" key={bonfire.room_id}>
-                <p className="bonfire-title">{bonfire.name}</p>
-                <button
-                  className="bonfire-join-btn"
-                  onClick={async () => await handleJoin(bonfire.room_id)}
-                  disabled={inCall || inGroupCall[0]}
-                >
-                  Join
-                </button>
-                <div className="joined-users">
-                  {Array.isArray(bonfire.joined_users) &&
-                  bonfire.joined_users.length > 0
-                    ? bonfire.joined_users.map((user) => {
-                        return <Avatar otherUserId={user} key={user} />;
-                      })
-                    : null}
+          ? bonfires.map((bonfire) => {
+              const numJoinedUsers = bonfire.joined_users.length;
+              const disable = checkJoinedUsers(numJoinedUsers);
+              return (
+                <div className="bonfire" key={bonfire.room_id}>
+                  <p className="bonfire-title">{bonfire.name}</p>
+                  <button
+                    className="bonfire-join-btn"
+                    onClick={async () => await handleJoin(bonfire.room_id)}
+                    disabled={inCall || inGroupCall[0] || disable}
+                  >
+                    Join
+                  </button>
+                  <div className="joined-users">
+                    {Array.isArray(bonfire.joined_users) &&
+                    bonfire.joined_users.length > 0
+                      ? bonfire.joined_users.map((user) => {
+                          return <Avatar otherUserId={user} key={user} />;
+                        })
+                      : null}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           : null}
       </div>
     );
