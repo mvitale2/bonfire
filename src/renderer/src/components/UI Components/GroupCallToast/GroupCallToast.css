@@ -118,6 +118,14 @@
   align-items: center;
   margin-left: 0.5em;
   margin-right: 0.5em;
+  cursor: pointer;
+  padding: 5px;
+  transition: all ease 0.3s;
+  border-radius: 10px;
+}
+
+.call-toast-wrapper .status-icons .mute-btn:hover {
+  background-color: var(--background-color-5);
 }
 
 .call-toast-wrapper .status-icons .muted {
