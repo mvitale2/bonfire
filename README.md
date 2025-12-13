@@ -1,4 +1,3 @@
-- Skell101 - Michael Vitale 
 - Mvitale2 - Michael Vitale 
 - Cyberdataint - Grant Williams
 - Mattnifico - Matthew Sickles
